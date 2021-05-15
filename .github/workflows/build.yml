@@ -23,9 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - name: QT
-        run: sudo apt update && sudo apt install -y qt4-dev-tools
-      
       - name: mkdir
         run: mkdir build
       - name: cmake build
