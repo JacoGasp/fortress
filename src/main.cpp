@@ -3,8 +3,23 @@
 //
 
 #include <iostream>
+#include <QApplication>
+#include <QQmlEngine>
+#include <QtQuick>
+#include <iostream>
+#include <cmath>
 
-int main() {
-    std::cout << "Hello!\n";
-    return 0;
+int main(int argc, char *argv[]) {
+
+    QApplication app(argc, argv);
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+
+    // Extract QObject
+
+
+    // Bind to backend
+//    Backend backend{ gauge };
+
+    return QApplication::exec();
 }
