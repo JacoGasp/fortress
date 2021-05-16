@@ -5,7 +5,9 @@
 #include <QApplication>
 #include <QQmlEngine>
 #include <QtQuick>
+#include <iostream>
 #include "Backend.h"
+
 
 int main(int argc, char *argv[]) {
 
@@ -15,9 +17,15 @@ int main(int argc, char *argv[]) {
 
     auto f = engine.rootObjects().first()->findChildren<QObject *>("gauge");
 
-    if (!f.empty())
-        auto *gauge = f.first();
+    Backend b;
 
-    Backend b{};
+    if (!f.empty()) {
+        auto *gauge = f.first();
+        std::cout << "Found a gauge! " << gauge << '\n';
+
+        b.addGauge(gauge);
+        b.startUpdate();
+    }
+
     return QApplication::exec();
 }

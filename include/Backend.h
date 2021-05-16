@@ -5,13 +5,27 @@
 #ifndef FORTRESS_BACKEND_H
 #define FORTRESS_BACKEND_H
 
+#include <QtCore>
 #include <iostream>
 
-class Backend {
+class Backend : public QObject {
+    Q_OBJECT
+
+private:
+    QPointer<QTimer> m_timer;
+    QObject *m_gauge;
 
 public:
-    Backend();
-};
+    explicit Backend(QObject *parent = nullptr);
 
+    ~Backend() override;
+
+    void addGauge(QObject *gauge);
+
+    void startUpdate();
+
+public slots:
+    void update();
+};
 
 #endif //FORTRESS_BACKEND_H
