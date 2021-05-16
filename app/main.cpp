@@ -2,12 +2,10 @@
 // Created by Jacopo Gasparetto on 15/05/21.
 //
 
-#include <iostream>
 #include <QApplication>
 #include <QQmlEngine>
 #include <QtQuick>
-#include <iostream>
-#include <cmath>
+#include "Backend.h"
 
 int main(int argc, char *argv[]) {
 
@@ -15,11 +13,11 @@ int main(int argc, char *argv[]) {
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
-    // Extract QObject
+    auto f = engine.rootObjects().first()->findChildren<QObject *>("gauge");
 
+    if (!f.empty())
+        auto *gauge = f.first();
 
-    // Bind to backend
-//    Backend backend{ gauge };
-
+    Backend b{};
     return QApplication::exec();
 }

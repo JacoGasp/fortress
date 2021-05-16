@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="main.qml">main.qml</file>
+        <file alias="Gauge.qml">Gauge.qml</file>
+    </qresource>
+</RCC>
