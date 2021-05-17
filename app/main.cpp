@@ -15,15 +15,15 @@ int main(int argc, char *argv[]) {
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
-    auto f = engine.rootObjects().first()->findChildren<QObject *>("gauge");
+    auto gauges = engine.rootObjects().first()->findChildren<QObject *>("gauge");
 
     Backend b;
 
-    if (!f.empty()) {
-        auto *gauge = f.first();
-        std::cout << "Found a gauge! " << gauge << '\n';
-
-        b.addGauge(gauge);
+    if (!gauges.empty()) {
+        for (auto *gauge : gauges) {
+            std::cout << "Found a gauge! " << gauge << '\n';
+            b.addGauge(gauge);
+        }
         b.startUpdate();
     }
 

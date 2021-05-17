@@ -13,7 +13,7 @@ class Backend : public QObject {
 
 private:
     QPointer<QTimer> m_timer;
-    QObject *m_gauge;
+    QVector<QObject*> m_gauges;
 
 public:
     explicit Backend(QObject *parent = nullptr);

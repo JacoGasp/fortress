@@ -20,26 +20,31 @@ ApplicationWindow {
     }
 
     Gauge {
+        objectName: "gauge"
         x: 200
         y: 0
     }
 
     Gauge {
+        objectName: "gauge"
         x: 400
         y: 0
     }
 
     Gauge {
+        objectName: "gauge"
         x: 0
         y: 200
     }
 
     Gauge {
+        objectName: "gauge"
         x: 200
         y: 200
     }
 
     Gauge {
+        objectName: "gauge"
         x: 400
         y: 200
     }
