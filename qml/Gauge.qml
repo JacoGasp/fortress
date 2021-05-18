@@ -14,6 +14,7 @@ Rectangle {
     readonly property var lineWidth: 15
     readonly property var innerRadius: 15
 
+    readonly property var maxValue: 50
     property var value
     property var currentColor: {Qt.rgba(0, 0, 0, 0)}
 
@@ -83,7 +84,7 @@ Rectangle {
         font.pointSize: 48
         color: currentColor
         horizontalAlignment: Text.AlignHCenter
-        text: {(value * 50.0).toFixed(1)}
+        text: { (value * maxValue).toFixed(1) }
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
