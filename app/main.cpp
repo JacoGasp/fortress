@@ -12,20 +12,15 @@
 int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
+//    Backend b;
+//    b.startUpdate();
+
+    qmlRegisterType<Backend>("com.fortress.backend", 1, 0, "Backend");
+
     QQmlApplicationEngine engine;
+//    engine.rootContext()->setContextProperty("backend", &b);
+
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-
-    auto gauges = engine.rootObjects().first()->findChildren<QObject *>("gauge");
-
-    Backend b;
-
-    if (!gauges.empty()) {
-        for (auto *gauge : gauges) {
-            std::cout << "Found a gauge! " << gauge << '\n';
-            b.addGauge(gauge);
-        }
-        b.startUpdate();
-    }
 
     return QApplication::exec();
 }

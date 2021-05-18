@@ -3,39 +3,43 @@
 //
 
 #include "Backend.h"
-#include <iostream>
-#include <cmath>
 
 Backend::Backend(QObject *parent)
-        : QObject(parent) {
-
-    m_timer = new QTimer(this);
-    connect(m_timer, &QTimer::timeout, this, &Backend::update);
+    : QObject{parent} {
+    m_runnable = new Runnable(this);
+    m_runnable->setAutoDelete(false);
 }
-
 
 Backend::~Backend() {
-    m_timer.clear();
-    m_timer = nullptr;
-    delete m_timer;
+    m_runnable->stop();
+    delete m_runnable;
+    std::cout << "runnable deleted, removing backend\n";
 }
-
 
 void Backend::startUpdate() {
-    m_timer->start(10);
-}
 
-void Backend::addGauge(QObject *gauge) {
-    m_gauges.push_back(gauge);
-    std::cout << "gauge address: " << gauge << '\n';
-}
-
-void Backend::update() {
-    static int t{};
-    double value = (1.0 + std::sin(static_cast<double>(t) / 50.0)) / 2.0;
-
-    for (auto *gauge : m_gauges) {
-        gauge->setProperty("value", value);
+    if (!m_runnable->isRunning()) {
+        QThreadPool::globalInstance()->start(m_runnable);
+        std::cout << "started thread pool\n";
     }
-    ++t;
+}
+
+void Backend::stopUpdate() {
+    if (m_runnable->isRunning()) {
+        m_runnable->stop();
+    }
+}
+
+double Backend::getValue() const {
+    return m_value;
+}
+
+// Slots
+void Backend::setNumber(int t) {
+    if (t == m_t)
+        return;
+
+    m_t = t;
+    m_value = (1.0 + std::sin(static_cast<double>(m_t) / 50.0)) / 2.0;
+    emit valueChanged(m_value);
 }

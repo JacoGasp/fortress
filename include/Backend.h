@@ -5,27 +5,41 @@
 #ifndef FORTRESS_BACKEND_H
 #define FORTRESS_BACKEND_H
 
-#include <QtCore>
+#include <QObject>
+#include <QThreadPool>
 #include <iostream>
+#include "Runnable.h"
 
 class Backend : public QObject {
-    Q_OBJECT
+Q_OBJECT
+    Q_PROPERTY(double value READ getValue NOTIFY valueChanged)
 
 private:
-    QPointer<QTimer> m_timer;
-    QVector<QObject*> m_gauges;
+    int m_t{};
+    double m_value{};
+    Runnable *m_runnable;
 
 public:
     explicit Backend(QObject *parent = nullptr);
 
     ~Backend() override;
 
-    void addGauge(QObject *gauge);
+    Q_INVOKABLE void startUpdate();
 
-    void startUpdate();
+    Q_INVOKABLE void stopUpdate();
 
+    [[nodiscard]] double getValue() const;
+
+
+// Listen for events
 public slots:
-    void update();
+
+    void setNumber(int t);
+
+// Emit signals
+signals:
+    void valueChanged(double);
+
 };
 
 #endif //FORTRESS_BACKEND_H
