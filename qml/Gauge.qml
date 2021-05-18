@@ -78,10 +78,7 @@ Rectangle {
 
     Text {
         id: textValue
-        x: root.width / 2 - 25
-        y: root.height / 2 - 25
-        width: 50
-        height: 50
+        anchors.centerIn: parent
         font.family: "Helvetica"
         font.pointSize: 48
         color: currentColor
@@ -89,10 +86,8 @@ Rectangle {
         text: {(value * 50.0).toFixed(1)}
 
         Text {
-            x: 0
-            y: textValue.height
-            width: 50
-            height: 50
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 80
             text: "mSv"
             font.pointSize: 18
             color: "lightgrey"
