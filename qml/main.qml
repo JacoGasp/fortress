@@ -27,9 +27,12 @@ ApplicationWindow {
 
     Button {
         id: button
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         x: 300
         y: 400 - 80
-        text: !isRunning ? "start" : "stop"
+        text: {!isRunning ? "start" : "stop"}
         onClicked: {!isRunning ? start() : stop()}
     }
 
