@@ -1,12 +1,12 @@
 set(CMAKE_CXX_STANDARD 20)
 
-if (LINUX)
+if(UNIX AND NOT APPLE)
     set(CMAKE_CXX_FLAGS "-pthread")
-endif(LINUX)
+endif(UNIX AND NOT APPLE)
 
-if (DARWIN)
+if(APPLE)
     include_directories(/usr/local/Cellar/asio/1.18.2/include)
-endif(DARWIN)
+endif(APPLE)
 # Setup executable
 
 file(GLOB INCLUDES ../include/*.h)
