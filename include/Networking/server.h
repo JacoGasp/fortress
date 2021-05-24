@@ -35,8 +35,10 @@ namespace fortress::net {
 
         virtual void onClientDisconnect(std::shared_ptr<Connection<T>> client) {}
 
-
         virtual void onMessage(std::shared_ptr<Connection<T>> client, message<T> &msg) {}
+
+    public:
+        virtual void onClientValidated(std::shared_ptr<Connection<T>> client) {}
 
 
     public:
@@ -45,8 +47,6 @@ namespace fortress::net {
         explicit ServerInterface(uint16_t port)
                 : m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
                   m_port(port) {}
-
-        virtual void onClientValidated(std::shared_ptr<Connection<T>> client) {}
 
         virtual ~ServerInterface() {
             stop();
@@ -170,6 +170,11 @@ namespace fortress::net {
             }
         }
     };
+
+    template<typename T>
+    void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
+        server->onClientValidated(this->shared_from_this());
+    }
 }
 
 #endif //FORTRESS_SERVER_H

@@ -93,6 +93,8 @@ namespace fortress::net {
         }
 
     public:
+        // Implemented in server.h
+        void onClientValidate(fortress::net::ServerInterface<T> *server);
 
         void connectToClient(fortress::net::ServerInterface<T> *server, uint32_t uid = 0) {
 
@@ -211,7 +213,7 @@ namespace fortress::net {
                                         if (m_nHandshakeIn == m_nHandshakeCheck) {
                                             // Client provided valid handshake
                                             std::cout << "Client Validated" << std::endl;
-                                            server->onClientValidated(this->shared_from_this());
+                                            onClientValidate(server);
 
                                             // Sit waiting to receive data now
                                             readHeader();

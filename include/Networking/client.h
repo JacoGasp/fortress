@@ -13,6 +13,9 @@
 namespace fortress::net {
 
     template<typename T>
+    void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {}
+
+    template<typename T>
     class ClientInterface {
 
     private:
