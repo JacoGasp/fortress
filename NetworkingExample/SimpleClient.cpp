@@ -5,6 +5,7 @@
 #include <iostream>
 #include "Networking/client.h"
 #include "Constants.h"
+#include "argparse.h"
 
 class SimpleClient : public fortress::net::ClientInterface<fortress::net::MsgTypes> {
 
@@ -41,9 +42,19 @@ void quitHandler(bool &shouldRun) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    auto parser = ArgumentParser(argc, argv);
+    parser.addArgument("ip", "127.0.0.1");
+    parser.addArgument("port", 60000);
+
+    parser.parseArguments();
+
+    auto ip = parser.getValue<std::string>("ip");
+    auto port = parser.getValue<int>("port");
+
     SimpleClient c;
-    c.connect("127.0.0.1", 60000);
+    c.connect(ip, port);
 
     bool bQuit = false;
     std::thread t{ quitHandler, std::ref(bQuit) };

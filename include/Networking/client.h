@@ -34,7 +34,7 @@ namespace fortress::net {
         }
 
         bool connect(const std::string &host, const uint16_t port) {
-
+            std::cout << "Connecting to server: " << host << ':' << port << '\n';
             try {
                 // Resolve hostname/ip-address into physical address
                 asio::ip::tcp::resolver resolver(m_context);
