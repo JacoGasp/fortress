@@ -61,24 +61,28 @@ public:
 
         for (int i = 1; i < m_argc; ++i) {
 
+            // If arguments starts with '--' remove the first '-'
             if (m_argv[i][1] == '-')
                 m_argv[i]++;
 
+            // If current arg starts with '-' is a flag.
             if (m_argv[i][0] == '-') {
-                auto currKey = std::string(++m_argv[i]);
+
+                auto currKey = std::string(++m_argv[i]);    // Remove the starting '-'
 
                 auto it = m_arguments.find(currKey);
-
                 if (it == m_arguments.end())
                     throw std::domain_error("Argument '" + currKey + "' not valid");
 
                 auto value = m_argv[i + 1];
 
-                if (m_argv[i + 1][0] == '-') {
+                // If the next arg starts with '-', the current args is a boolean flag
+                if (value[0] == '-') {
                     setValue(currKey, true);
                     continue;
                 }
 
+                // Set the value with proper type
                 switch (*it->second.type().name()) {
                     case 'i':
                         setValue<int>(currKey, value);
@@ -89,11 +93,9 @@ public:
                     default:
                         setValue<std::string>(currKey, value);
                 }
-
             }
         }
     }
-
 };
 
 #endif //FORTRESS_ARGPARSE_H
