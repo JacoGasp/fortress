@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     std::thread t{ quitHandler, std::ref(shouldRun)};
 
     while(shouldRun)
-        server.update();
+        server.update(-1, true);
 
     t.join();
 
