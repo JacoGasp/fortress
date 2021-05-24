@@ -35,7 +35,9 @@ namespace fortress::net {
 
         virtual void onClientDisconnect(std::shared_ptr<Connection<T>> client) {}
 
+
         virtual void onMessage(std::shared_ptr<Connection<T>> client, message<T> &msg) {}
+
 
     public:
         // Constructors
@@ -43,6 +45,8 @@ namespace fortress::net {
         explicit ServerInterface(uint16_t port)
                 : m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
                   m_port(port) {}
+
+        virtual void onClientValidated(std::shared_ptr<Connection<T>> client) {}
 
         virtual ~ServerInterface() {
             stop();
@@ -91,7 +95,7 @@ namespace fortress::net {
                             if (onClientConnect(newConnection)) {
                                 // Connection allowed, add it to active connections
                                 m_connections.push_back(std::move(newConnection));
-                                m_connections.back()->connectToClient(nIDCounter++);
+                                m_connections.back()->connectToClient(this, nIDCounter++);
 
                                 std::cout << "[" << m_connections.back()->getID() << "] Connection Approved\n";
 
@@ -108,6 +112,7 @@ namespace fortress::net {
                         waitForClientConnection();
                     });
         }
+
 
         void sendMessage(std::shared_ptr<Connection<T>> client, const message<T> &msg) {
             if (client && client->isConnected())

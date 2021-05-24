@@ -10,6 +10,10 @@
 
 namespace fortress::net {
 
+    // Forward declare
+    template<typename T>
+    class ServerInterface;
+
     template<typename T>
     /*
       Enable the class Connection<T>, currently managed by a std::shared_pointer name pt, to safely generate
@@ -50,7 +54,13 @@ namespace fortress::net {
 
         message<T> m_msgTemporaryIn;
 
+        // Connection id
         uint32_t m_id = 0;
+
+        // Handshake Validation
+        uint64_t m_nHandshakeOut = 0;
+        uint64_t m_nHandshakeIn = 0;
+        uint16_t m_nHandshakeCheck = 0;
 
     public:
 
@@ -62,6 +72,18 @@ namespace fortress::net {
 
             m_ownerType = parent;
 
+            // Construct validation check data
+            if (m_ownerType == owner::server) {
+                // Server -> Client
+                // Construct random data to send for validation
+                m_nHandshakeOut = u_int64_t(std::chrono::system_clock::now().time_since_epoch().count());
+                // Precalculate the expected response
+                m_nHandshakeCheck = scramble(m_nHandshakeOut);
+            } else {
+                // Client -> Server
+                m_nHandshakeIn = 0;
+                m_nHandshakeCheck = 0;
+            }
         }
 
         virtual ~Connection() = default;
@@ -72,12 +94,16 @@ namespace fortress::net {
 
     public:
 
-        void connectToClient(uint32_t uid = 0) {
+        void connectToClient(fortress::net::ServerInterface<T> *server, uint32_t uid = 0) {
 
             if (m_ownerType == owner::server)
                 if (m_socket.is_open()) {
                     m_id = uid;
-                    readHeader(); // Start polling client
+
+                    // A client has attempted to connect to the server. Write out handshake data to be validated
+                    writeValidation();
+                    // Listen asynchronously for validation data sent back
+                    readValidation();
                 }
         }
 
@@ -86,7 +112,7 @@ namespace fortress::net {
                 asio::async_connect(m_socket, endpoints,
                                     [this](std::error_code ec, const asio::ip::tcp::endpoint &endpoint) {
                                         if (!ec) {
-                                            readHeader();
+                                            readValidation();
                                         }
                                     });
             }
@@ -121,6 +147,20 @@ namespace fortress::net {
 
 
     private:
+
+        void writeValidation() {
+            asio::async_write(m_socket, asio::buffer(&m_nHandshakeOut, sizeof(uint64_t)),
+                              [this](std::error_code ec, std::size_t length) {
+                                  if (!ec) {
+                                      // Validation data sent, clients should sit and wait for a response
+                                      if (m_ownerType == owner::client)
+                                          readHeader();
+                                  } else {
+                                      m_socket.close();
+                                  }
+                              });
+        }
+
         void writeHeader() {
             asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(MessageHeader<T>)),
                               [this](std::error_code ec, std::size_t length) {
@@ -162,7 +202,36 @@ namespace fortress::net {
                         }
                     });
         }
-        // Async - Prime context ready to read a message header
+
+        void readValidation(fortress::net::ServerInterface<T> *server = nullptr) {
+            asio::async_read(m_socket, asio::buffer(&m_nHandshakeIn, sizeof(uint64_t)),
+                             [this, server](std::error_code ec, std::size_t length) {
+                                 if (!ec) {
+                                     if (m_ownerType == owner::server) {
+                                        if (m_nHandshakeIn == m_nHandshakeCheck) {
+                                            // Client provided valid handshake
+                                            std::cout << "Client Validated" << std::endl;
+                                            server->onClientValidated(this->shared_from_this());
+
+                                            // Sit waiting to receive data now
+                                            readHeader();
+                                        } else {
+                                            // Handshake failed
+                                            std::cout << "Client Disconnected (Failed Validation)" << std::endl;
+                                            m_socket.close();
+                                        }
+                                     } else {
+                                         // Connection is client, resolve handshake
+                                         m_nHandshakeOut = scramble(m_nHandshakeIn);
+                                         writeValidation();
+                                     }
+                                 } else {
+                                     std::cout << "Client Disconnected (readValidation)" << std::endl;
+                                     m_socket.close();
+                                 }
+                             });
+        }
+
         void readHeader() {
             // Read the context and write the m_msgTemporary's header
             asio::async_read(m_socket, asio::buffer(&m_msgTemporaryIn.header, sizeof(MessageHeader<T>)),
@@ -211,6 +280,13 @@ namespace fortress::net {
 
             // After the message has been added to the queue, read a new message
             readHeader();
+        }
+
+        // Encrypt data
+        uint16_t scramble(uint16_t nInput) {
+            uint64_t out = nInput ^0xDEADBEEFC0DECADE;
+            out = (out & 0xF0F0F0F0F0F0F0) >> 4 | (out & 0xF0F0F0F0F0F0F0 << 4);
+            return out ^ 0xC0DEFACE12345678;
         }
     };
 }
