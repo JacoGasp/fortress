@@ -50,8 +50,7 @@ public:
         return std::any_cast<T>(it->second);
     }
 
-    template<>
-    std::string_view getValue(const std::string &key) const {
+    [[nodiscard]] std::string_view getValue(const std::string &key) const {
         auto it = m_arguments.find(key);
         if (it == m_arguments.end())
             throw std::domain_error("Element '" + key + "' not found");
