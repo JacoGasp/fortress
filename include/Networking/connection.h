@@ -103,7 +103,7 @@ namespace fortress::net {
                     // A client has attempted to connect to the server. Write out handshake data to be validated
                     writeValidation();
                     // Listen asynchronously for validation data sent back
-                    readValidation();
+                    readValidation(server);
                 }
         }
 
