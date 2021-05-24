@@ -5,38 +5,52 @@
 #include <iostream>
 #include "Networking/server.h"
 #include "Constants.h"
+#include "argparse.h"
 
-class SimpleServer: public fortress::net::ServerInterface<fortress::net::MsgTypes> {
+using namespace fortress::net;
+
+class SimpleServer: public ServerInterface<MsgTypes> {
 public:
     explicit SimpleServer(uint16_t port)
-    : fortress::net::ServerInterface<fortress::net::MsgTypes>(port){}
+    : ServerInterface<MsgTypes>(port){}
 
 protected:
-    bool onClientConnect(std::shared_ptr<fortress::net::Connection<fortress::net::MsgTypes>> client) override {
+    bool onClientConnect(std::shared_ptr<Connection<MsgTypes>> client) override {
         std::cout << "Client " << client->getID() << " connected\n";
+
+        message<MsgTypes> newMessage;
+        newMessage.header.id = MsgTypes::ServerAccept;
+
         return true;
     }
 
-    void onClientDisconnect(std::shared_ptr<fortress::net::Connection<fortress::net::MsgTypes>> client) override {
+    void onClientDisconnect(std::shared_ptr<Connection<MsgTypes>> client) override {
         std::cout << "Client disconnected\n";
     }
 
-    void onMessage(const std::shared_ptr<fortress::net::Connection<fortress::net::MsgTypes>> client, fortress::net::message<fortress::net::MsgTypes> &msg) override {
+    void onMessage(const std::shared_ptr<Connection<MsgTypes>> client, message<MsgTypes> &msg) override {
 
          switch (msg.header.id) {
-             case fortress::net::MsgTypes::ServerPing: {
+             case MsgTypes::ServerPing: {
                  std::cout << '[' << client->getID()  << "]: Server ping\n";
                  //Simply bounce message back to client
                  client->send(msg);
              }
              break;
 
+             case MsgTypes::MessageAll: {
+                 std::cout << '[' << client->getID() << "]: Message All\n";
+                 message<MsgTypes> newMessage;
+                 newMessage.header.id = MsgTypes::ServerMessage;
+                 msg << client->getID();
+                 sendMessageToAllClients(msg, client);
+             }
+
              default:
                  std::cout << "???\n";
          }
     }
 };
-
 
 void quitHandler(bool &shouldRun) {
     while (true) {
@@ -49,9 +63,13 @@ void quitHandler(bool &shouldRun) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 
-    SimpleServer server(60000);
+    ArgumentParser parser(argc, argv);
+    parser.addArgument<int>("port", 6000);
+    parser.parseArguments();
+
+    SimpleServer server(parser.getValue<int>("port"));
     server.start();
 
     bool shouldRun = true;
@@ -62,6 +80,7 @@ int main() {
 
     t.join();
 
+    server.stop();
 
     return 0;
 }

@@ -28,6 +28,7 @@ namespace fortress::net {
         asio::ip::tcp::acceptor m_asioAcceptor;                      // Used to accept new socket connections
 
         uint32_t nIDCounter = 10000;                                 // Client unique identifier
+        uint16_t m_port;                                             // Only for verbose
 
     protected:
         virtual bool onClientConnect(std::shared_ptr<Connection<T>> client) { return false; }
@@ -40,9 +41,8 @@ namespace fortress::net {
         // Constructors
 
         explicit ServerInterface(uint16_t port)
-                : m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {
-
-        }
+                : m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
+                  m_port(port) {}
 
         virtual ~ServerInterface() {
             stop();
@@ -61,7 +61,7 @@ namespace fortress::net {
                 return false;
             }
 
-            std::cout << "[SERVER] Started!\n";
+            std::cout << "[SERVER] Started at port " << m_port << "!\n";
             return true;
         }
 
