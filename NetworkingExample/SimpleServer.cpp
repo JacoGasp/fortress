@@ -66,7 +66,7 @@ void quitHandler(bool &shouldRun) {
 int main(int argc, char *argv[]) {
 
     ArgumentParser parser(argc, argv);
-    parser.addArgument<int>("port", 6000);
+    parser.addArgument<int>("port", 60000);
     parser.parseArguments();
 
     SimpleServer server(parser.getValue<int>("port"));
