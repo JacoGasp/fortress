@@ -50,6 +50,13 @@ protected:
                  std::cout << "???\n";
          }
     }
+
+    void onClientValidated(std::shared_ptr<Connection<MsgTypes>> client) override {
+        message<MsgTypes> newMessage;
+        newMessage.header.id = ServerAccept;
+        newMessage << client->getID();
+        sendMessage(client, newMessage);
+    }
 };
 
 void quitHandler(bool &shouldRun) {

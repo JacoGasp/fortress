@@ -7,13 +7,15 @@
 #include "Constants.h"
 #include "argparse.h"
 
-class SimpleClient : public fortress::net::ClientInterface<fortress::net::MsgTypes> {
+using namespace fortress::net;
+
+class SimpleClient : public ClientInterface<MsgTypes> {
 
 public:
     void pingServer() {
         static int count = 0;
         std::cout << "Sending ping\n";
-        fortress::net::message<fortress::net::MsgTypes> msg;
+        message<MsgTypes> msg;
         msg.header.id = fortress::net::ServerPing;
 
         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
@@ -56,9 +58,10 @@ int main(int argc, char *argv[]) {
     SimpleClient c;
     c.connect(ip, port);
 
+
     bool bQuit = false;
-    std::thread t{ quitHandler, std::ref(bQuit) };
-    std::thread ping { pingThread, std::ref(c)};
+    std::thread t;
+    std::thread ping;
 
     while (!bQuit) {
 
@@ -67,7 +70,13 @@ int main(int argc, char *argv[]) {
                 auto msg = c.incoming().pop_front().message;
 
                 switch (msg.header.id) {
-                    case fortress::net::MsgTypes::ServerPing: {
+                    case MsgTypes::ServerAccept: {
+                        std::cout << "Server accepted\n";
+                        t = std::thread{ quitHandler, std::ref(bQuit) };
+                        ping = std::thread{ pingThread, std::ref(c)};
+                        break;
+                    }
+                    case MsgTypes::ServerPing: {
                         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
                         std::chrono::system_clock::time_point timeThen;
                         msg >> timeThen;
@@ -82,9 +91,9 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
     t.join();
     ping.join();
+
 
     return 0;
 }

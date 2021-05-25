@@ -212,14 +212,13 @@ namespace fortress::net {
                                      if (m_ownerType == owner::server) {
                                         if (m_nHandshakeIn == m_nHandshakeCheck) {
                                             // Client provided valid handshake
-                                            std::cout << "Client Validated" << std::endl;
                                             onClientValidate(server);
 
                                             // Sit waiting to receive data now
                                             readHeader();
                                         } else {
                                             // Handshake failed
-                                            std::cout << "Client Disconnected (Failed Validation)" << std::endl;
+                                            std::cout << "[SERVER] Client Disconnected (Failed Validation)" << std::endl;
                                             m_socket.close();
                                         }
                                      } else {
@@ -228,7 +227,7 @@ namespace fortress::net {
                                          writeValidation();
                                      }
                                  } else {
-                                     std::cout << "Client Disconnected (readValidation)" << std::endl;
+                                     std::cout << "[SERVER] Client Disconnected (readValidation)" << std::endl;
                                      m_socket.close();
                                  }
                              });

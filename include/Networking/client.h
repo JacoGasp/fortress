@@ -13,9 +13,6 @@
 namespace fortress::net {
 
     template<typename T>
-    void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {}
-
-    template<typename T>
     class ClientInterface {
 
     private:
@@ -35,6 +32,8 @@ namespace fortress::net {
         virtual ~ClientInterface() {
             disconnect();
         }
+
+        virtual void onClientValidate(fortress::net::ServerInterface<T> *server) {}
 
         bool connect(const std::string &host, const uint16_t port) {
             std::cout << "Connecting to server: " << host << ':' << port << '\n';
@@ -99,6 +98,12 @@ namespace fortress::net {
             return m_qMessageIn;
         }
     };
+
+    template<typename T>
+    void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
+        onClientValidate(server);
+    }
+
 }
 
 #endif //FORTRESS_CLIENT_H

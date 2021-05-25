@@ -118,7 +118,7 @@ namespace fortress::net {
             if (client && client->isConnected())
                 client->send(msg);
             else {
-                onClientDiconnect(client);
+                onClientDisconnect(client);
 
                 client.reset();
 
@@ -173,6 +173,7 @@ namespace fortress::net {
 
     template<typename T>
     void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
+        std::cout << '[' << this->getID() << "] client validated" << std::endl;
         server->onClientValidated(this->shared_from_this());
     }
 }
