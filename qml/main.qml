@@ -1,16 +1,21 @@
 import QtQuick 2.0
-import QtQuick.Controls
+import QtQuick.Controls 6.0
+import Qt.labs.platform 1.0
+import QtQuick.Layouts 1.11
+import QtQuick.Window 2.2
 
 import com.fortress.backend 1.0
 
 ApplicationWindow {
     id: window
     visible: true
-    width: 600
-    height: 400
+    width: 1200
+    height: 840
     title: {qsTr("Minimal Qml")}
+    color: "#373A3C"
 
-    property var isRunning: false
+    property bool isRunning: false
+    readonly property int margins: 16
 
     function start() {
         window.isRunning = true
@@ -25,6 +30,55 @@ ApplicationWindow {
         backend.stopUpdate()
     }
 
+    MenuBar {
+        id: menuBar
+        Menu {
+            id: fileMenu
+            title: qsTr("File")
+            // ...
+        }
+
+        Menu {
+            id: editMenu
+            title: qsTr("&Edit")
+            // ...
+        }
+
+        Menu {
+            id: viewMenu
+            title: qsTr("&View")
+            // ...
+        }
+
+        Menu {
+            id: helpMenu
+            title: qsTr("&Help")
+            // ...
+        }
+    }
+
+
+    header: FRToolBar {
+
+    }
+
+
+    Rectangle {
+        id: menuBarRec
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: margins
+        height: 50
+        color: "#55595C"
+    }
+
+    Rectangle {
+        id: background
+        anchors.fill: parent
+        color: "white"
+    }
+
     Button {
         id: button
         anchors.horizontalCenter: parent.horizontalCenter
@@ -37,19 +91,12 @@ ApplicationWindow {
     }
 
 
-    Text {
-        id: hello
-        anchors.fill: parent
-        text: "Hello!"
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 48
-    }
-
     Gauge {
         id: gauge1
-        x: 0
-        y: 0
+        anchors.top: menuBar.bottom
+        anchors.right: parent.right
+        anchors.margins: margins
+
     }
 
     Backend {

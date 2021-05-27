@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="main.qml">main.qml</file>
-        <file alias="Gauge.qml">Gauge.qml</file>
+        <file>main.qml</file>
+        <file>Gauge.qml</file>
+        <file>FRToolBar.qml</file>
     </qresource>
 </RCC>
