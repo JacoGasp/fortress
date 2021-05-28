@@ -36,11 +36,11 @@ namespace fortress::net {
         };
 
     protected:
-        // Each connection has a unique socket to a remote
-        asio::ip::tcp::socket m_socket;
-
         // This context is shared with the whole asio instance
         asio::io_context &m_asioContext;
+
+        // Each connection has a unique socket to a remote
+        asio::ip::tcp::socket m_socket;
 
         // This queue holds all messages to be sent to the remote side of this connection
         threadSafeQueue<message<T>> m_qMessagesOut;
