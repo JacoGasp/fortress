@@ -33,6 +33,8 @@ namespace fortress::net {
             disconnect();
         }
 
+        virtual void onConnect() {}
+
         virtual void onClientValidate(fortress::net::ServerInterface<T> *server) {}
 
         bool connect(const std::string &host, const uint16_t port) {
@@ -56,11 +58,14 @@ namespace fortress::net {
                 // Start the thread context
                 m_threadContext = std::thread([this]() { m_context.run(); });
 
+                onConnect();
+
             } catch (std::exception &e) {
                 std::cerr << "Client Exception: " << e.what() << "\n";
+                return false;
             }
 
-            return false;
+            return true;
         }
 
         void disconnect() {
@@ -101,7 +106,7 @@ namespace fortress::net {
 
     template<typename T>
     void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
-        onClientValidate(server);
+//        onClientValidate(server);
     }
 
 }
