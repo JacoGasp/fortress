@@ -61,10 +61,10 @@ protected:
                 newMsg.header.id = ServerMessage;
 
                 std::ostringstream out;
-                out << "Hello";
+                out << "Hello, ";
 
-                for (auto ch : msg.body)
-                        out << ch;
+                for (int i = 0; i < msg.size() - 1; ++i)
+                        out << msg.body[i];
 
                 out << '!';
 
@@ -98,9 +98,10 @@ public:
     }
 };
 
+std::atomic_bool shouldRun;
 
-void quitHandler(bool &shouldRun) {
-    while (true) {
+void quitHandler() {
+    while (shouldRun) {
         char c;
         std::cin >> c;
         if (c > 0) {
@@ -127,13 +128,9 @@ int main(int argc, char *argv[]) {
     SimpleServer server(parser.getValue<int>("port"));
     server.start();
 
-//    auto pingThread{std::thread{pingHelper, std::ref(server)}};
+    shouldRun = true;
+    std::thread t{quitHandler};
 
-    bool shouldRun = true;
-    std::thread t{quitHandler, std::ref(shouldRun)};
-
-    while (shouldRun)
-        server.update(-1, true);
 
 //    pingThread.join();
     t.join();

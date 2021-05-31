@@ -12,6 +12,7 @@
 #include <deque>
 #include <mutex>
 #include <memory>
+#include <atomic>
 
 #define ASIO_STANDALONE
 #include <asio.hpp>

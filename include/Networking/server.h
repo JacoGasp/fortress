@@ -30,6 +30,9 @@ namespace fortress::net {
         uint32_t nIDCounter = 10000;                                 // Client unique identifier
         uint16_t m_port;                                             // Only for verbose
 
+        std::thread m_updateThread;
+        std::atomic_bool m_bIsUpdating = false;
+
     protected:
         virtual bool onClientConnect(std::shared_ptr<Connection<T>> client) { return false; }
 
@@ -66,6 +69,11 @@ namespace fortress::net {
             }
 
             std::cout << "[SERVER] Started at port " << m_port << "!\n";
+
+            if (!m_bIsUpdating) {
+                m_bIsUpdating = true;
+                m_updateThread = std::thread{ &ServerInterface<T>::updateHandler, this };
+            }
             return true;
         }
 
@@ -76,6 +84,14 @@ namespace fortress::net {
             if (m_threadContext.joinable())
                 m_threadContext.join();
 
+            if (m_bIsUpdating) {
+                m_bIsUpdating = false;
+                m_qMessagesIn.stopWaiting();
+
+                if (m_updateThread.joinable()) {
+                    m_updateThread.join();
+                }
+            }
         }
 
         void waitForClientConnection() {
@@ -112,7 +128,6 @@ namespace fortress::net {
                         waitForClientConnection();
                     });
         }
-
 
         void sendMessage(std::shared_ptr<Connection<T>> client, const message<T> &msg) {
             if (client && client->isConnected())
@@ -151,9 +166,7 @@ namespace fortress::net {
                 );
         }
 
-        /*
-         *
-         */
+        // Single shot update
         void update(size_t nMaxMessages = -1, bool bWait = false) {  // set to maximum size_t by default
             if (bWait)
                 m_qMessagesIn.wait();
@@ -168,6 +181,14 @@ namespace fortress::net {
                 onMessage(msg.remote, msg.message);
                 nMessageCount++;
             }
+        }
+
+    protected:
+        void updateHandler() {
+            while (m_bIsUpdating)
+                update(-1, m_bIsUpdating);
+
+            std::cout << "Stopped";
         }
     };
 

@@ -19,6 +19,8 @@ namespace fortress::net {
         std::condition_variable m_cvBlocking;
         std::mutex m_muxCvBlocking;
 
+        bool m_bForceAwake = false;
+
     public:
         threadSafeQueue() = default;
 
@@ -85,14 +87,24 @@ namespace fortress::net {
         }
 
         void wait() {
+            std::cout << "Wait!\n";
             // Checks whether the queue is empty or not.
-            while (empty()) {
+            while (empty() && !m_bForceAwake) {
                 // Send the thread to sleep. Wait here until something signals the conditional variable to wake up.
                 std::unique_lock<std::mutex> ul(m_muxCvBlocking);
                 m_cvBlocking.wait(ul);
             }
 
             // When receive the notification, release control to the calling function
+            m_bForceAwake = false;
+            std::cout << "Resume!\n";
+        }
+
+        void stopWaiting() {
+            // Wake the wait() function notifying that the queue is not empty anymore
+            std::unique_lock<std::mutex> ul(m_muxCvBlocking);
+            m_bForceAwake = true;
+            m_cvBlocking.notify_one();
         }
     };
 }

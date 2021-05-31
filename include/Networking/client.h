@@ -16,7 +16,7 @@ namespace fortress::net {
     class ClientInterface {
 
     private:
-        threadSafeQueue<owned_message<T>> m_qMessageIn;
+        threadSafeQueue<owned_message<T>> m_qMessagesIn;
 
     protected:
         // asio context handles the data transfer
@@ -26,10 +26,21 @@ namespace fortress::net {
 
         std::unique_ptr<Connection<T>> m_connection;
 
+        std::thread m_updateThread;
+
+        std::atomic_bool m_bIsUpdating = false;
+
+    protected:
+        virtual void onMessage(message<T> &msg) {};
+
     public:
         ClientInterface() = default;
 
         virtual ~ClientInterface() {
+
+            if (m_bIsUpdating)
+                stopUpdating();
+
             disconnect();
         }
 
@@ -49,7 +60,7 @@ namespace fortress::net {
                         Connection<T>::owner::client,
                         m_context,
                         asio::ip::tcp::socket(m_context),
-                        m_qMessageIn
+                        m_qMessagesIn
                 );
 
                 // Tell the connection object to connect to server
@@ -98,9 +109,54 @@ namespace fortress::net {
                 m_connection->send(msg);
         }
 
+        void startUpdating() {
+            if (!m_bIsUpdating) {
+                m_updateThread = std::thread{ &ClientInterface<T>::updateHandler, this};
+                m_bIsUpdating = true;
+                std::cout << "Start updating...\n";
+            } else
+                std::cout << "Updating already started";
+        }
+
+        void stopUpdating() {
+            if (m_bIsUpdating) {
+                m_qMessagesIn.stopWaiting();
+
+                if (m_updateThread.joinable())
+                    m_updateThread.join();
+
+                m_bIsUpdating = false;
+                std::cout << "Stop updating";
+            }
+        }
+
         // Retrieve messages queue from server
         threadSafeQueue<owned_message<T>> &incoming() {
-            return m_qMessageIn;
+            return m_qMessagesIn;
+        }
+
+        // Single shot update
+        void update(size_t nMaxMessages = -1, bool bWait = false) {  // set to maximum size_t by default
+            if (bWait)
+                m_qMessagesIn.wait();
+
+            size_t nMessageCount = 0;
+
+            while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
+                // Grab the front message
+                auto msg = m_qMessagesIn.pop_front();
+
+                // Pass to message handler
+                onMessage(msg.message);
+                nMessageCount++;
+            }
+        }
+
+    protected:
+        void updateHandler() {
+            while (m_bIsUpdating) {
+                update(-1, true);
+            }
         }
     };
 
