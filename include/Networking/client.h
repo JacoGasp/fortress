@@ -120,13 +120,12 @@ namespace fortress::net {
 
         void stopUpdating() {
             if (m_bIsUpdating) {
+                m_bIsUpdating = false;
                 m_qMessagesIn.stopWaiting();
 
                 if (m_updateThread.joinable())
                     m_updateThread.join();
 
-                m_bIsUpdating = false;
-                std::cout << "Stop updating";
             }
         }
 
