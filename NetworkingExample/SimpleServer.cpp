@@ -9,10 +9,10 @@
 
 using namespace fortress::net;
 
-class SimpleServer: public ServerInterface<MsgTypes> {
+class SimpleServer : public ServerInterface<MsgTypes> {
 public:
     explicit SimpleServer(uint16_t port)
-    : ServerInterface<MsgTypes>(port){}
+            : ServerInterface<MsgTypes>(port) {}
 
 protected:
     bool onClientConnect(std::shared_ptr<Connection<MsgTypes>> client) override {
@@ -30,25 +30,49 @@ protected:
 
     void onMessage(const std::shared_ptr<Connection<MsgTypes>> client, message<MsgTypes> &msg) override {
 
-         switch (msg.header.id) {
-             case MsgTypes::ServerPing: {
-                 std::cout << '[' << client->getID()  << "]: Server ping\n";
-                 //Simply bounce message back to client
-                 client->send(msg);
-             }
-             break;
+        switch (msg.header.id) {
+            case MsgTypes::ServerPing: {
+                std::cout << '[' << client->getID() << "]: Server ping\n";
+                //Simply bounce message back to client
+                client->send(msg);
+            }
+                break;
 
-             case MsgTypes::MessageAll: {
-                 std::cout << '[' << client->getID() << "]: Message All\n";
-                 message<MsgTypes> newMessage;
-                 newMessage.header.id = MsgTypes::ServerMessage;
-                 msg << client->getID();
-                 sendMessageToAllClients(msg, client);
-             }
+            case MsgTypes::ClientPing: {
+                std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+                std::chrono::system_clock::time_point timeThen;
+                msg >> timeThen;
+                std::cout << "Ping client [" << client->getID() << "]: "
+                          << std::chrono::duration<double>(timeNow - timeThen).count() * 1000
+                          << " ms.\n";
+            }
+                break;
 
-             default:
-                 std::cout << "???\n";
-         }
+            case MsgTypes::MessageAll: {
+                std::cout << '[' << client->getID() << "]: Message All\n";
+                message<MsgTypes> newMessage;
+                newMessage.header.id = MsgTypes::ServerMessage;
+                msg << client->getID();
+                sendMessageToAllClients(msg, client);
+            }
+
+            case MsgTypes::ClientMessage: {
+                message<MsgTypes> newMsg;
+                newMsg.header.id = ServerMessage;
+                std::ostringstream out;
+                for (auto ch : msg.body)
+                    if (ch != '\0')
+                        out << ch;
+
+                std::string s{"Hello, " + out.str() + '!'};
+                for (auto ch : s)
+                    newMsg << ch;
+                sendMessage(client, newMsg);
+            } break;
+
+            default:
+                std::cout << "???\n";
+        }
     }
 
     void onClientValidated(std::shared_ptr<Connection<MsgTypes>> client) override {
@@ -57,7 +81,19 @@ protected:
         newMessage << client->getID();
         sendMessage(client, newMessage);
     }
+
+public:
+    void pingAll() {
+        std::cout << "[SERVER]: Ping All\n";
+        message<MsgTypes> msg;
+        msg.header.id = ClientPing;
+
+        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+        msg << timeNow;
+        sendMessageToAllClients(msg);
+    }
 };
+
 
 void quitHandler(bool &shouldRun) {
     while (true) {
@@ -70,6 +106,14 @@ void quitHandler(bool &shouldRun) {
     }
 }
 
+void pingHelper(SimpleServer &server) {
+    while (true) {
+        server.pingAll();
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(2s);
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     ArgumentParser parser(argc, argv);
@@ -79,12 +123,15 @@ int main(int argc, char *argv[]) {
     SimpleServer server(parser.getValue<int>("port"));
     server.start();
 
-    bool shouldRun = true;
-    std::thread t{ quitHandler, std::ref(shouldRun)};
+//    auto pingThread{std::thread{pingHelper, std::ref(server)}};
 
-    while(shouldRun)
+    bool shouldRun = true;
+    std::thread t{quitHandler, std::ref(shouldRun)};
+
+    while (shouldRun)
         server.update(-1, true);
 
+//    pingThread.join();
     t.join();
 
     server.stop();

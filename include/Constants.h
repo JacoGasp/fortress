@@ -13,9 +13,13 @@ namespace fortress::net {
     enum MsgTypes : uint32_t {
         ServerAccept,
         ServerDeny,
+        ServerMessage,
         ServerPing,
-        MessageAll,
-        ServerMessage
+
+        ClientPing,
+        ClientMessage,
+
+        MessageAll
     };
 }
 

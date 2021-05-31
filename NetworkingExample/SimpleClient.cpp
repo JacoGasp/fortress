@@ -6,6 +6,8 @@
 #include "Networking/client.h"
 #include "Constants.h"
 #include "argparse.h"
+#include <thread>
+#include <atomic>
 
 using namespace fortress::net;
 
@@ -20,6 +22,13 @@ public:
 
         std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
         msg << timeNow;
+        send(msg);
+    }
+
+    void greeting() {
+        message<MsgTypes> msg;
+        msg.header.id = ClientMessage;
+        msg << "John";
         send(msg);
     }
 };
@@ -44,10 +53,63 @@ void quitHandler(bool &shouldRun) {
     }
 }
 
+std::atomic_bool bShouldListen = true;
+void listenHelper(SimpleClient &c) {
+    while (bShouldListen) {
+        if (c.isConnected()) {
+            if (!c.incoming().empty()) {
+                auto msg = c.incoming().pop_front().message;
+
+                switch (msg.header.id) {
+                    case MsgTypes::ServerAccept: {
+                        std::cout << "Server accepted\n";
+                        break;
+                    }
+
+                    case MsgTypes::ServerMessage: {
+                        std::cout << "Message from server: " << msg << ":\n";
+                        std::ostringstream out;
+                        for (auto ch: msg.body) {
+                            out << ch;
+                        }
+                        std::cout << out.str() << std::endl;
+                    } break;
+
+                    case MsgTypes::ServerPing: {
+                        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+                        std::chrono::system_clock::time_point timeThen;
+                        msg >> timeThen;
+                        std::cout << "Ping: " << std::chrono::duration<double>(timeNow - timeThen).count() * 1000
+                                  << " ms.\n";
+                    }
+                        break;
+
+                    case MsgTypes::ClientPing:
+                        c.send(msg);
+                        break;
+
+                    default:
+                        std::cout << "???\n";
+                }
+            }
+        }
+    }
+}
+
+char getCommand() {
+    std::cout << "Choose a command\n"
+    << "\t [p] ping\n"
+    << "\t [g] greeting\n"
+    << "\t [q] quit\n";
+    char c;
+    std::cin >> c;
+    return c;
+}
+
 int main(int argc, char *argv[]) {
 
     auto parser = ArgumentParser(argc, argv);
-    parser.addArgument("ip", "127.0.0.1");
+    parser.addArgument("ip", std::string {"127.0.0.1"});
     parser.addArgument("port", 60000);
 
     parser.parseArguments();
@@ -58,42 +120,21 @@ int main(int argc, char *argv[]) {
     SimpleClient c;
     c.connect(ip, port);
 
+    auto listen{std::thread(listenHelper, std::ref(c))};
 
-    bool bQuit = false;
-    std::thread t;
-    std::thread ping;
-
-    while (!bQuit) {
-
-        if (c.isConnected()) {
-            if (!c.incoming().empty()) {
-                auto msg = c.incoming().pop_front().message;
-
-                switch (msg.header.id) {
-                    case MsgTypes::ServerAccept: {
-                        std::cout << "Server accepted\n";
-                        t = std::thread{ quitHandler, std::ref(bQuit) };
-                        ping = std::thread{ pingThread, std::ref(c)};
-                        break;
-                    }
-                    case MsgTypes::ServerPing: {
-                        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-                        std::chrono::system_clock::time_point timeThen;
-                        msg >> timeThen;
-                        std::cout << "Ping: " << std::chrono::duration<double>(timeNow - timeThen).count() * 1000
-                                  << " ms.\n";
-                    }
-                        break;
-
-                    default:
-                        std::cout << "???\n";
-                }
-            }
+    char ch;
+    while ((ch = getCommand()) != 'q') {
+        switch(ch) {
+            case 'p':
+                c.pingServer();
+                break;
+            case 'g':
+                c.greeting();
+                break;
         }
     }
-    t.join();
-    ping.join();
-
+    bShouldListen = false;
+    listen.join();
 
     return 0;
 }
