@@ -59,14 +59,18 @@ protected:
             case MsgTypes::ClientMessage: {
                 message<MsgTypes> newMsg;
                 newMsg.header.id = ServerMessage;
+
                 std::ostringstream out;
+                out << "Hello";
+
                 for (auto ch : msg.body)
-                    if (ch != '\0')
                         out << ch;
 
-                std::string s{"Hello, " + out.str() + '!'};
-                for (auto ch : s)
+                out << '!';
+
+                for (auto ch : out.str())
                     newMsg << ch;
+
                 sendMessage(client, newMsg);
             } break;
 
@@ -110,7 +114,7 @@ void pingHelper(SimpleServer &server) {
     while (true) {
         server.pingAll();
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(2s);
+        std::this_thread::sleep_for(30s);
     }
 }
 
