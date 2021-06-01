@@ -125,12 +125,15 @@ namespace fortress::net {
         }
 
         void disconnect() {
-            if (isConnected())
-                asio::post(m_asioContext, [this]() {
-                    m_socket.shutdown(asio::socket_base::shutdown_both);
-                    m_socket.close();
-                    m_socket.release();
-                });
+            if (isConnected()) {
+                // Stop reading and writing data
+                m_socket.shutdown(asio::socket_base::shutdown_both);
+                // Give some times to finish reading possible incoming data
+                using namespace std::chrono_literals;
+                std::this_thread::sleep_for(200ms); // FIXME: check when all operations are done, instead
+                // Close the socket
+                m_socket.close();
+            }
         }
 
         [[nodiscard]] bool isConnected() const {
@@ -234,7 +237,7 @@ namespace fortress::net {
                                      }
                                  } else {
                                      std::cout << "[SERVER] Client Disconnected (readValidation): "
-                                     << ec.message() << std::endl;
+                                               << ec.message() << std::endl;
                                      m_socket.close();
                                  }
                              });
@@ -257,9 +260,7 @@ namespace fortress::net {
                                  } else if (ec.value() == asio::error::misc_errors::eof) {
                                      std::cout << "Peer disconnected" << std::endl;
                                      m_socket.close();
-                                 }
-
-                                 else {
+                                 } else {
                                      std::cout << '[' << m_id << "] Read header failed: " << ec.message() << '\n';
                                      m_socket.close();
                                  }

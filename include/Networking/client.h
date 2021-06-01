@@ -37,10 +37,6 @@ namespace fortress::net {
         ClientInterface() = default;
 
         virtual ~ClientInterface() {
-
-            if (m_bIsListening)
-                stopListening();
-
             disconnect();
         }
 
@@ -77,6 +73,9 @@ namespace fortress::net {
         }
 
         void disconnect() {
+
+            if (m_bIsListening)
+                stopListening();
 
             // Disconnect gracefully
             if (isConnected())
