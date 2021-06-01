@@ -18,6 +18,7 @@ namespace fortress::net {
 
         ClientPing,
         ClientMessage,
+        ClientDisconnect,
 
         MessageAll
     };

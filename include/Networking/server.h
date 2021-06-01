@@ -153,7 +153,7 @@ namespace fortress::net {
                     if (client != pIgnoreClient)
                         client->send(msg);
                 } else {
-                    onClientConnect(client);
+                    onClientDisconnect(client);
                     client.reset();
                     bInvalidClientExists = true;
                 }
@@ -194,7 +194,6 @@ namespace fortress::net {
 
     template<typename T>
     void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
-        std::cout << '[' << this->getID() << "] client validated" << std::endl;
         server->onClientValidated(this->shared_from_this());
     }
 }

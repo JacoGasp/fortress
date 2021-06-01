@@ -28,7 +28,7 @@ namespace fortress::net {
 
         std::thread m_updateThread;
 
-        std::atomic_bool m_bIsUpdating = false;
+        std::atomic_bool m_bIsListening = false;
 
     protected:
         virtual void onMessage(message<T> &msg) {};
@@ -38,19 +38,18 @@ namespace fortress::net {
 
         virtual ~ClientInterface() {
 
-            if (m_bIsUpdating)
-                stopUpdating();
+            if (m_bIsListening)
+                stopListening();
 
             disconnect();
         }
 
-        virtual void onConnect() {}
-
-        virtual void onClientValidate(fortress::net::ServerInterface<T> *server) {}
-
         bool connect(const std::string &host, const uint16_t port) {
             std::cout << "Connecting to server: " << host << ':' << port << '\n';
             try {
+                if (m_context.stopped())
+                    m_context.restart();
+
                 // Resolve hostname/ip-address into physical address
                 asio::ip::tcp::resolver resolver(m_context);
                 auto endpoints = resolver.resolve(host, std::to_string(port));
@@ -68,8 +67,6 @@ namespace fortress::net {
 
                 // Start the thread context
                 m_threadContext = std::thread([this]() { m_context.run(); });
-
-                onConnect();
 
             } catch (std::exception &e) {
                 std::cerr << "Client Exception: " << e.what() << "\n";
@@ -109,18 +106,18 @@ namespace fortress::net {
                 m_connection->send(msg);
         }
 
-        void startUpdating() {
-            if (!m_bIsUpdating) {
+        void startListening() {
+            if (!m_bIsListening) {
                 m_updateThread = std::thread{ &ClientInterface<T>::updateHandler, this};
-                m_bIsUpdating = true;
-                std::cout << "Start updating...\n";
+                m_bIsListening = true;
+                std::cout << "Start listening remote host...\n";
             } else
                 std::cout << "Updating already started";
         }
 
-        void stopUpdating() {
-            if (m_bIsUpdating) {
-                m_bIsUpdating = false;
+        void stopListening() {
+            if (m_bIsListening) {
+                m_bIsListening = false;
                 m_qMessagesIn.stopWaiting();
 
                 if (m_updateThread.joinable())
@@ -153,16 +150,16 @@ namespace fortress::net {
 
     protected:
         void updateHandler() {
-            while (m_bIsUpdating) {
+            while (m_bIsListening) {
                 update(-1, true);
             }
         }
     };
 
     template<typename T>
-    void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
-//        onClientValidate(server);
-    }
+    // Since we own an object of type Connection<T>, we need to provide an dummy implementation of the onClientValidated
+    // function (used only in server.h) to overcome linking errors.
+    void Connection<T>::onClientValidate([[maybe_unused]] fortress::net::ServerInterface<T> *server) {}
 
 }
 

@@ -9,6 +9,8 @@
 
 using namespace fortress::net;
 
+constexpr auto PING_FREQUENCY = std::chrono::seconds(10);
+
 class SimpleServer : public ServerInterface<MsgTypes> {
 public:
     explicit SimpleServer(uint16_t port)
@@ -16,23 +18,20 @@ public:
 
 protected:
     bool onClientConnect(std::shared_ptr<Connection<MsgTypes>> client) override {
-        std::cout << "Client " << client->getID() << " connected\n";
-
-        message<MsgTypes> newMessage;
-        newMessage.header.id = MsgTypes::ServerAccept;
+        std::cout << "[SERVER] New Client Connected\n";
 
         return true;
     }
 
     void onClientDisconnect(std::shared_ptr<Connection<MsgTypes>> client) override {
-        std::cout << "Client disconnected\n";
+        std::cout << '[' << client->getID() << "] Client Disconnected\n";
     }
 
     void onMessage(const std::shared_ptr<Connection<MsgTypes>> client, message<MsgTypes> &msg) override {
 
         switch (msg.header.id) {
             case MsgTypes::ServerPing: {
-                std::cout << '[' << client->getID() << "]: Server ping\n";
+                std::cout << '[' << client->getID() << "]: Server Ping\n";
                 //Simply bounce message back to client
                 client->send(msg);
             }
@@ -42,7 +41,7 @@ protected:
                 std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
                 std::chrono::system_clock::time_point timeThen;
                 msg >> timeThen;
-                std::cout << "Ping client [" << client->getID() << "]: "
+                std::cout <<  '[' << client->getID() << "] Ping: "
                           << std::chrono::duration<double>(timeNow - timeThen).count() * 1000
                           << " ms.\n";
             }
@@ -74,6 +73,10 @@ protected:
                 sendMessage(client, newMsg);
             } break;
 
+            case MsgTypes::ClientDisconnect: {
+                std::cout << '[' << client->getID() << "] Client Disconnects\n";
+            } break;
+
             default:
                 std::cout << "???\n";
         }
@@ -84,6 +87,7 @@ protected:
         newMessage.header.id = ServerAccept;
         newMessage << client->getID();
         sendMessage(client, newMessage);
+        std::cout << '[' << client->getID() << "] Client Validated" << std::endl;
     }
 
 public:
@@ -99,6 +103,7 @@ public:
 };
 
 std::atomic_bool shouldRun;
+std::atomic_bool bRunPingThread = false;
 
 void quitHandler() {
     while (shouldRun) {
@@ -106,16 +111,17 @@ void quitHandler() {
         std::cin >> c;
         if (c > 0) {
             shouldRun = false;
+            bRunPingThread = false;
             break;
         }
     }
 }
 
 void pingHelper(SimpleServer &server) {
-    while (true) {
+    while (bRunPingThread) {
         server.pingAll();
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(30s);
+        std::this_thread::sleep_for(PING_FREQUENCY);
     }
 }
 
@@ -129,11 +135,12 @@ int main(int argc, char *argv[]) {
     server.start();
 
     shouldRun = true;
-    std::thread t{quitHandler};
+    bRunPingThread = true;
+    std::thread quitThread{ quitHandler};
+    std::thread pingThread{pingHelper, std::ref(server)};
 
-
-//    pingThread.join();
-    t.join();
+    pingThread.join();
+    quitThread.join();
 
     server.stop();
 

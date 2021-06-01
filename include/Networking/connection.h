@@ -93,8 +93,8 @@ namespace fortress::net {
         }
 
     public:
-        // Implemented in server.h
-        void onClientValidate(fortress::net::ServerInterface<T> *server);
+        // Implemented in server.h only. Makes no sense in client.h
+        void onClientValidate([[maybe_unused]] fortress::net::ServerInterface<T> *server);
 
         void connectToClient(fortress::net::ServerInterface<T> *server, uint32_t uid = 0) {
 
@@ -115,6 +115,9 @@ namespace fortress::net {
                                     [this](std::error_code ec, const asio::ip::tcp::endpoint &endpoint) {
                                         if (!ec) {
                                             readValidation();
+                                        } else {
+                                            std::cout << "Failed to connect to server: " << ec.message() << std::endl;
+                                            m_socket.close();
                                         }
                                     });
             }
@@ -123,7 +126,11 @@ namespace fortress::net {
 
         void disconnect() {
             if (isConnected())
-                asio::post(m_asioContext, [this]() { m_socket.close(); });
+                asio::post(m_asioContext, [this]() {
+                    m_socket.shutdown(asio::socket_base::shutdown_both);
+                    m_socket.close();
+                    m_socket.release();
+                });
         }
 
         [[nodiscard]] bool isConnected() const {
@@ -144,8 +151,6 @@ namespace fortress::net {
                     writeHeader();
             });
         }
-
-        void reset() {}
 
 
     private:
@@ -210,24 +215,26 @@ namespace fortress::net {
                              [this, server](std::error_code ec, std::size_t length) {
                                  if (!ec) {
                                      if (m_ownerType == owner::server) {
-                                        if (m_nHandshakeIn == m_nHandshakeCheck) {
-                                            // Client provided valid handshake
-                                            onClientValidate(server);
+                                         if (m_nHandshakeIn == m_nHandshakeCheck) {
+                                             // Client provided valid handshake
+                                             onClientValidate(server);
 
-                                            // Sit waiting to receive data now
-                                            readHeader();
-                                        } else {
-                                            // Handshake failed
-                                            std::cout << "[SERVER] Client Disconnected (Failed Validation)" << std::endl;
-                                            m_socket.close();
-                                        }
+                                             // Sit waiting to receive data now
+                                             readHeader();
+                                         } else {
+                                             // Handshake failed
+                                             std::cout << "[SERVER] Client Disconnected (Failed Validation)"
+                                                       << std::endl;
+                                             m_socket.close();
+                                         }
                                      } else {
                                          // Connection is client, resolve handshake
                                          m_nHandshakeOut = scramble(m_nHandshakeIn);
                                          writeValidation();
                                      }
                                  } else {
-                                     std::cout << "[SERVER] Client Disconnected (readValidation)" << std::endl;
+                                     std::cout << "[SERVER] Client Disconnected (readValidation): "
+                                     << ec.message() << std::endl;
                                      m_socket.close();
                                  }
                              });
@@ -247,7 +254,12 @@ namespace fortress::net {
                                          addToIncomingMessageQueue();
                                      }
 
-                                 } else {
+                                 } else if (ec.value() == asio::error::misc_errors::eof) {
+                                     std::cout << "Peer disconnected" << std::endl;
+                                     m_socket.close();
+                                 }
+
+                                 else {
                                      std::cout << '[' << m_id << "] Read header failed: " << ec.message() << '\n';
                                      m_socket.close();
                                  }

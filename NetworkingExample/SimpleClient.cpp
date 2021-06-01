@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     SimpleClient c;
     c.connect(ip, port);
 
-    c.startUpdating();
+    c.startListening();
 
     char ch;
     while ((ch = getCommand()) != 'q') {
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
                 std::cout << "Unknown command\n";
         }
     }
-    c.stopUpdating();
+    c.stopListening();
 
     return 0;
 }
