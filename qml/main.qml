@@ -7,28 +7,15 @@ import QtQuick.Window 2.2
 import com.fortress.backend 1.0
 
 ApplicationWindow {
-    id: window
+    id: root
     visible: true
     width: 1200
     height: 840
-    title: {qsTr("Minimal Qml")}
+    title: {qsTr("Fortress")}
     color: "#373A3C"
 
     property bool isRunning: false
     readonly property int margins: 16
-
-    function start() {
-        window.isRunning = true
-        console.log("start")
-        backend.startUpdate()
-
-    }
-
-    function stop() {
-        isRunning = false
-        console.log("stop")
-        backend.stopUpdate()
-    }
 
     MenuBar {
         id: menuBar
@@ -57,52 +44,30 @@ ApplicationWindow {
         }
     }
 
-
     header: FRToolBar {
-
+        id: headerId
+        backend: backend
     }
 
-
-    Rectangle {
-        id: menuBarRec
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: margins
-        height: 50
-        color: "#55595C"
-    }
 
     Rectangle {
         id: background
         anchors.fill: parent
         color: "white"
-    }
 
-    Button {
-        id: button
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 15
-        x: 300
-        y: 400 - 80
-        text: {!isRunning ? "start" : "stop"}
-        onClicked: {!isRunning ? start() : stop()}
+        Gauge {
+            id: gauge1
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 
 
-    Gauge {
-        id: gauge1
-        anchors.top: menuBar.bottom
-        anchors.right: parent.right
-        anchors.margins: margins
-
-    }
 
     Backend {
         id: backend
-        onValueChanged: {
-            gauge1.value = this.value
+        onPingReceived: {
+            gauge1.value = this.dPingValue
         }
     }
 }

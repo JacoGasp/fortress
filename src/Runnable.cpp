@@ -12,8 +12,7 @@ void Runnable::run() {
 
     while (m_isRunning) {
         m_number++;
-        QMetaObject::invokeMethod(m_receiver, "setNumber", Qt::QueuedConnection, Q_ARG(int, m_number));
-        QThread::msleep(10);
+        QMetaObject::invokeMethod(m_receiver, "update", Qt::QueuedConnection);
     }
 }
 

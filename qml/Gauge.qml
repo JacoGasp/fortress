@@ -8,14 +8,14 @@ Rectangle {
     color: "#55595C"
     radius: 5
 
-    readonly property var backgroundColor: "#58555A"
+    readonly property string backgroundColor: "#817D85"
     readonly property var colorA: {hexToRgb("#2F9E69")}
     readonly property var colorB: {hexToRgb("#fcba03")}
     readonly property var colorC: {hexToRgb("#eb3434")}
-    readonly property var lineWidth: 15
-    readonly property var innerRadius: 15
+    readonly property int lineWidth: 15
+    readonly property int innerRadius: 15
 
-    readonly property var maxValue: 50
+    readonly property real maxValue: 2
     property var value
     property var currentColor: {Qt.rgba(0, 0, 0, 0)}
 
@@ -73,7 +73,7 @@ Rectangle {
             c.strokeStyle = currentColor
             c.globalAlpha = 1
 
-            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0, Math.PI * 3/2 * root.value)
+            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0, Math.PI * 3/2 * root.value / maxValue)
             c.stroke()
         }
     }
@@ -83,10 +83,10 @@ Rectangle {
         anchors.centerIn: parent
         font.family: "Helvetica"
         font.pointSize: 48
-        color: currentColor
+        color: isNaN(value) ? backgroundColor : currentColor
         horizontalAlignment: Text.AlignHCenter
-        text: { (value * maxValue).toFixed(1) }
-
+//        text: { (value * maxValue).toFixed(1) }
+        text: isNaN(value) ? "--" : value.toFixed(1)
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 80

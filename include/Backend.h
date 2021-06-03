@@ -8,18 +8,33 @@
 #include <QObject>
 #include <QThreadPool>
 #include <iostream>
+#include <thread>
 #include "Runnable.h"
+#include "Networking/client.h"
+#include "Constants.h"
 
-class Backend : public QObject {
+using namespace fortress::net;
+
+class Backend : public QObject, public ClientInterface<MsgTypes> {
 Q_OBJECT
     Q_PROPERTY(double value READ getValue NOTIFY valueChanged)
+    Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
+    Q_PROPERTY(double dPingValue READ getLastPingValue NOTIFY pingReceived)
 
 private:
     int m_t{};
     double m_value{};
     Runnable *m_runnable;
 
+    double m_lastPingValue{ std::numeric_limits<double>::infinity() };
+    bool m_isPinging { false };
+    std::thread m_pingThread;
+    static constexpr std::chrono::seconds PING_DELAY {1};
+
 public:
+    // Avoid name collision with multiple inheritance
+    using ClientInterface<MsgTypes>::connect;
+
     explicit Backend(QObject *parent = nullptr);
 
     ~Backend() override;
@@ -28,8 +43,24 @@ public:
 
     Q_INVOKABLE void stopUpdate();
 
+    Q_INVOKABLE bool connectToHost(const QString &host, uint16_t port);
+
+    Q_INVOKABLE void disconnectFromHost();
+
+    Q_INVOKABLE void sendGreetings();
+
+    Q_INVOKABLE void togglePingUpdate();
+
+    void onMessage(message<MsgTypes> &msg) override;
+
+    // Accessors
+
     [[nodiscard]] double getValue() const;
 
+    [[nodiscard]] double getLastPingValue() const;
+
+private:
+    void pingHandler();
 
 // Listen for events
 public slots:
@@ -38,7 +69,12 @@ public slots:
 
 // Emit signals
 signals:
+
     void valueChanged(double);
+
+    void connectionStatusChanged(bool);
+
+    void pingReceived(double);
 
 };
 
