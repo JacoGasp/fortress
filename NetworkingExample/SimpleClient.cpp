@@ -72,6 +72,7 @@ char getCommand() {
     std::cout << "Choose a command\n"
     << "\t [p] ping\n"
     << "\t [g] greeting\n"
+    << "\t [d] disconnect\n"
     << "\t [q] quit\n";
     char c;
     std::cin >> c;
@@ -102,6 +103,10 @@ int main(int argc, char *argv[]) {
                 break;
             case 'g':
                 c.greeting();
+                break;
+
+            case 'd':
+                c.disconnect();
                 break;
 
             default:
