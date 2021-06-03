@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     shouldRun = true;
     bRunPingThread = true;
     std::thread quitThread{ quitHandler};
-    std::thread pingThread{pingHelper, std::ref(server)};
+    std::thread pingThread{ pingHelper, std::ref(server)};
 
     pingThread.join();
     quitThread.join();
