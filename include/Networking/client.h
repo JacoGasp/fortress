@@ -37,7 +37,8 @@ namespace fortress::net {
         ClientInterface() = default;
 
         virtual ~ClientInterface() {
-            disconnect();
+            if (isConnected())
+                disconnect();
         }
 
         bool connect(const std::string &host, const uint16_t port) {
