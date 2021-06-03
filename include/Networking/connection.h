@@ -126,14 +126,21 @@ namespace fortress::net {
 
         void disconnect() {
             if (isConnected()) {
-                // Stop reading and writing data
-                m_socket.shutdown(asio::socket_base::shutdown_both);
-                // Give some times to finish reading possible incoming data
-                using namespace std::chrono_literals;
-                std::this_thread::sleep_for(200ms); // FIXME: check when all operations are done, instead
-                // Close the socket
-                m_socket.close();
+                asio::post(m_asioContext, [this]() {
+
+                    // If there are messages in queues, run all ready handler to finishing reading/writing
+                    while (!m_qMessagesIn.empty() || !m_qMessagesOut.empty()) {
+                        m_asioContext.poll();
+                    }
+
+                    // Stop reading and writing data
+                    m_socket.shutdown(asio::socket_base::shutdown_both);
+                });
             }
+        }
+
+        void closeSocket() {
+            m_socket.close();
         }
 
         [[nodiscard]] bool isConnected() const {
@@ -186,9 +193,15 @@ namespace fortress::net {
                                           if (!m_qMessagesOut.empty())
                                               writeHeader();
                                       }
-                                  } else {
-                                      std::cout << '[' << m_id << "] Write header failed: " << ec.message() << '\n';
-                                      m_socket.close();
+                                      return;
+                                  }
+
+                                  switch (ec.value()) {
+                                      case asio::error::broken_pipe:
+                                          std::cout << "Pipe closed\n";
+                                          break;
+                                      default:
+                                          std::cout << '[' << m_id << "] Write header failed: " << ec.message() << '\n';
                                   }
                               });
         }
@@ -259,7 +272,6 @@ namespace fortress::net {
 
                                  } else if (ec.value() == asio::error::misc_errors::eof) {
                                      std::cout << "Peer disconnected" << std::endl;
-                                     m_socket.close();
                                  } else {
                                      std::cout << '[' << m_id << "] Read header failed: " << ec.message() << '\n';
                                      m_socket.close();
@@ -298,7 +310,7 @@ namespace fortress::net {
 
         // Encrypt data
         uint16_t scramble(uint16_t nInput) {
-            uint64_t out = nInput ^0xDEADBEEFC0DECADE;
+            uint64_t out = nInput ^ 0xDEADBEEFC0DECADE;
             out = (out & 0xF0F0F0F0F0F0F0) >> 4 | (out & 0xF0F0F0F0F0F0F0 << 4);
             return out ^ 0xC0DEFACE12345678;
         }

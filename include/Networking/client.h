@@ -43,6 +43,8 @@ namespace fortress::net {
         bool connect(const std::string &host, const uint16_t port) {
             std::cout << "Connecting to server: " << host << ':' << port << '\n';
             try {
+
+                // It should never be the case
                 if (m_context.stopped())
                     m_context.restart();
 
@@ -82,11 +84,14 @@ namespace fortress::net {
                 m_connection->disconnect();
 
             // Stop the context
-            m_context.stop();
+            m_context.restart();
 
-            // Stop context thread
+            // Stop the context thread and wait until it finishes
             if (m_threadContext.joinable())
                 m_threadContext.join();
+
+            // Close the socket only after the all async work is completed
+            m_connection->closeSocket();
 
             // Destroy the connection
             m_connection.release();

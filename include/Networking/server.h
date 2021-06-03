@@ -78,12 +78,6 @@ namespace fortress::net {
         }
 
         void stop() {
-            m_asioContext.stop();
-
-            // Clean the context thread
-            if (m_threadContext.joinable())
-                m_threadContext.join();
-
             if (m_bIsUpdating) {
                 m_bIsUpdating = false;
                 m_qMessagesIn.stopWaiting();
@@ -92,6 +86,14 @@ namespace fortress::net {
                     m_updateThread.join();
                 }
             }
+
+            m_asioContext.stop();
+
+            // Clean the context thread
+            if (m_threadContext.joinable())
+                m_threadContext.join();
+
+            std::cout << "[SERVER] stopped!\n";
         }
 
         void waitForClientConnection() {
@@ -124,7 +126,7 @@ namespace fortress::net {
                             std::cout << "[SERVER] New Connection Error: " << ec.message() << '\n';
                         }
 
-                        // Prime th asio context with more work - again simply wait for another connection...
+                        // Prime the asio context with more work - again simply wait for another connection...
                         waitForClientConnection();
                     });
         }
