@@ -89,12 +89,7 @@ jobs:
           string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
           file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
-
-
-
-
-
       - name: Configure
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" ../
+          cmake -DCMAKE_PREFIX_PATH="${qt_name}/${qt_version}/lib/cmake" ../
