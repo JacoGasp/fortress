@@ -32,6 +32,7 @@ jobs:
           endif()
 
       - name: Download Qt
+        shell: cmake -P {0}
         run: | # Cmake script:
           set(qt_version $ENV{QT_VERSION})
           string(REPLACE "." "" qt_version_dotless "${qt_version}")
