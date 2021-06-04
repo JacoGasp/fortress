@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Installing system libraries
+        shell: cmake -P {0}
         run: |
           if ("${{ runner.os }}" STREQUAL "Linux")
             execute_process(
