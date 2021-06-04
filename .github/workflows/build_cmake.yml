@@ -82,10 +82,12 @@ jobs:
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY "${qt_name}")
           endforeach()
           
-          file(GLOB files "${qt_name}/*")
-          foreach(file ${files})
-            message(${file})
-          endforeach()
+          file(READ "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" qtconfig)
+          string(REPLACE "Enterprise" "OpenSource" qtconfig "${qtconfig}")
+          string(REPLACE "licheck.exe" "" qtconfig "${qtconfig}")
+          string(REPLACE "licheck64" "" qtconfig "${qtconfig}")
+          string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
+          file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
 
 
