@@ -15,7 +15,7 @@ Rectangle {
     readonly property int lineWidth: 15
     readonly property int innerRadius: 15
 
-    readonly property real maxValue: 2
+    readonly property real maxValue: 50
     property var value
     property var currentColor: {Qt.rgba(0, 0, 0, 0)}
 
@@ -36,9 +36,9 @@ Rectangle {
 
     function colorGrade (cA, cB) {
 
-        var r = cA.r + value * (cB.r - cA.r)
-        var g = cA.g + value * (cB.g - cA.g)
-        var b = cA.b + value * (cB.b - cA.b)
+        var r = cA.r + value / maxValue * (cB.r - cA.r)
+        var g = cA.g + value / maxValue * (cB.g - cA.g)
+        var b = cA.b + value / maxValue * (cB.b - cA.b)
 
         return Qt.rgba(r, g, b, 1)
     }
