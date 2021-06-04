@@ -74,6 +74,7 @@ jobs:
 
           # Save the path for other steps
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${qt_name}/${qt_dir_prefix}" qt_dir)
+          set(ENV{QT_DIR} ${qt_dir})
           message("::set-output name=qt_dir::${qt_dir}")
     
           foreach(package qtbase qtdeclarative qttools qtquick)
