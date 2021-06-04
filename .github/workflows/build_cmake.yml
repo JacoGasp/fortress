@@ -91,3 +91,10 @@ jobs:
 
 
 
+
+
+
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" ../
