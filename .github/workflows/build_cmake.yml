@@ -18,7 +18,7 @@ jobs:
         config: 
           - name: "Linux Latest x64"
             artifact: "Linux-x64.zip"
-            on: linux-latest
+            os: linux-latest
     steps:
       - uses: actions/checkout@v2
       
