@@ -32,6 +32,7 @@ jobs:
           endif()
 
       - name: Download Qt
+        id: qt
         shell: cmake -P {0}
         run: | # Cmake script:
           set(qt_version $ENV{QT_VERSION})
@@ -74,7 +75,6 @@ jobs:
 
           # Save the path for other steps
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${qt_name}/${qt_dir_prefix}" qt_dir)
-          set(ENV{QT_DIR} ${qt_dir})
           message("::set-output name=qt_dir::${qt_dir}")
     
           foreach(package qtbase qtdeclarative qttools qtquick)
@@ -93,4 +93,4 @@ jobs:
       - name: Configure
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_PREFIX_PATH="${{ env.QT_DIR }}/lib/cmake" ../
+          cmake -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" ../
