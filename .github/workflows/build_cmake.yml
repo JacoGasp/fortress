@@ -80,14 +80,11 @@ jobs:
             file(DOWNLOAD "${qt_base_url}/${qt_package_name}/${package_version}${package}${package_suffix}.7z" "./${package}.7z" SHOW_PROGRESS)
             execute_process(COMMAND ${CAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY ${qt_name})
           endforeach()
-
-          file(READ "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" qtconfig)
-          string(REPLACE "Enterprise" "OpenSource" qtconfig "${qtconfig}")
-          string(REPLACE "licheck.exe" "" qtconfig "${qtconfig}")
-          string(REPLACE "licheck64" "" qtconfig "${qtconfig}")
-          string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
-          file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
-
+          
+          file(GLOB files "*")
+          foreach(file ${files})
+            message(${file})
+          endforeach()
 
 
 
