@@ -81,7 +81,7 @@ jobs:
             execute_process(COMMAND ${CAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY ${qt_name})
           endforeach()
           
-          file(GLOB files "*")
+          file(GLOB files "${qt_name}")
           foreach(file ${files})
             message(${file})
           endforeach()
