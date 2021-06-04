@@ -53,8 +53,8 @@ jobs:
           # Download the manifest file to read which packages are available to download
           file(DOWNLOAD "${qt_base_url}/Updates.xml" ./Updates.xml SHOW_PROGRESS)
           string(REGEX MATCH "<Name>${qt_package_name}.*<Version>([0-9+-.]+)</Version>.*<DownloadableArchives>qtbase([a-zA-Z0-9_-]+).7z")
-          set(package_version, ${CMAKE_MATCH_1})
-          set(package_suffix, ${CMAKE_MATCH_2})
+          set(package_version ${CMAKE_MATCH_1})
+          set(package_suffix ${CMAKE_MATCH_2})
           string(REPLACE "-debug-symbols" "" package_suffix "${package_suffix"})
 
           # Workaround for CMake's greedy regex (WinOnly)
