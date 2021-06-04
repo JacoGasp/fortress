@@ -93,4 +93,4 @@ jobs:
       - name: Configure
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_PREFIX_PATH="${{ env.QT_NAME }}/${{ env.QT_VERSION }}/lib/cmake" ../
+          cmake -DCMAKE_PREFIX_PATH="${{ env.QT_DIR }}/lib/cmake" ../
