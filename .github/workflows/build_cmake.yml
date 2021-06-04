@@ -35,19 +35,19 @@ jobs:
         shell: cmake -P {0}
         run: | # Cmake script:
           set(qt_version $ENV{QT_VERSION})
+          set(qt_name $ENV{QT_NAME})
+
           string(REPLACE "." "" qt_version_dotless "${qt_version}")
 
-          if ("${{ runner.os }}" STREQUAL "Linux")
+          if ("Linux" STREQUAL "Linux")
            set(url_os "linux_x64")
            set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.gcc_64")
            set(qt_dir_prefix "${qt_version}/gcc_64")
-
           elseif ("${{ runner.os }}" STREQUAL "macOS")
            set(url_os "mac_x64")
            set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.clang_64")
            set(qt_dir_prefix "${qt_version}/clang_64")
            endif()
-
           set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/${QT_MAJOR_V}_${qt_version_dotless}")
 
           # Download the manifest file to read which packages are available to download
@@ -55,21 +55,20 @@ jobs:
           string(REGEX MATCH "<Name>${qt_package_name}.*<Version>([0-9+-.]+)</Version>.*<DownloadableArchives>qtbase([a-zA-Z0-9_-]+).7z")
           set(package_version ${CMAKE_MATCH_1})
           set(package_suffix ${CMAKE_MATCH_2})
-          string(REPLACE "-debug-symbols" "" package_suffix "${package_suffix"})
+          string(REPLACE "-debug-symbols" "" package_suffix "${package_suffix}")
 
           # Workaround for CMake's greedy regex (WinOnly)
+
           if ("${{ matrix.config.environment_script }}" MATCHES "vcvars32.bat")
             string(REPLACE "X86_64" "X86" package_suffix "${package_suffix}")
           endif()
-
           file(MAKE_DIRECTORY ${qt_name})
 
           # Save the path for other steps
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${qt_name}/${qt_dir_prefix}" qt_dir)
           message("::set-output name=qt_dir::${qt_dir}")
 
-          # Download all packages
-          foreach(DOWNLOAD "${qt_base_url}/${qt_package_name}/${package_version}${package}$packge_suffix}.7z" ./${package}.7z" SHOW_PROGRESS)
+          foreach(DOWNLOAD "${qt_base_url}/${qt_package_name}/${package_version}${package}$packge_suffix}.7z" "./${package}.7z" SHOW_PROGRESS)
            execute_command(COMMAND ${CAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY ${qt_name})
           endforeach()
 
@@ -79,6 +78,7 @@ jobs:
           string(REPLACE "licheck64" "" qtconfig "${qtconfig}")
           string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
           file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
+
 
 
 
