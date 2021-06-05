@@ -121,7 +121,6 @@ jobs:
           foreach (artifact desktop_app_artifact server_app_artifact)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar cvf ${artifact} --format=zip "${artifact}.zip"
               WORKING_DIRECTORY $ENV{OUTPUT_DIR})
-            )
           endforeach()
           
           file(GLOB "$ENV{OUTPUT_DIR}/*" files)
