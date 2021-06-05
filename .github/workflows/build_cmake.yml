@@ -104,7 +104,7 @@ jobs:
         shell: cmake -P {0}
         run: |
           # TODO: fix for linux
-          set(ENV{PATH} "${{ steps.qt.outputs.qt_dir }}/bin/:$ENV{PATH}")
+          set(ENV{PATH} "${{ steps.qt.outputs.qt_dir }}/bin:$ENV{PATH}")
           set(ENV{LD_LIBRARY_PATH} "${{ steps.qt.outputs.qt_dir }}/lib:$ENV{LD_LIBRARY_PATH}")
           
           include(ProcessorCount)
