@@ -107,7 +107,7 @@ jobs:
           ProcessorCount(N)
           
           set(make_cmd make -j ${N})
-          execute_process(COMMAND ${make_program} RESULT_VARIABLE result)
+          execute_process(COMMAND ${make_cmd} RESULT_VARIABLE result)
           
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status")
