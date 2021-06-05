@@ -9,6 +9,10 @@ env:
   QT_NAME: qt6
   QT_VERSION: 6.0.2
   
+  DESKTOP_APP_NAME: Fortress
+  SERVER_APP_NAME:  SimpleServer
+  OUTPUT_DIR: ${GITHUB_WORKSPACE}/output
+  
 jobs:
   build:
     name: ${{ matrix.config.name }}
@@ -94,3 +98,33 @@ jobs:
         run: |
           mkdir build && cd build
           cmake -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" ../
+          
+          
+      - name: Build
+        shell: cmake -P {0}
+        run: |
+          include(ProcessorCount)
+          ProcessorCount(N)
+          
+          set(make_cmd make -j ${N})
+          execute_process(COMMAND ${make_program} RESULT_VARIABLE result)
+          
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status")
+          endif()
+          
+          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/$ENV{DESKTOP_APP_NAME}-${{ matrix.config.artifact }}" desktop_app_artifact)
+          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/$ENV{SERVER_APP_NAME}-${{ matrix.config.artifact }}" server_app_artifact)
+          
+          file(MAKE_DIR $ENV{OUTPUT_DIR})
+          
+          foreach (artifact desktop_app_artifact server_app_artifact)
+            execute_process(COMMAND ${CMAKE_COMMAND} -E tar cvf ${artifact} --format=zip "${artifact}.zip"
+              WORKING_DIRECTORY $ENV{OUTPUT_DIR})
+            )
+          endforeach()
+          
+          file(GLOB "$ENV{OUTPUT_DIR}/*" files)
+          foreach(file ${files})
+            message(${file})
+          endforeach()
