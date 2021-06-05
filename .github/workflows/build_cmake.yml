@@ -103,6 +103,9 @@ jobs:
       - name: Build
         shell: cmake -P {0}
         run: |
+          # TODO: fix for linux
+          set(ENV{PATH} "${{ steps.qt.outputs.qt_dir }}/bin/:$ENV{PATH}")
+          
           include(ProcessorCount)
           ProcessorCount(N) 
           
