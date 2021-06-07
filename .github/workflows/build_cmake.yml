@@ -27,7 +27,7 @@ jobs:
             artifact: "Linux-x64.tar.gz"
             os: ubuntu-latest
           - name: "macOS Latest x64"
-            artifact: "macOS-x64.dmg"
+            artifact: "macOS-x64.zip"
             os: macos-latest
     steps:
       - uses: actions/checkout@v2
