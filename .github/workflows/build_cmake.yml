@@ -214,8 +214,8 @@ jobs:
     - id: set_upload_url
       run: |
         upload_url=`cat ./upload_url`
-        echo ${upload_url}
         echo ::set-output name=upload_url::$upload_url
+        ls
     
     - name: Upload to Release
       id: upload_to_release_linux
@@ -224,7 +224,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-        asset_path: ./${{ matrix.config.artifact }}
+        asset_path: ${{ matrix.config.artifact }}
         asset_name: ${{ matrix.config.artifact }}
         asset_content_type: application/zip
     
