@@ -27,7 +27,7 @@ jobs:
             artifact: "Linux-x64.tar.gz"
             os: ubuntu-latest
           - name: "macOS Latest x64"
-            artifact: "macOS-x64.zip"
+            artifact: "macOS-x64.dmg"
             os: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -145,12 +145,9 @@ jobs:
           if [ $RUNNER_OS == "Linux" ]; then
             ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${client_bundle_dir}
           elif [ "$RUNNER_OS" == macOS ]; then
-            ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml
-            
-            # Fix macdeployqt not copying this framework
+           # Fix macdeployqt not copying this framework
             cp -r ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
-            chmod +x ./build/app/Fortress.app/Contents/MacOS/Fortress
-            chmod +x ./build/NetworkingExample/SimpleServer
+            ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml -dmg
             mv ./build/app/Fortress.app ${client_bundle_dir}
             mv ./build/NetworkingExample/SimpleServer ${server_bundle_dir}
           fi
@@ -175,3 +172,70 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
+
+    - name: Store Release URL
+      run: |
+        echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
+
+    - uses: actions/upload-artifact@v1
+      with:
+        path: ./upload_url
+        name: upload_url
+
+  publish:
+    if: contains(github.ref, 'tags/v')
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - name: "Linux Latest x64"
+            artifact: Linux-x64.tar.gz
+            os: ubuntu-latest
+          - name: "macOS Latest x64"
+            artifact: "macOS-x64.dmg"
+            os: ubuntu-latest
+    needs: release
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: ${{ matrix.config.artifact }}
+        path: ./
+    
+    - name: Download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: upload_url
+        path: ./
+    
+    - id: set_upload_url
+      run: |
+        upload_url=`cat ./upload_url`
+    
+    - name: Upload to Release
+      id: upload_to_release
+      if: ${{ matrix.config.artifact }} == "Linux-x64.tar.gz"
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
+        asset_path: ./${{ matrix.config.artifact }}
+        asset_name: ./${{ matrix.config.artifact }}
+        asset_content_type: application/tar+gzip
+    
+    - name: Upload to Release
+      id: upload_to_release
+      if: ${{ matrix.config.artifact }} == "macOS-x64.dmg"
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
+        asset_path: ./${{ matrix.config.artifact }}
+        asset_name: ./${{ matrix.config.artifact }}
+        asset_content_type: application/x-apple-diskimage
+    
