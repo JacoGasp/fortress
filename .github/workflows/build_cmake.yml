@@ -137,6 +137,7 @@ jobs:
 
           execute_process(
             COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${{ runner.os }}/client
+            COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/NetworkingExample/SimpleServer -targetDir ${{ runner.os }}/server
             )
 
       - uses: actions/upload-artifact@v2
