@@ -129,19 +129,33 @@ jobs:
           endif()
     
       - name: Bundle
-        shell: cmake -P {0}
         run: |
-          file(MAKE_DIRECTORY ${{ runner.os }})
-          file(MAKE_DIRECTORY ${{ runner.os }}/server)
-          file(MAKE_DIRECTORY ${{ runner.os }}/client)
+          mkdir ${{ runner.os }}
+          mkdir ${{ runner.os }}/server
+          mkdir ${{ runner.os }}/client
 
-          execute_process(
-            COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${{ runner.os }}/client
-            COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/NetworkingExample/SimpleServer -targetDir ${{ runner.os }}/server
-            )
+          if [ $RUNNER_OS == "Linux" ]; then
+            ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${{ runner.os }}/client
+            ./cqtdeployer/cqtdeployer.sh -bin ./build/NetworkingExample/SimpleServer -targetDir ${{ runner.os }}/server
+          fi
 
       - uses: actions/upload-artifact@v2
         id: upload_artifact
         with:
           path: ./${{ runner.os }}
           name: ${{ matrix.config.artifact }}
+
+    release:
+      if: contains(github.ref, 'tags/v')
+      runs-on: ubuntu-latest
+      needs: build
+
+      steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
