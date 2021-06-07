@@ -144,7 +144,7 @@ jobs:
           elif [ "$RUNNER_OS" == macOS ]; then
             ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml
             mv ./build/app/Fortress.app ${client_bundle_dir}
-            mv ./build/NetorkingExample/SimpleServer.app ${server_bundle_dir}
+            mv ./build/NetworkingExample/SimpleServer.app ${server_bundle_dir}
           fi
 
       - uses: actions/upload-artifact@v2
