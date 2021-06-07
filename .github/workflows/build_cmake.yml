@@ -21,19 +21,22 @@ jobs:
       matrix:
         config: 
           - name: "Linux Latest x64"
-            artifact: "Linux-x64.zip"
+            artifact: "Linux-x64.tar.gz"
             os: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Installing system libraries
-        shell: cmake -P {0}
+
+      - name: Installing Dependency
+        shell: bash
         run: |
-          if ("${{ runner.os }}" STREQUAL "Linux")
-            execute_process(
-              COMMAND sudo apt install libgl1-mesa-dev libasio-dev -y
-            )
-          endif()
+          if [ "$RUNNER_OS" == Linux ]; then
+            sudo apt update
+            sudo apt install -y libgl1-mesa-dev libasio-dev libxkbcommon-x11-0 cmake
+            wget https://github.com/QuasarApp/CQtDeployer/releases/download/1.5.1/CQtDeployer_1.5.1_Linux64.zip 
+            unzip CQtDeployer*.zip -d cqtdeployer
+            chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
+          fi
+         
 
       - name: Download Qt
         id: qt
@@ -41,7 +44,6 @@ jobs:
         run: | # Cmake script:
           set(qt_version $ENV{QT_VERSION})
           set(qt_name $ENV{QT_NAME})
-
           string(REPLACE "." "" qt_version_dotless "${qt_version}")
 
           if ("${{ runner.os }}" STREQUAL "Linux")
@@ -86,27 +88,36 @@ jobs:
             file (DOWNLOAD "${qt_base_url}/${qt_package_name}/${package_version}${package}${package_suffix}.7z" "./${package}.7z" SHOW_PROGRESS)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY "${qt_name}")
           endforeach()
+
+          # uic depends on libicu56.so
+          if ("${{ runner.os }}" STREQUAL "Linux")
+            file(DOWNLOAD 
+              "${qt_base_url}/${qt_package_name}/${package_version}icu-linux-Rhel7.2-x64.7z" 
+              "./icu.7z" SHOW_PROGRESS)
+              execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../icu.7z WORKING_DIRECTORY "${qt_name}")
+          endif()
           
           file(READ "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" qtconfig)
           string(REPLACE "Enterprise" "OpenSource" qtconfig "${qtconfig}")
           string(REPLACE "licheck.exe" "" qtconfig "${qtconfig}")
-          string(REPLACE "licheck64" "" qtconfig "${qtconfig}")
+          string(REPLACE "licheck64" "" qtconfig "${qtconfg}")
           string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
           file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
       - name: Configure
         run: |
           mkdir build && cd build
+          # TODO: fix for linux
+
+          export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
+          export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
+
           cmake -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" ../
           
           
       - name: Build
         shell: cmake -P {0}
         run: |
-          # TODO: fix for linux
-          set(ENV{PATH} "${{ steps.qt.outputs.qt_dir }}/bin:$ENV{PATH}")
-          set(ENV{LD_LIBRARY_PATH} "${{ steps.qt.outputs.qt_dir }}/lib:$ENV{LD_LIBRARY_PATH}")
-          
           include(ProcessorCount)
           ProcessorCount(N) 
           
@@ -116,18 +127,22 @@ jobs:
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status")
           endif()
-          
-          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/$ENV{DESKTOP_APP_NAME}-${{ matrix.config.artifact }}" desktop_app_artifact)
-          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/$ENV{SERVER_APP_NAME}-${{ matrix.config.artifact }}" server_app_artifact)
-          
-          file(MAKE_DIR $ENV{OUTPUT_DIR})
-          
-          foreach (artifact desktop_app_artifact server_app_artifact)
-            execute_process(COMMAND ${CMAKE_COMMAND} -E tar cvf ${artifact} --format=zip "${artifact}.zip"
-              WORKING_DIRECTORY $ENV{OUTPUT_DIR})
-          endforeach()
-          
-          file(GLOB "$ENV{OUTPUT_DIR}/*" files)
-          foreach(file ${files})
-            message(${file})
-          endforeach()
+    
+      - name: Bundle
+        shell: cmake -P {0}
+        run: |
+          file(MAKE_DIRECTORY Distribution WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE})
+          file(MAKE_DIRECTORY Distribution/client WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE})
+          file(MAKE_DIRECTORY Distribution/server WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE})
+
+          execute_process(
+            COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir Distribution/client
+            COMMAND tar cvf ${{matrix.config.artifact}} Distribution
+            WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE}
+            )
+
+      - uses: actions/upload-artifacts@v2
+        id: upload_artifact
+        with:
+          path: ./${{matrix.config.artifact}}
+          name: ${{matrix.config.artifact}}
