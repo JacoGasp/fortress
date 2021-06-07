@@ -203,11 +203,7 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: ${{ matrix.config.artifact }}
-        path: ./
-      run: |
-        mkdir bundle
-        mv client bundle
-        mv server bundle
+        path: ./        
     
     - name: Download URL
       uses: actions/download-artifact@v1
@@ -219,6 +215,12 @@ jobs:
       run: |
         upload_url=`cat ./upload_url`
         echo ::set-output name=upload_url::$upload_url
+
+    - name: Prepare Packages
+      run: |
+        mkdir bundle
+        mv client bundle
+        mv server bundle
     
     - name: Upload to Release
       id: upload_to_release
