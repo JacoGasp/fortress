@@ -11,7 +11,6 @@ env:
   
   DESKTOP_APP_NAME: Fortress
   SERVER_APP_NAME:  SimpleServer
-  OUTPUT_DIR: ${GITHUB_WORKSPACE}/output
   
 jobs:
   build:
@@ -20,9 +19,12 @@ jobs:
     strategy:
       matrix:
         config: 
-          - name: "Linux Latest x64"
-            artifact: "Linux-x64.tar.gz"
-            os: ubuntu-latest
+          # - name: "Linux Latest x64"
+          #   artifact: "Linux-x64.tar.gz"
+          #   os: ubuntu-latest
+          - name: "macOS Latest x64"
+            artifact: "macOS-x64.tar.gz"
+            os: macos-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -35,9 +37,10 @@ jobs:
             wget https://github.com/QuasarApp/CQtDeployer/releases/download/1.5.1/CQtDeployer_1.5.1_Linux64.zip 
             unzip CQtDeployer*.zip -d cqtdeployer
             chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
+          elif [ "$RUNNER_OS" == macOS ]; then
+            brew install asio
           fi
          
-
       - name: Download Qt
         id: qt
         shell: cmake -P {0}
