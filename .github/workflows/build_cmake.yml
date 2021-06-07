@@ -131,18 +131,16 @@ jobs:
       - name: Bundle
         shell: cmake -P {0}
         run: |
-          file(MAKE_DIRECTORY Distribution WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE})
-          file(MAKE_DIRECTORY Distribution/client WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE})
-          file(MAKE_DIRECTORY Distribution/server WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE})
+          file(MAKE_DIRECTORY ${{ runner.os }})
+          file(MAKE_DIRECTORY ${{ runner.os }}/server)
+          file(MAKE_DIRECTORY ${{ runner.os }}/client)
 
           execute_process(
-            COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir Distribution/client
-            COMMAND tar cvf ${{matrix.config.artifact}} Distribution
-            WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE}
+            COMMAND ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${{ runner.os }}/client
             )
 
       - uses: actions/upload-artifact@v2
         id: upload_artifact
         with:
-          path: ./${{matrix.config.artifact}}
-          name: ${{matrix.config.artifact}}
+          path: ./${{ runner.os }}
+          name: ${{ matrix.config.artifact }}
