@@ -214,8 +214,10 @@ jobs:
     - id: set_upload_url
       run: |
         upload_url=`cat ./upload_url`
+        echo ${upload_url}
+        echo ::set-output name=upload_url::$upload_url
     
-    - name: Upload to Release
+    - name: Upload to Release Linux
       id: upload_to_release_linux
       if: ${{ matrix.config.artifact }} == "Linux-x64.tar.gz"
       uses: actions/upload-release-asset@v1.0.1
@@ -227,7 +229,7 @@ jobs:
         asset_name: ./${{ matrix.config.artifact }}
         asset_content_type: application/tar+gzip
     
-    - name: Upload to Release
+    - name: Upload to Release Mac
       id: upload_to_release_mac
       if: ${{ matrix.config.artifact }} == "macOS-x64.dmg"
       uses: actions/upload-release-asset@v1.0.1
