@@ -135,7 +135,7 @@ jobs:
         run: |
           bundle_dir=${{ runner.os }}
           client_bundle_dir=${bundle_dir}/client
-          server_bundle_dir=${bundler_dir}/server
+          server_bundle_dir=${bundle_dir}/server
           mkdir ${bundle_dir} ${client_bundle_dir} ${server_bundle_dir}
 
           if [ $RUNNER_OS == "Linux" ]; then
