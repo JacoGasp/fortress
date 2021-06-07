@@ -141,7 +141,7 @@ jobs:
             WORKING_DIRECTORY $ENV{GITHUB_WORKSPACE}
             )
 
-      - uses: actions/upload-artifacts@v2
+      - uses: actions/upload-artifact@v2
         id: upload_artifact
         with:
           path: ./${{matrix.config.artifact}}
