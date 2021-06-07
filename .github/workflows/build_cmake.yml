@@ -205,9 +205,9 @@ jobs:
         name: ${{ matrix.config.artifact }}
         path: ./
       run: |
-        mkdir ${{ matrix.config.artifact }}
-        mv client ${{ matrix.config.artifact }}
-        mv server ${{ matrix.config.artifact }}
+        mkdir bundle
+        mv client bundle
+        mv server bundle
     
     - name: Download URL
       uses: actions/download-artifact@v1
@@ -221,13 +221,13 @@ jobs:
         echo ::set-output name=upload_url::$upload_url
     
     - name: Upload to Release
-      id: upload_to_release_linux
+      id: upload_to_release
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-        asset_path: ./${{ matrix.config.artifact }}
+        asset_path: ./bundle
         asset_name: ${{ matrix.config.artifact }}
         asset_content_type: application/zip
     
