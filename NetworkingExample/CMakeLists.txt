@@ -12,13 +12,9 @@ endif(APPLE)
 file(GLOB INCLUDES ../include/*.h)
 file(GLOB SOURCES ../src/*.cpp)
 
-if(APPLE)
-    add_executable(SimpleServer MACOSX_BUNDLE SimpleServer.cpp ${INCLUDES})
-    add_executable(SimpleClient MACOSX_BUNDLE SimpleClient.cpp ${INCLUDES})
-else()
-    add_executable(SimpleServer SimpleServer.cpp ${INCLUDES})
-    add_executable(SimpleClient SimpleClient.cpp ${INCLUDES})
-endif()
+
+add_executable(SimpleServer SimpleServer.cpp ${INCLUDES})
+add_executable(SimpleClient SimpleClient.cpp ${INCLUDES})
 
 target_include_directories(SimpleServer PRIVATE ../include)
 target_include_directories(SimpleClient PRIVATE ../include)

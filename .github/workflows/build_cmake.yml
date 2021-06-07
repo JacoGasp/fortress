@@ -3,7 +3,11 @@
 
 name: Qt Cmake Build
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - v*
 
 env:
   QT_NAME: qt6
@@ -140,15 +144,15 @@ jobs:
 
           if [ $RUNNER_OS == "Linux" ]; then
             ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${client_bundle_dir}
-            ./cqtdeployer/cqtdeployer.sh -bin ./build/NetworkingExample/SimpleServer -targetDir ${server_bundle_dir}
           elif [ "$RUNNER_OS" == macOS ]; then
             ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml
             
             # Fix macdeployqt not copying this framework
             cp -r ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
             chmod +x ./build/app/Fortress.app/Contents/MacOS/Fortress
+            chmod +x ./build/NetworkingExample/SimpleServer
             mv ./build/app/Fortress.app ${client_bundle_dir}
-            mv ./build/NetworkingExample/SimpleServer.app ${server_bundle_dir}
+            mv ./build/NetworkingExample/SimpleServer ${server_bundle_dir}
           fi
 
       - uses: actions/upload-artifact@v2
