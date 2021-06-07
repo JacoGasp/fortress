@@ -149,6 +149,7 @@ jobs:
 
           elif [ "$RUNNER_OS" == macOS ]; then
             # Fix macdeployqt not copying this framework
+            mkdir ./build/app/Fortress.app/Contents/Frameworks/
             cp ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
             ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml -dmg
             mv ./build/app/Fortress.dmg ${bundle_dir}
