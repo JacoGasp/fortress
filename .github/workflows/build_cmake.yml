@@ -135,7 +135,7 @@ jobs:
         run: |
           bundle_dir=${{ runner.os }}
           client_bundle_dir=${bundle_dir}/client
-          server_bundle_dir=${bundler_dir}/server
+          server_bundle_dir=${bundle_dir}/server
           mkdir ${bundle_dir} ${client_bundle_dir} ${server_bundle_dir}
 
           if [ $RUNNER_OS == "Linux" ]; then
@@ -143,8 +143,12 @@ jobs:
             ./cqtdeployer/cqtdeployer.sh -bin ./build/NetworkingExample/SimpleServer -targetDir ${server_bundle_dir}
           elif [ "$RUNNER_OS" == macOS ]; then
             ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml
+            
+            # Fix macdeployqt not copying this framework
+            cp -r ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
+            chmod +x ./build/app/Fortress.app/Contents/MacOS/Fortress
             mv ./build/app/Fortress.app ${client_bundle_dir}
-            mv ./build/NetorkingExample/SimpleServer.app ${server_bundle_dir}
+            mv ./build/NetworkingExample/SimpleServer.app ${server_bundle_dir}
           fi
 
       - uses: actions/upload-artifact@v2
