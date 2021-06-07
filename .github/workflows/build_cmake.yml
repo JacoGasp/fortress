@@ -25,9 +25,11 @@ jobs:
         config: 
           - name: "Linux Latest x64"
             artifact: "Linux-x64.tar.gz"
+            bundle_name: "Linux-x64"
             os: ubuntu-latest
           - name: "macOS Latest x64"
             artifact: "macOS-x64.zip"
+            bundle_name: "macOS-x64"
             os: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -137,25 +139,27 @@ jobs:
     
       - name: Bundle
         run: |
-          bundle_dir=${{ runner.os }}
-          client_bundle_dir=${bundle_dir}/client
-          server_bundle_dir=${bundle_dir}/server
-          mkdir ${bundle_dir} ${client_bundle_dir} ${server_bundle_dir}
+          bundle_dir=${{ matrix.config.bundle_name }}
+          mkdir ${bundle_dir}
 
           if [ $RUNNER_OS == "Linux" ]; then
-            ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${client_bundle_dir}
+            mkdir ${bundle_dir}/Fortress
+            ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${bundle_dir}/Fortress
+            tar -cvf ${{ matrix.config.artifact }} ./${bundle_dir}
+
           elif [ "$RUNNER_OS" == macOS ]; then
            # Fix macdeployqt not copying this framework
             cp -r ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
             ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml -dmg
-            mv ./build/app/Fortress.dmg ${client_bundle_dir}
-            mv ./build/NetworkingExample/SimpleServer ${server_bundle_dir}
+            mv ./build/app/Fortress.dmg ${bundle_dir}
+            mv ./build/NetworkingExample/SimpleServer ${bundle_dir}
+            zip -r ${{ matrix.config.artifact }} ./${bundle_dir} 
           fi
 
       - uses: actions/upload-artifact@v2
         id: upload_artifact
         with:
-          path: ./${{ runner.os }}
+          path: ./${{ matrix.config.artifact}}
           name: ${{ matrix.config.artifact }}
 
   release:
