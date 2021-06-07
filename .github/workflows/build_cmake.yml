@@ -203,7 +203,7 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: ${{ matrix.config.artifact }}
-        path: ./
+        path: ./${{ matrix.config.artifact }}
     
     - name: Download URL
       uses: actions/download-artifact@v1
