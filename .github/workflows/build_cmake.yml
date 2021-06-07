@@ -145,6 +145,7 @@ jobs:
           if [ $RUNNER_OS == "Linux" ]; then
             mkdir ${bundle_dir}/Fortress
             ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${bundle_dir}/Fortress
+            mv ./build/SimpleServer ${bundle_dir}
             tar -cvf ${{ matrix.config.artifact }} ./${bundle_dir}
 
           elif [ "$RUNNER_OS" == macOS ]; then
