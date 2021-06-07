@@ -148,7 +148,7 @@ jobs:
            # Fix macdeployqt not copying this framework
             cp -r ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
             ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml -dmg
-            mv ./build/app/Fortress.app ${client_bundle_dir}
+            mv ./build/app/Fortress.dmg ${client_bundle_dir}
             mv ./build/NetworkingExample/SimpleServer ${server_bundle_dir}
           fi
 
@@ -194,7 +194,7 @@ jobs:
             artifact: Linux-x64.tar.gz
             os: ubuntu-latest
           - name: "macOS Latest x64"
-            artifact: "macOS-x64.dmg"
+            artifact: "macOS-x64.zip"
             os: ubuntu-latest
     needs: release
 
@@ -231,7 +231,7 @@ jobs:
     
     - name: Upload to Release Mac
       id: upload_to_release_mac
-      if: ${{ matrix.config.artifact }} == "macOS-x64.dmg"
+      if: ${{ matrix.config.artifact }} == "macOS-x64.zip"
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -239,5 +239,5 @@ jobs:
         upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
         asset_path: ./${{ matrix.config.artifact }}
         asset_name: ./${{ matrix.config.artifact }}
-        asset_content_type: application/x-apple-diskimage
+        asset_content_type: application/zip
     
