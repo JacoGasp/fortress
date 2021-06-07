@@ -26,7 +26,11 @@ qt_add_resources(QT_RESOURCES ../qml/qml.qrc)
 file(GLOB INCLUDES ../include/*.h)
 file(GLOB SOURCES ../src/*.cpp)
 
-add_executable(${PROJECT_NAME} MACOSX_BUNDLE main.cpp ${QT_RESOURCES} ${SOURCES} ${INCLUDES})
+if (APPLE)
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE main.cpp ${QT_RESOURCES} ${SOURCES} ${INCLUDES})
+else()
+    add_executable(${PROJECT_NAME} main.cpp ${QT_RESOURCES} ${SOURCES} ${INCLUDES})
+endif()
 
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)
