@@ -198,6 +198,9 @@ namespace fortress::net {
     void Connection<T>::onClientValidate(fortress::net::ServerInterface<T> *server) {
         server->onClientValidated(this->shared_from_this());
     }
+
+    template<typename T>
+    void Connection<T>::onConnectionFailed(fortress::net::ClientInterface<T> *client, std::error_code &ec) {}
 }
 
 #endif //FORTRESS_SERVER_H

@@ -17,6 +17,21 @@ ApplicationWindow {
     property bool isRunning: false
     readonly property int margins: 16
 
+    Backend {
+        id: backend
+        onPingReceived: {
+            gauge1.value = this.dPingValue
+        }
+
+        onConnectionStatusChanged: {
+            headerId.onConnectionStatusChanged(bIsConnected)
+        }
+
+        onConnectionFailed: {
+            headerId.onConnectionFailed(error_message)
+        }
+    }
+
     MenuBar {
         id: menuBar
         Menu {
@@ -59,15 +74,6 @@ ApplicationWindow {
             id: gauge1
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
-        }
-    }
-
-
-
-    Backend {
-        id: backend
-        onPingReceived: {
-            gauge1.value = this.dPingValue
         }
     }
 }

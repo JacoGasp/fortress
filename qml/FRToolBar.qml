@@ -9,6 +9,15 @@ ToolBar {
     property bool bIsPinging: false
     property var backend
 
+    function onConnectionStatusChanged(bIsConnected) {
+        changeStatus(bIsConnected ? "connected" : "disconnected")
+    }
+
+    function onConnectionFailed(error_message) {
+        statusLabel.text = `Status: Failed to connect - ${error_message}`
+        statusIcon.color = "red"
+    }
+
     height: 150
     RowLayout {
         anchors.fill: parent
@@ -70,16 +79,10 @@ ToolBar {
                             if (!backend.bIsConnected) {
                                 console.log("Attempting to connect...")
                                 changeStatus("connecting")
-                                backend.connectToHost(ipAddressField.text,
-                                                      portField.text)
-                                backend.bIsConnected ? changeStatus("connected") : changeStatus("disconnected")
-                                console.log("Connection successfull")
-                                backend.startUpdate()
+                                backend.connectToHost(ipAddressField.text, portField.text)
                             } else {
                                 console.log("Disconnecting...")
                                 backend.disconnectFromHost()
-                                backend.bIsConnected ? changeStatus("connected") : changeStatus("disconnected")
-
                                 // Stop ping
                                 bIsPinging = false
                             }
@@ -97,20 +100,22 @@ ToolBar {
                 }
             }
             RowLayout {
-                Label {
-                    id: statusLabel
-                    text: "Status: disconnected"
-                    Rectangle {
-                        id: statusIcon
-                        width: 10
-                        height: 10
-                        y: parent.height / 2 - height / 2
+                Rectangle {
+                    id: statusIcon
+                    width: 10
+                    height: 10
+
+                    radius: width / 2
+                    color: "red"
+                    Label {
+                        id: statusLabel
+                        text: "Status: disconnected"
                         anchors.left: parent.right
-                        anchors.leftMargin: 2
-                        radius: width / 2
-                        color: "red"
+                        anchors.leftMargin: 5
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
+
             }
         }
 
@@ -126,7 +131,8 @@ ToolBar {
                     }
                 }
                 Label {
-                    text: `${backend.dPingValue.toFixed(1)} ms`;
+                    id: pingLabel
+                    text: backend.dPingValue >= Infinity ? "--" : `${backend.dPingValue.toFixed(1)} ms`;
                 }
             }
         }

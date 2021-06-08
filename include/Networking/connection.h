@@ -15,6 +15,9 @@ namespace fortress::net {
     class ServerInterface;
 
     template<typename T>
+    class ClientInterface;
+
+    template<typename T>
     /*
       Enable the class Connection<T>, currently managed by a std::shared_pointer name pt, to safely generate
       additional std::shared_ptr instances pt1, pt2, ... that all share ownership of t with pt.
@@ -96,6 +99,8 @@ namespace fortress::net {
         // Implemented in server.h only. Makes no sense in client.h
         void onClientValidate([[maybe_unused]] fortress::net::ServerInterface<T> *server);
 
+        void onConnectionFailed(fortress::net::ClientInterface<T> *client, std::error_code &ec);
+
         void connectToClient(fortress::net::ServerInterface<T> *server, uint32_t uid = 0) {
 
             if (m_ownerType == owner::server)
@@ -109,15 +114,16 @@ namespace fortress::net {
                 }
         }
 
-        void connectToServer(const asio::ip::tcp::resolver::results_type &endpoints) {
+        void connectToServer(const asio::ip::tcp::resolver::results_type &endpoints, fortress::net::ClientInterface<T> *client) {
             if (m_ownerType == owner::client) {
                 asio::async_connect(m_socket, endpoints,
-                                    [this](std::error_code ec, const asio::ip::tcp::endpoint &endpoint) {
+                                    [this, client](std::error_code ec, const asio::ip::tcp::endpoint &endpoint) {
                                         if (!ec) {
                                             readValidation();
                                         } else {
                                             std::cout << "Failed to connect to server: " << ec.message() << std::endl;
                                             m_socket.close();
+                                            onConnectionFailed(client, ec);
                                         }
                                     });
             }
@@ -164,7 +170,6 @@ namespace fortress::net {
 
 
     private:
-
         void writeValidation() {
             asio::async_write(m_socket, asio::buffer(&m_nHandshakeOut, sizeof(uint64_t)),
                               [this](std::error_code ec, std::size_t length) {

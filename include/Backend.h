@@ -39,10 +39,6 @@ public:
 
     ~Backend() override;
 
-    Q_INVOKABLE void startUpdate();
-
-    Q_INVOKABLE void stopUpdate();
-
     Q_INVOKABLE bool connectToHost(const QString &host, uint16_t port);
 
     Q_INVOKABLE void disconnectFromHost();
@@ -52,6 +48,8 @@ public:
     Q_INVOKABLE void togglePingUpdate();
 
     void onMessage(message<MsgTypes> &msg) override;
+
+    void onConnectionFailed(std::error_code &ec) override;
 
     // Accessors
 
@@ -72,7 +70,9 @@ signals:
 
     void valueChanged(double);
 
-    void connectionStatusChanged(bool);
+    void connectionStatusChanged(bool bIsConnected);
+
+    void connectionFailed(QString error_message);
 
     void pingReceived(double);
 

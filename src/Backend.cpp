@@ -15,19 +15,7 @@ Backend::~Backend() {
     m_runnable->stop();
     delete m_runnable;
     std::cout << "runnable deleted, removing backend\n";
-    stopUpdate();
-}
-
-// Overrides - Client Interface
-void Backend::startUpdate() {
-    startListening();
-}
-
-void Backend::stopUpdate() {
-    stopListening();
-
-    if (m_isPinging)
-        togglePingUpdate();
+    disconnectFromHost();
 }
 
 double Backend::getValue() const {
@@ -35,21 +23,32 @@ double Backend::getValue() const {
 }
 
 bool Backend::connectToHost(const QString &host, uint16_t port) {
+    startListening();
     return connect(host.toStdString(), port);
 }
 
 void Backend::disconnectFromHost() {
-    message<MsgTypes> disconnectMsg;
-    disconnectMsg.header.id = ClientDisconnect;
-    send(disconnectMsg);
+    if (isConnected()) {
+        message<MsgTypes> disconnectMsg;
+        disconnectMsg.header.id = ClientDisconnect;
+        send(disconnectMsg);
+    }
 
-    stopUpdate();
+    stopListening();
 
+    if (m_isPinging)
+        togglePingUpdate();
+
+    bool prevIsConnected {isConnected()};
     ClientInterface<MsgTypes>::disconnect();
-    if (!isConnected())
-        std::cout << "[BACKEND]: disconnected from host" << std::endl;
+    if (prevIsConnected != isConnected())
+        emit connectionStatusChanged(isConnected());
 
-    emit connectionStatusChanged(isConnected());
+    if (!isConnected()) {
+        std::cout << "[BACKEND]: disconnected from host" << std::endl;
+    }
+
+
 }
 
 void Backend::sendGreetings() {
@@ -59,6 +58,10 @@ void Backend::sendGreetings() {
     send(msg);
 }
 
+void Backend::onConnectionFailed(std::error_code &ec) {
+    stopListening();
+    emit connectionFailed(QString::fromStdString(ec.message()));
+}
 
 void Backend::onMessage(message<MsgTypes> &msg) {
     switch (msg.header.id) {

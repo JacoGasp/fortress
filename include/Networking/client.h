@@ -34,6 +34,11 @@ namespace fortress::net {
         virtual void onMessage(message<T> &msg) {};
 
     public:
+        virtual void onConnectionFailed(std::error_code &ec) {
+            std::cout << "Connection failed\n";
+        };
+
+    public:
         ClientInterface() = default;
 
         virtual ~ClientInterface() {
@@ -62,7 +67,7 @@ namespace fortress::net {
                 );
 
                 // Tell the connection object to connect to server
-                m_connection->connectToServer(endpoints);
+                m_connection->connectToServer(endpoints, this);
 
                 // Start the thread context
                 m_threadContext = std::thread([this]() { m_context.run(); });
@@ -92,10 +97,13 @@ namespace fortress::net {
                 m_threadContext.join();
 
             // Close the socket only after the all async work is completed
-            m_connection->closeSocket();
 
-            // Destroy the connection
-            m_connection.release();
+            if (m_connection) {
+                m_connection->closeSocket();
+
+                // Destroy the connection
+                m_connection.release();
+            }
         }
 
         bool isConnected() {
@@ -127,7 +135,6 @@ namespace fortress::net {
 
                 if (m_updateThread.joinable())
                     m_updateThread.join();
-
             }
         }
 
@@ -165,6 +172,11 @@ namespace fortress::net {
     // Since we own an object of type Connection<T>, we need to provide an dummy implementation of the onClientValidated
     // function (used only in server.h) to overcome linking errors.
     void Connection<T>::onClientValidate([[maybe_unused]] fortress::net::ServerInterface<T> *server) {}
+
+    template<typename T>
+    void Connection<T>::onConnectionFailed(fortress::net::ClientInterface<T> *client, std::error_code &ec) {
+        client->onConnectionFailed(ec);
+    }
 
 }
 
