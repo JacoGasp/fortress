@@ -1,8 +1,8 @@
-import QtQuick 6.0
-import QtQuick.Controls 6.0
+import QtQuick
+import QtQuick.Controls
 
 Rectangle {
-    id: root
+    id: gauge
     width: 200
     height: 200
     color: "#55595C"
@@ -34,7 +34,7 @@ Rectangle {
             )
     }
 
-    function colorGrade (cA, cB) {
+    function colorGrade(cA, cB) {
 
         var r = cA.r + value / maxValue * (cB.r - cA.r)
         var g = cA.g + value / maxValue * (cB.g - cA.g)
@@ -49,12 +49,13 @@ Rectangle {
         rotation: 135
 
         onPaint: {
-            var c = getContext('2d');
+            var c = getContext('2d')
             c.clearRect(0, 0, width, height)
             c.beginPath()
             c.lineWidth = lineWidth
             c.strokeStyle = backgroundColor
-            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0, Math.PI * 3/2)
+            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0,
+                  Math.PI * 3 / 2)
             c.stroke()
         }
     }
@@ -65,7 +66,7 @@ Rectangle {
         rotation: 135
 
         onPaint: {
-            var c = getContext('2d');
+            var c = getContext('2d')
             c.clearRect(0, 0, width, height)
 
             c.beginPath()
@@ -73,7 +74,8 @@ Rectangle {
             c.strokeStyle = currentColor
             c.globalAlpha = 1
 
-            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0, Math.PI * 3/2 * root.value / maxValue)
+            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0,
+                  Math.PI * 3 / 2 * gauge.value / maxValue)
             c.stroke()
         }
     }
@@ -85,7 +87,7 @@ Rectangle {
         font.pointSize: 48
         color: isNaN(value) ? backgroundColor : currentColor
         horizontalAlignment: Text.AlignHCenter
-//        text: { (value * maxValue).toFixed(1) }
+        //        text: { (value * maxValue).toFixed(1) }
         text: isNaN(value) ? "--" : value.toFixed(1)
         Text {
             anchors.horizontalCenter: parent.horizontalCenter

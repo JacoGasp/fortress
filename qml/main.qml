@@ -1,8 +1,8 @@
-import QtQuick 2.0
-import QtQuick.Controls 6.0
-import Qt.labs.platform 1.0
-import QtQuick.Layouts 1.11
-import QtQuick.Window 2.2
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Window
+import QtQml
 
 import com.fortress.backend 1.0
 
@@ -19,18 +19,8 @@ ApplicationWindow {
 
     Backend {
         id: backend
-        onPingReceived: {
-            gauge1.value = this.dPingValue
-        }
-
-        onConnectionStatusChanged: {
-            headerId.onConnectionStatusChanged(bIsConnected)
-        }
-
-        onConnectionFailed: {
-            headerId.onConnectionFailed(error_message)
-        }
     }
+
 
     MenuBar {
         id: menuBar
@@ -76,4 +66,15 @@ ApplicationWindow {
             anchors.verticalCenter: parent.verticalCenter
         }
     }
+
+    Connections {
+        target: backend
+
+        function onPingReceived(ping) {
+            gauge1.value = ping
+        }
+    }
+
 }
+
+

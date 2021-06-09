@@ -62,7 +62,7 @@ signals:
 
     void connectionFailed(QString error_message);
 
-    void pingReceived(double);
+    void pingReceived(double ping);
 
 };
 
