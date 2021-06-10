@@ -11,7 +11,7 @@ on:
 
 env:
   QT_NAME: qt6
-  QT_VERSION: 6.0.2
+  QT_VERSION: 6.1.1
   
   DESKTOP_APP_NAME: Fortress
   SERVER_APP_NAME:  SimpleServer
