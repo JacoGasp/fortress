@@ -6,6 +6,7 @@
 
 Backend::Backend(QObject *parent)
         : QObject{ parent } {
+    generatePlotSeries(1, 1024);
     std::cout << "Instantiated backend helper\n";
 }
 
@@ -124,4 +125,37 @@ void Backend::togglePingUpdate() {
 
 double Backend::getLastPingValue() const {
     return m_lastPingValue;
+}
+
+// Slots
+void Backend::generatePlotSeries(int n_channels, int length) {
+    m_data.clear();
+    for (int ch = 0; ch < n_channels; ++ch) {
+        QList<QPointF> points;
+        points.reserve(length);
+        for (int i = 0; i < length; ++i) {
+            double x{ static_cast<double>(i) };
+            double y{ qSin(M_PI / 50.0 * i) + 0.5 + QRandomGenerator::global()->generateDouble() };
+            points.append(QPointF(x, y));
+        }
+        m_data.append(points);
+    }
+}
+
+void Backend::updatePlotSeries(QAbstractSeries *series) {
+    if (series) {
+        auto *xySeries = dynamic_cast<QXYSeries *>(series);
+        m_data_idx++;
+        if (m_data_idx > m_data.count() - 1)
+            m_data_idx = 0;
+
+        generatePlotSeries(1, 1024);
+//        QList<QPointF> points = m_data.at(m_data_idx);
+        QList<QPointF> points = m_data.at(0); // First series
+        xySeries->replace(points);
+    }
+}
+
+QList<QPointF> Backend::getSeries() const {
+    return m_data.at(0);
 }

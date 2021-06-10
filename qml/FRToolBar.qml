@@ -1,21 +1,27 @@
-import QtQuick 6.0
-import QtQuick.Controls 6.0
-import QtQuick.Layouts 1.11
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQml
 
 ToolBar {
+
+    //    property var backend
 
     property bool bIpIsValid: false
     property bool bIsPortValid: true
     property bool bIsPinging: false
-    property var backend
 
-    function onConnectionStatusChanged(bIsConnected) {
-        changeStatus(bIsConnected ? "connected" : "disconnected")
-    }
+    Connections {
+        target: backend
 
-    function onConnectionFailed(error_message) {
-        statusLabel.text = `Status: Failed to connect - ${error_message}`
-        statusIcon.color = "red"
+        function onConnectionFailed(error_message) {
+            statusLabel.text = `Status: Failed to connect - ${error_message}`
+            statusIcon.color = "red"
+        }
+
+        function onConnectionStatusChanged(bIsConnected) {
+            changeStatus(bIsConnected ? "connected" : "disconnected")
+        }
     }
 
     height: 150
@@ -73,7 +79,7 @@ ToolBar {
                     Button {
                         id: connectButton
                         Layout.preferredWidth: 100
-                        text: backend.bIsConnected ? "Disconnect" : "Connect"
+                        text: backend ? backend.bIsConnected ? "Disconnect" : "Connect" : "Disconnected"
                         enabled: bIpIsValid && bIsPortValid
                         onClicked: {
                             if (!backend.bIsConnected) {
@@ -92,7 +98,7 @@ ToolBar {
                     Button {
                         id: sendGreetings
                         text: "Greetings"
-                        enabled: backend.bIsConnected
+                        enabled: backend ? backend.bIsConnected : false
                         onClicked: {
                             backend.sendGreetings()
                         }
@@ -124,16 +130,20 @@ ToolBar {
                 columns: 2
                 Button {
                     text: !bIsPinging ? "Ping" : "Stop"
-                    enabled: backend.bIsConnected
+                    enabled: backend ? backend.bIsConnected : false
                     onClicked: {
                         backend.togglePingUpdate();
                         bIsPinging = !bIsPinging;
                     }
                 }
+
                 Label {
+
                     id: pingLabel
-                    text: backend.dPingValue >= Infinity ? "--" : `${backend.dPingValue.toFixed(1)} ms`;
+
+                    text: backend ? (backend.dPingValue >= Infinity ? "--" : `${backend.dPingValue.toFixed(1)} ms`) : "--"
                 }
+
             }
         }
         ColumnLayout {

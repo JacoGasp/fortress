@@ -3,8 +3,8 @@ import QtQuick.Controls
 
 Rectangle {
     id: gauge
-    width: 200
-    height: 200
+    width: 150
+    height: 150
     color: "#55595C"
     radius: 5
 

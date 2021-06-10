@@ -9,13 +9,12 @@
 
 
 int main(int argc, char *argv[]) {
-    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     QApplication app(argc, argv);
-
-    qmlRegisterType<Backend>("com.fortress.backend", 1, 0, "Backend");
-
     QQmlApplicationEngine engine;
+
+    Backend backend;
+    engine.rootContext()->setContextProperty("backend", &backend);
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 

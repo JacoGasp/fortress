@@ -4,22 +4,16 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQml
 
-import com.fortress.backend 1.0
-
 ApplicationWindow {
     id: root
     visible: true
-    width: 1200
+    width: 1150
     height: 840
-    title: {qsTr("Fortress")}
-    color: "#373A3C"
+//    title: {qsTr("Fortress")}
+//    color: "#373A3C"
 
     property bool isRunning: false
     readonly property int margins: 16
-
-    Backend {
-        id: backend
-    }
 
 
     MenuBar {
@@ -51,20 +45,14 @@ ApplicationWindow {
 
     header: FRToolBar {
         id: headerId
-        backend: backend
+//        backend: backend
     }
 
 
     Rectangle {
         id: background
         anchors.fill: parent
-        color: "white"
-
-        Gauge {
-            id: gauge1
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-        }
+        color: "#373A3C"
     }
 
     Connections {
@@ -72,6 +60,50 @@ ApplicationWindow {
 
         function onPingReceived(ping) {
             gauge1.value = ping
+        }
+    }
+
+    GridLayout {
+        anchors.fill: parent
+        anchors.margins: 5
+        columns: 2
+
+        FRCharts {
+            Layout.preferredHeight: 150
+            Layout.preferredWidth: 150
+            Layout.fillWidth: true
+        }
+
+        Gauge {
+            id: gauge1
+            Layout.preferredHeight: 150
+        }
+
+        FRCharts {
+            Layout.preferredHeight: 150
+            Layout.fillWidth: true
+        }
+
+        Gauge {
+            Layout.preferredHeight: 150
+        }
+
+        FRCharts {
+            Layout.preferredHeight: 150
+            Layout.fillWidth: true
+        }
+
+        Gauge {
+            Layout.preferredHeight: 150
+        }
+
+        FRCharts {
+            Layout.preferredHeight: 150
+            Layout.fillWidth: true
+        }
+
+        Gauge {
+            Layout.preferredHeight: 150
         }
     }
 

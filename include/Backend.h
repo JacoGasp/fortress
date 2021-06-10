@@ -5,8 +5,12 @@
 #ifndef FORTRESS_BACKEND_H
 #define FORTRESS_BACKEND_H
 
-#include <QObject>
-#include <QThreadPool>
+#include <QtCore/QtMath>
+#include <QtCore/QObject>
+#include <QtCore/QRandomGenerator>
+#include <QtCharts/QAbstractSeries>
+#include <QtCharts/QXYSeries>
+#include <QtQuick/QQuickView>
 #include <iostream>
 #include <thread>
 #include "Networking/client.h"
@@ -18,12 +22,16 @@ class Backend : public QObject, public ClientInterface<MsgTypes> {
 Q_OBJECT
     Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
     Q_PROPERTY(double dPingValue READ getLastPingValue NOTIFY pingReceived)
+    Q_PROPERTY(QList<QPointF> series READ getSeries())
 
 private:
     double m_lastPingValue{ std::numeric_limits<double>::infinity() };
     bool m_isPinging{ false };
     std::thread m_pingThread;
     static constexpr std::chrono::seconds PING_DELAY{ 1 };
+
+    QList<QList<QPointF>> m_data;
+    int m_data_idx{ -1 };
 
 public:
     // Avoid name collision with multiple inheritance
@@ -49,11 +57,17 @@ public:
 
     [[nodiscard]] double getLastPingValue() const;
 
+    [[nodiscard]] QList<QPointF> getSeries() const;
+
 private:
     void pingHandler();
 
 // Listen for events
-// public slots:
+public slots:
+
+    void generatePlotSeries(int n_channels, int length);
+
+    void updatePlotSeries(QAbstractSeries *series);
 
 // Emit signals
 signals:

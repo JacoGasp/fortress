@@ -14,8 +14,8 @@ if(APPLE)
     include_directories(/usr/local/Cellar/asio/1.18.2/include)
 endif(APPLE)
 # Setup Qt
-set(REQUIRED_LIBS Core Gui Qml Quick Widgets)
-set(REQUIRED_LIBS_QUALIFIED Qt6::Core Qt6::Gui Qt6::Qml Qt::Quick Qt::Widgets)
+set(REQUIRED_LIBS Core Gui Qml Quick Widgets Charts)
+set(REQUIRED_LIBS_QUALIFIED Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::Widgets Qt6::Charts)
 
 find_package(Qt6 COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 
