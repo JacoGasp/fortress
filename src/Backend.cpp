@@ -6,7 +6,7 @@
 
 Backend::Backend(QObject *parent)
         : QObject{ parent } {
-    generatePlotSeries(1, 1024);
+    generatePlotSeries(4, m_windowSizeInPoint);
     std::cout << "Instantiated backend helper\n";
 }
 
@@ -83,6 +83,12 @@ void Backend::onMessage(message<MsgTypes> &msg) {
             m_lastPingValue = std::chrono::duration<double>(timeNow - timeThen).count() * 1000;
             std::cout << "Ping: " << m_lastPingValue << " ms.\n";
 
+            m_chLastValues[0] = m_lastPingValue;
+            m_chLastValues[1] = 2 + m_lastPingValue / 0.7;
+            m_chLastValues[2] = 8 - m_lastPingValue;
+            m_chLastValues[3] = 4 + m_lastPingValue * .5;
+
+            addPointsToSeries(m_chLastValues);
             emit pingReceived(m_lastPingValue);
 
             break;
@@ -129,33 +135,60 @@ double Backend::getLastPingValue() const {
 
 // Slots
 void Backend::generatePlotSeries(int n_channels, int length) {
-    m_data.clear();
+
     for (int ch = 0; ch < n_channels; ++ch) {
-        QList<QPointF> points;
+        QList<QPointF> points{};
         points.reserve(length);
-        for (int i = 0; i < length; ++i) {
-            double x{ static_cast<double>(i) };
-            double y{ qSin(M_PI / 50.0 * i) + 0.5 + QRandomGenerator::global()->generateDouble() };
-            points.append(QPointF(x, y));
-        }
+
+        for (int i = 0; i < length; ++i)
+            points.push_front(QPointF{});
+
         m_data.append(points);
     }
 }
 
-void Backend::updatePlotSeries(QAbstractSeries *series) {
-    if (series) {
-        auto *xySeries = dynamic_cast<QXYSeries *>(series);
-        m_data_idx++;
-        if (m_data_idx > m_data.count() - 1)
-            m_data_idx = 0;
+void Backend::addPointsToSeries(const std::array<double, m_nChannels> &values) {
 
-        generatePlotSeries(1, 1024);
-//        QList<QPointF> points = m_data.at(m_data_idx);
-        QList<QPointF> points = m_data.at(0); // First series
-        xySeries->replace(points);
+    static int t{ 0 };
+    m_data_idx = t % m_windowSizeInPoint;
+    for (int ch = 0; ch < m_nChannels; ++ch) {
+
+        auto chSeries = &m_data[ch];
+
+        double x{ static_cast<double>(m_data_idx % (m_windowSizeInPoint)) };
+        double y {values[ch]};
+        chSeries->replace(m_data_idx,QPointF{ x, y });
+    }
+    ++t;
+}
+
+void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel) {
+    if (newSeries && oldSeries) {
+        auto *xyNewSeries = dynamic_cast<QXYSeries *>(newSeries);
+        auto *xyOldSeries = dynamic_cast<QXYSeries *>(oldSeries);
+
+        auto newPoints = QList<QPointF>{m_data[channel].begin(), m_data[channel].begin() + m_data_idx};
+        auto oldPoints = QList<QPointF>{m_data[channel].begin() + m_data_idx + 1, m_data[channel].end()};
+
+        xyNewSeries->replace(newPoints);
+        xyOldSeries->replace(oldPoints);
     }
 }
 
+// Accessors
+
 QList<QPointF> Backend::getSeries() const {
     return m_data.at(0);
+}
+
+int Backend::windowSize() const {
+    return m_windowSizeInPoint;
+}
+
+void Backend::setWindowSize(int windowSize) {
+    m_windowSizeInPoint = windowSize;
+}
+
+double Backend::getLastChannelValue(int channel) const {
+    return m_chLastValues[channel];
 }

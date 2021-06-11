@@ -15,7 +15,7 @@ Rectangle {
     readonly property int lineWidth: 15
     readonly property int innerRadius: 15
 
-    readonly property real maxValue: 50
+    readonly property real maxValue: 10
     property var value
     property var currentColor: {Qt.rgba(0, 0, 0, 0)}
 

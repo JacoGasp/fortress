@@ -11,6 +11,12 @@
 int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
+    bool openGLSupported = QQuickWindow::graphicsApi() == QSGRendererInterface::OpenGLRhi;
+    if (!openGLSupported) {
+        qWarning() << "OpenGL is not set as the graphics backend, so AbstractSeries.useOpenGL will not work.";
+        qWarning() << "Set QSG_RHI_BACKEND=opengl environment variable to force the OpenGL backend to be used.";
+    }
+
     QQmlApplicationEngine engine;
 
     Backend backend;

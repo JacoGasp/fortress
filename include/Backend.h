@@ -22,16 +22,20 @@ class Backend : public QObject, public ClientInterface<MsgTypes> {
 Q_OBJECT
     Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
     Q_PROPERTY(double dPingValue READ getLastPingValue NOTIFY pingReceived)
+    Q_PROPERTY(int windowSize READ windowSize() NOTIFY windowSizeChanged)
     Q_PROPERTY(QList<QPointF> series READ getSeries())
 
 private:
     double m_lastPingValue{ std::numeric_limits<double>::infinity() };
     bool m_isPinging{ false };
     std::thread m_pingThread;
-    static constexpr std::chrono::seconds PING_DELAY{ 1 };
+    static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
 
     QList<QList<QPointF>> m_data;
     int m_data_idx{ -1 };
+    int m_windowSizeInPoint{ 128 };
+    static constexpr int m_nChannels{ 4 };
+    std::array<double, 4> m_chLastValues{};
 
 public:
     // Avoid name collision with multiple inheritance
@@ -59,6 +63,10 @@ public:
 
     [[nodiscard]] QList<QPointF> getSeries() const;
 
+    [[nodiscard]] int windowSize() const;
+
+
+
 private:
     void pingHandler();
 
@@ -67,7 +75,13 @@ public slots:
 
     void generatePlotSeries(int n_channels, int length);
 
-    void updatePlotSeries(QAbstractSeries *series);
+    void addPointsToSeries(const std::array<double, m_nChannels> &values);
+
+    void updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel);
+
+    void setWindowSize(int windowSize);
+
+    [[nodiscard]] double getLastChannelValue(int channel) const;
 
 // Emit signals
 signals:
@@ -77,6 +91,8 @@ signals:
     void connectionFailed(QString error_message);
 
     void pingReceived(double ping);
+
+    void windowSizeChanged();
 
 };
 

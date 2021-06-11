@@ -2,6 +2,8 @@ import QtQuick
 import QtCharts
 
 Rectangle {
+    property int channel
+    property string lineColor
     color: "#373A3C"
 
     ChartView {
@@ -9,21 +11,22 @@ Rectangle {
         anchors {fill: parent; margins: -12}
         antialiasing: true
         backgroundColor: "#55595C"
-
         legend.visible: false
-
-        ValueAxis {
-            id: axisX
-            labelsColor: "lightgray"
-            min: 0
-            max: 1024
-        }
 
         ValueAxis {
             id: axisY
             labelsColor: "lightgray"
-            min: -10
-            max: 5
+            min: 0
+            max: 10
+            titleText: `<font color='lightgray'>Ch ${channel}</font>`
+        }
+
+        ValueAxis {
+            id: axisX
+            labelsColor: "lightgray"
+            visible: false
+            min: 0
+            max: backend ? backend.windowSize : 0
         }
 
         LineSeries {
@@ -32,16 +35,22 @@ Rectangle {
             axisX: axisX
             axisY: axisY
         }
+
+        LineSeries {
+            id: lineSeriesOld
+            name: "LineSeriesOld"
+            axisX: axisX
+            axisY: axisY
+        }
     }
 
-    Timer {
-        id: refreshTimer
-        interval: 1 / 60 * 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            backend.updatePlotSeries(chartView.series(0))
-        }
+    function update() {
+        backend.updatePlotSeries(lineSeries, lineSeriesOld, channel)
+    }
+
+    Component.onCompleted: {
+        lineSeries.color = lineColor
+        lineSeriesOld.color = lineColor
     }
 }
 /*##^##
