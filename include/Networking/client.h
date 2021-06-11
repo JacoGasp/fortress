@@ -114,6 +114,22 @@ namespace fortress::net {
             return false;
         }
 
+        // Use this function to stop context in case of failed connections.
+        // This is bad and should be redesigned
+        void stopContext() {
+            if (isConnected())
+                m_connection->disconnect();
+            m_context.stop();
+
+            if (m_connection) {
+                m_connection->closeSocket();
+
+                // Destroy the connection
+                m_connection.release();
+            }
+            m_threadContext.detach(); // FIXME: with .join() crash. It must be closed somehow to allow a new connection
+        }
+
         void send(const message<T> &msg) {
             if (isConnected())
                 m_connection->send(msg);
@@ -175,6 +191,7 @@ namespace fortress::net {
 
     template<typename T>
     void Connection<T>::onConnectionFailed(fortress::net::ClientInterface<T> *client, std::error_code &ec) {
+        client->stopContext();
         client->onConnectionFailed(ec);
     }
 
