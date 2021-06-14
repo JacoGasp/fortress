@@ -206,7 +206,3 @@ double Backend::getLastChannelValue(int channel) const {
 double Backend::getMaxChannelValue(int channel) const {
     return m_chMaxValues[channel];
 }
-
-double Backend::getMinChannelValue(int channel) const {
-    return m_chMaxValues[channel];
-}
