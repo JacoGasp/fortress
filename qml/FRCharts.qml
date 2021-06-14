@@ -1,10 +1,17 @@
 import QtQuick
 import QtCharts
+import QtQuick.Layouts
 
 Rectangle {
     property int channel
     property string lineColor
     color: "#373A3C"
+
+    Layout.fillHeight: true
+    Layout.fillWidth: true
+    Layout.preferredHeight: Layout.rowSpan
+    Layout.preferredWidth: Layout.columnSpan
+
 
     ChartView {
         id: chartView
@@ -15,28 +22,38 @@ Rectangle {
 
         ValueAxis {
             id: axisY
-            labelsColor: "lightgray"
+            labelsColor: "darkgray"
             min: 0
             max: 10
             titleText: `<font color='lightgray'>Ch ${channel}</font>`
+            gridLineColor: "darkgray"
+
+            Behavior on min {
+                NumberAnimation { duration: 200 }
+            }
+
+            Behavior on max {
+                NumberAnimation { duration: 200 }
+            }
+
         }
 
         ValueAxis {
             id: axisX
-            labelsColor: "lightgray"
+            labelsColor: "darkgray"
             visible: false
             min: 0
             max: backend ? backend.windowSize : 0
         }
 
-        LineSeries {
+        SplineSeries {
             id: lineSeries
             name: "LineSeries"
             axisX: axisX
             axisY: axisY
         }
 
-        LineSeries {
+        SplineSeries {
             id: lineSeriesOld
             name: "LineSeriesOld"
             axisX: axisX
@@ -45,6 +62,11 @@ Rectangle {
     }
 
     function update() {
+        let maxValue = backend.getMaxChannelValue(channel)
+
+        if (axisY.max !== maxValue)
+            axisY.max = maxValue
+
         backend.updatePlotSeries(lineSeries, lineSeriesOld, channel)
     }
 

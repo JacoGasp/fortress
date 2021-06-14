@@ -31,11 +31,12 @@ private:
     std::thread m_pingThread;
     static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
 
-    QList<QList<QPointF>> m_data;
-    int m_data_idx{ -1 };
-    int m_windowSizeInPoint{ 128 };
-    static constexpr int m_nChannels{ 4 };
-    std::array<double, 4> m_chLastValues{};
+    int m_data_idx{ -1 };                   // X axis index
+    int m_windowSizeInPoint{ 128 };         // Size of horizontal x as number of points
+    static constexpr int m_nChannels{ 4 };  // Number of channels
+    QList<QList<QPointF>> m_data;           // (nChannel x windowSize) data to display
+    std::array<double, 4> m_chLastValues{}; // Store temporary last reads per each channel for plotting
+    std::array<double, 4> m_chMaxValues{};  // Store temporary maxValue per each channel for autoscaling plot
 
 public:
     // Avoid name collision with multiple inheritance
@@ -82,6 +83,8 @@ public slots:
     void setWindowSize(int windowSize);
 
     [[nodiscard]] double getLastChannelValue(int channel) const;
+
+    [[nodiscard]] double getMaxChannelValue(int channel) const;
 
 // Emit signals
 signals:

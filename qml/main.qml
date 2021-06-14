@@ -7,14 +7,17 @@ import QtQml
 ApplicationWindow {
     id: root
     visible: true
-    width: 1150
-    height: 840
+    minimumWidth: 1280
+    minimumHeight: 800
     title: {qsTr("Fortress")}
     color: "#373A3C"
 
+
     property bool isRunning: false
     readonly property int margins: 16
-
+    readonly property int nChannels: 4
+    property var charts: []
+    property var gauges: []
 
     MenuBar {
         id: menuBar
@@ -55,77 +58,94 @@ ApplicationWindow {
     }
 
     GridLayout {
+        id: gridLayout
         anchors.fill: parent
         anchors.margins: 5
-        columns: 2
+        columns: 4
+        rows: 4
 
         FRCharts {
             id: chart_0
             channel: 0
             lineColor: "#D9534F"
-            Layout.preferredHeight: 150
-            Layout.preferredWidth: 150
-            Layout.fillWidth: true
+            Layout.columnSpan: 3
+            Layout.rowSpan: 1
+
         }
 
-        Gauge {
+        FRGauge {
             id: gauge_0
-            Layout.preferredHeight: 150
+            channel: 0
+            Layout.columnSpan: 1
+            Layout.rowSpan: 1
         }
 
         FRCharts {
             id: chart_1
             channel: 1
             lineColor: "#F0AD4E"
-            Layout.preferredHeight: 150
-            Layout.fillWidth: true
+            Layout.columnSpan: 3
+            Layout.rowSpan: 1
         }
 
-        Gauge {
+        FRGauge {
             id: gauge_1
-            Layout.preferredHeight: 150
+            channel: 1
+            Layout.columnSpan: 1
+            Layout.rowSpan: 1
         }
 
         FRCharts {
             id: chart_2
             channel: 2
             lineColor: "#5CB85C"
-            Layout.preferredHeight: 150
-            Layout.fillWidth: true
+            Layout.columnSpan: 3
+            Layout.rowSpan: 1
         }
 
-        Gauge {
+        FRGauge {
             id: gauge_2
-            Layout.preferredHeight: 150
+            channel: 2
+            Layout.columnSpan: 1
+            Layout.rowSpan: 1
         }
 
         FRCharts {
             id: chart_3
             channel: 3
             lineColor: "#56C0E0"
-            Layout.preferredHeight: 150
-            Layout.fillWidth: true
+            Layout.columnSpan: 3
+            Layout.rowSpan: 1
         }
 
-        Gauge {
+        FRGauge {
             id: gauge_3
-            Layout.preferredHeight: 150
+            channel: 3
+            Layout.columnSpan: 1
+            Layout.rowSpan: 1
+        }
+
+        Layout.fillHeight: true
+
+        Component.onCompleted: {
+            charts = [chart_0, chart_1, chart_2, chart_3]
+            gauges = [gauge_0, gauge_1, gauge_2, gauge_3]
         }
     }
 
     Connections {
         target: backend
         function onPingReceived() {
-            chart_0.update()
-            chart_1.update()
-            chart_2.update()
-            chart_3.update()
-
-            gauge_0.value = backend.getLastChannelValue(0)
-            gauge_1.value = backend.getLastChannelValue(1)
-            gauge_2.value = backend.getLastChannelValue(2)
-            gauge_3.value = backend.getLastChannelValue(3)
+            charts.forEach(c => c.update())
         }
+    }
+
+    function start() {
+        gauges.forEach(g => g.start())
+    }
+
+    function stop() {
+        gauges.forEach(g => g.stop())
     }
 }
 

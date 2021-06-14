@@ -5,11 +5,10 @@ import QtQml
 
 ToolBar {
 
-    //    property var backend
-
     property bool bIpIsValid: false
-    property bool bIsPortValid: true
+    property bool bIsPortValid: true    // Workaround for default port
     property bool bIsPinging: false
+    property bool bIsConnecting: false
 
     Connections {
         target: backend
@@ -17,10 +16,13 @@ ToolBar {
         function onConnectionFailed(error_message) {
             statusLabel.text = `Status: Failed to connect - ${error_message}`
             statusIcon.color = "red"
+            bIsConnecting = false
         }
 
         function onConnectionStatusChanged(bIsConnected) {
+            console.log(bIsConnected ? "Connected to host" : "Disconnected from host")
             changeStatus(bIsConnected ? "connected" : "disconnected")
+            bIsConnecting = false
         }
     }
 
@@ -34,15 +36,18 @@ ToolBar {
                 GridLayout {
                     columns: 2
                     Label {
-                        text: "Ip Address:"
+                        text: "IP Address:"
                         Layout.alignment: Qt.AlignRight
                     }
 
                     TextField {
+                        Layout.minimumWidth: 120
                         id: ipAddressField
                         placeholderText: "192.168.1.7"
                         text: "127.0.0.1"
-                        Layout.minimumWidth: 120
+
+                        enabled: backend ? !(backend.bIsConnected || bIsConnecting) : false
+
                         validator: RegularExpressionValidator {
                             regularExpression: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])/
                         }
@@ -64,6 +69,7 @@ ToolBar {
                         id: portField
                         text: "60000"
                         Layout.maximumWidth: 60
+                        enabled: backend ? !(backend.bIsConnected | bIsConnecting) : false
                         validator: IntValidator {
                             bottom: 1
                             top: 65535
@@ -82,16 +88,7 @@ ToolBar {
                         text: backend ? backend.bIsConnected ? "Disconnect" : "Connect" : "Disconnected"
                         enabled: bIpIsValid && bIsPortValid
                         onClicked: {
-                            if (!backend.bIsConnected) {
-                                console.log("Attempting to connect...")
-                                changeStatus("connecting")
-                                backend.connectToHost(ipAddressField.text, portField.text)
-                            } else {
-                                console.log("Disconnecting...")
-                                backend.disconnectFromHost()
-                                // Stop ping
-                                bIsPinging = false
-                            }
+                            !backend.bIsConnected ? connect() : disconnect()
                         }
                     }
 
@@ -134,13 +131,12 @@ ToolBar {
                     onClicked: {
                         backend.togglePingUpdate();
                         bIsPinging = !bIsPinging;
+                        bIsPinging ? start() : stop()
                     }
                 }
 
                 Label {
-
                     id: pingLabel
-
                     text: backend ? (backend.dPingValue >= Infinity ? "--" : `${backend.dPingValue.toFixed(1)} ms`) : "--"
                 }
 
@@ -150,6 +146,30 @@ ToolBar {
             Layout.fillWidth: true
         }
 
+    }
+
+    function start() {
+        root.start()
+    }
+
+
+    function stop() {
+        root.stop()
+    }
+
+    function connect() {
+        bIsConnecting = true
+        console.log("Attempting to connect...")
+        changeStatus("connecting")
+
+        backend.connectToHost(ipAddressField.text, portField.text)
+    }
+
+    function disconnect() {
+        console.log("Disconnecting...")
+        backend.disconnectFromHost()
+        // Stop ping
+        bIsPinging = false
     }
 
 

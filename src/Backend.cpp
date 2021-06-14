@@ -81,12 +81,15 @@ void Backend::onMessage(message<MsgTypes> &msg) {
             msg >> timeThen;
 
             m_lastPingValue = std::chrono::duration<double>(timeNow - timeThen).count() * 1000;
-            std::cout << "Ping: " << m_lastPingValue << " ms.\n";
+            // std::cout << "Ping: " << m_lastPingValue << " ms.\n";
 
             m_chLastValues[0] = m_lastPingValue;
             m_chLastValues[1] = 2 + m_lastPingValue / 0.7;
             m_chLastValues[2] = 8 - m_lastPingValue;
             m_chLastValues[3] = 4 + m_lastPingValue * .5;
+
+            for (int i = 0; i < m_nChannels; ++i)
+                if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
 
             addPointsToSeries(m_chLastValues);
             emit pingReceived(m_lastPingValue);
@@ -158,6 +161,12 @@ void Backend::addPointsToSeries(const std::array<double, m_nChannels> &values) {
         double x{ static_cast<double>(m_data_idx % (m_windowSizeInPoint)) };
         double y {values[ch]};
         chSeries->replace(m_data_idx,QPointF{ x, y });
+
+        auto max = *std::max_element(chSeries->begin(), chSeries->end(), [](const QPointF &p1, const QPointF &p2) {
+            return p1.y() < p2.y();
+        });
+
+        m_chMaxValues[ch] = max.y();
     }
     ++t;
 }
@@ -191,4 +200,13 @@ void Backend::setWindowSize(int windowSize) {
 
 double Backend::getLastChannelValue(int channel) const {
     return m_chLastValues[channel];
+
+}
+
+double Backend::getMaxChannelValue(int channel) const {
+    return m_chMaxValues[channel];
+}
+
+double Backend::getMinChannelValue(int channel) const {
+    return m_chMaxValues[channel];
 }
