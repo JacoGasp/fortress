@@ -200,7 +200,6 @@ void Backend::setWindowSize(int windowSize) {
 
 double Backend::getLastChannelValue(int channel) const {
     return m_chLastValues[channel];
-
 }
 
 double Backend::getMaxChannelValue(int channel) const {
