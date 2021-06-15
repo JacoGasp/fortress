@@ -145,6 +145,25 @@ ToolBar {
         ColumnLayout {
             Layout.fillWidth: true
         }
+        ColumnLayout {
+            GridLayout {
+                columns: 2
+                Label {
+                    text: "Threshold"
+                }
+                TextField {
+                    text: "10"
+                    validator: DoubleValidator{
+                        bottom: 0
+                        top: 10000
+                    }
+                    onAccepted: {
+                        root.threshold = this.text
+                    }
+                }
+
+            }
+        }
 
     }
 

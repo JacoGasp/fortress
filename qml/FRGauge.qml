@@ -86,6 +86,13 @@ Rectangle {
 
         onPaint: {
             var c = getContext('2d')
+
+            if (value > maxValue)
+                value = maxValue
+
+            let maxAngle = Math.PI * 3 / 2
+            let angle =  maxAngle * value / maxValue
+
             c.clearRect(0, 0, width, height)
 
             c.beginPath()
@@ -93,8 +100,7 @@ Rectangle {
             c.strokeStyle = color
             c.globalAlpha = 1
 
-            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0,
-                  Math.PI * 3 / 2 * value / maxValue)
+            c.arc(width / 2, height / 2, width / 2 - innerRadius, 0, angle > maxAngle ? maxAngle : angle)
             c.stroke()
         }
 
@@ -144,12 +150,13 @@ Rectangle {
 
     function update(newValue) {
 
+        textValue.text = newValue.toFixed(1)
+
         if (newValue > maxValue)
             newValue = maxValue
 
         let newColor = colorGrade(colorA, colorGrade(colorB, colorC, newValue), newValue)
 
-        textValue.text = newValue.toFixed(1)
         textValue.color = newColor
         arc.color = newColor
         arc.value = newValue

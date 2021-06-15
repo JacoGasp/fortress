@@ -53,7 +53,7 @@ Rectangle {
             axisY: axisY
         }
 
-        SplineSeries {
+        LineSeries {
             id: lineSeriesOld
             name: "LineSeriesOld"
             axisX: axisX

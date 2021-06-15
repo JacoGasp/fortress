@@ -4,5 +4,6 @@
         <file>FRGauge.qml</file>
         <file>FRToolBar.qml</file>
         <file>FRCharts.qml</file>
+        <file>FRMenuBar.qml</file>
     </qresource>
 </RCC>

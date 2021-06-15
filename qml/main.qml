@@ -18,33 +18,13 @@ ApplicationWindow {
     readonly property int nChannels: 4
     property var charts: []
     property var gauges: []
+    property double threshold: 10
 
-    MenuBar {
+    /*
+    FRMenuBar {
         id: menuBar
-        Menu {
-            id: fileMenu
-            title: qsTr("File")
-            // ...
-        }
-
-        Menu {
-            id: editMenu
-            title: qsTr("&Edit")
-            // ...
-        }
-
-        Menu {
-            id: viewMenu
-            title: qsTr("&View")
-            // ...
-        }
-
-        Menu {
-            id: helpMenu
-            title: qsTr("&Help")
-            // ...
-        }
     }
+    */
 
     header: FRToolBar {
         id: headerId
@@ -78,6 +58,7 @@ ApplicationWindow {
             channel: 0
             Layout.columnSpan: 1
             Layout.rowSpan: 1
+            maxValue: threshold
         }
 
         FRCharts {
@@ -93,6 +74,7 @@ ApplicationWindow {
             channel: 1
             Layout.columnSpan: 1
             Layout.rowSpan: 1
+            maxValue: threshold
         }
 
         FRCharts {
@@ -108,6 +90,7 @@ ApplicationWindow {
             channel: 2
             Layout.columnSpan: 1
             Layout.rowSpan: 1
+            maxValue: threshold
         }
 
         FRCharts {
@@ -123,6 +106,7 @@ ApplicationWindow {
             channel: 3
             Layout.columnSpan: 1
             Layout.rowSpan: 1
+            maxValue: threshold
         }
 
         Layout.fillHeight: true
