@@ -15,10 +15,14 @@ namespace fortress::net {
         ServerDeny,
         ServerMessage,
         ServerPing,
+        ServerReadings,
 
         ClientPing,
         ClientMessage,
         ClientDisconnect,
+        ClientStartUpdating,
+        ClientStopUpdating,
+        ClientSetSampleFrequency,
 
         MessageAll
     };

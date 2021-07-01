@@ -9,6 +9,7 @@ ToolBar {
     property bool bIsPortValid: true    // Workaround for default port
     property bool bIsPinging: false
     property bool bIsConnecting: false
+    property bool bIsReceiving: false
 
     Connections {
         target: backend
@@ -140,6 +141,17 @@ ToolBar {
                     text: backend ? (backend.dPingValue >= Infinity ? "--" : `${backend.dPingValue.toFixed(1)} ms`) : "--"
                 }
 
+
+                Button {
+                    text: !bIsReceiving ? "Start" : "Stop"
+                    enabled: backend ? backend.bIsConnected : false
+                    onClicked: {
+                        !bIsReceiving ? start() : stop()
+
+                        bIsReceiving = !bIsReceiving;
+                    }
+                }
+
             }
         }
         ColumnLayout {
@@ -168,11 +180,13 @@ ToolBar {
     }
 
     function start() {
+        backend.sendStartUpdateCommand()
         root.start()
     }
 
 
     function stop() {
+        backend.sendStopUpdateCommand()
         root.stop()
     }
 

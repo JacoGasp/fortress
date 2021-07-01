@@ -46,7 +46,7 @@ Rectangle {
             max: backend ? backend.windowSize : 0
         }
 
-        SplineSeries {
+        LineSeries {
             id: lineSeries
             name: "LineSeries"
             axisX: axisX

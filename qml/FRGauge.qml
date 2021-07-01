@@ -19,6 +19,7 @@ Rectangle {
     property real maxValue: 10
     property var currentColor: {Qt.rgba(0, 0, 0, 0)}
     property bool isRunning: false
+    property bool bIsIntegral: false
 
     Layout.fillHeight: true
     Layout.minimumWidth: 150
@@ -130,21 +131,18 @@ Rectangle {
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: textValue.bottom
-        text: "mSv"
+        text: bIsIntegral ? "Sv" : "mSv"
         font.pointSize: 18
         color: "lightgrey"
         horizontalAlignment: Text.AlignHCenter
     }
-
-
-
 
     Timer {
         interval: 1000
         running: isRunning
         repeat: true
         onTriggered: {
-           update(backend.getLastChannelValue(channel))
+           update(bIsIntegral ? backend.getIntegralChannelValue(channel) / 1000 : backend.getLastChannelValue(channel))
         }
     }
 

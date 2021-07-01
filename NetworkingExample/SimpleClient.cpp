@@ -32,6 +32,18 @@ public:
         send(msg);
     }
 
+    void startUpdate() {
+        message<MsgTypes> msg;
+        msg.header.id = ClientStartUpdating;
+        send(msg);
+    }
+
+    void stopUpdate() {
+        message<MsgTypes> msg;
+        msg.header.id = ClientStopUpdating;
+        send(msg);
+    }
+
     void onMessage(message<MsgTypes> &msg) override {
         switch (msg.header.id) {
             case MsgTypes::ServerAccept: {
@@ -73,6 +85,8 @@ char getCommand() {
     << "\t [p] ping\n"
     << "\t [g] greeting\n"
     << "\t [d] disconnect\n"
+    << "\t [u] update\n"
+    << "\t [s] stop updating\n"
     << "\t [q] quit\n";
     char c;
     std::cin >> c;
@@ -107,6 +121,14 @@ int main(int argc, char *argv[]) {
 
             case 'd':
                 c.disconnect();
+                break;
+
+            case 'u':
+                c.startUpdate();
+                break;
+
+            case 's':
+                c.stopUpdate();
                 break;
 
             default:

@@ -102,6 +102,11 @@ void Backend::onMessage(message<MsgTypes> &msg) {
             break;
         }
 
+        case MsgTypes::ServerReadings: {
+            onReadingsReceived(msg);
+            break;
+        }
+
         default:
             std::cout << "???\n";
     }
@@ -120,6 +125,16 @@ void Backend::pingHandler() {
         std::this_thread::sleep_for(PING_DELAY);
     }
     std::cout << "[BACKEND] Ping thread stopped\n";
+}
+
+void Backend::onReadingsReceived(message<MsgTypes> &msg) {
+    msg >> m_chLastValues;
+
+    for (int i = 0; i < m_nChannels; ++i)
+        if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
+
+    addPointsToSeries(m_chLastValues);
+    emit readingsReceived();
 }
 
 void Backend::togglePingUpdate() {
@@ -159,14 +174,15 @@ void Backend::addPointsToSeries(const std::array<double, m_nChannels> &values) {
         auto chSeries = &m_data[ch];
 
         double x{ static_cast<double>(m_data_idx % (m_windowSizeInPoint)) };
-        double y {values[ch]};
-        chSeries->replace(m_data_idx,QPointF{ x, y });
+        double y{ values[ch] };
+        chSeries->replace(m_data_idx, QPointF{ x, y });
 
         auto max = *std::max_element(chSeries->begin(), chSeries->end(), [](const QPointF &p1, const QPointF &p2) {
             return p1.y() < p2.y();
         });
 
         m_chMaxValues[ch] = max.y();
+        m_chIntegralValues[ch] += values[ch];
     }
     ++t;
 }
@@ -176,11 +192,14 @@ void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldS
         auto *xyNewSeries = dynamic_cast<QXYSeries *>(newSeries);
         auto *xyOldSeries = dynamic_cast<QXYSeries *>(oldSeries);
 
-        auto newPoints = QList<QPointF>{m_data[channel].begin(), m_data[channel].begin() + m_data_idx};
-        auto oldPoints = QList<QPointF>{m_data[channel].begin() + m_data_idx + 1, m_data[channel].end()};
+        if (m_data_idx == 0) {
+            xyNewSeries->removePoints(0, xyNewSeries->count());
+            xyOldSeries->replace(m_data[channel]);
+        } else {
+            xyOldSeries->remove(0);
+        }
 
-        xyNewSeries->replace(newPoints);
-        xyOldSeries->replace(oldPoints);
+        xyNewSeries->append(m_data[channel][m_data_idx]);
     }
 }
 
@@ -204,4 +223,20 @@ double Backend::getLastChannelValue(int channel) const {
 
 double Backend::getMaxChannelValue(int channel) const {
     return m_chMaxValues[channel];
+}
+
+double Backend::getIntegralChannelValue(int channel) const {
+    return m_chIntegralValues[channel];
+}
+
+void Backend::sendStartUpdateCommand() {
+    message<MsgTypes> msg;
+    msg.header.id = ClientStartUpdating;
+    send(msg);
+}
+
+void Backend::sendStopUpdateCommand() {
+    message<MsgTypes> msg;
+    msg.header.id = ClientStopUpdating;
+    send(msg);
 }

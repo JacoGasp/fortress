@@ -31,12 +31,13 @@ private:
     std::thread m_pingThread;
     static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
 
-    int m_data_idx{ -1 };                   // X axis index
-    int m_windowSizeInPoint{ 128 };         // Size of horizontal x as number of points
-    static constexpr int m_nChannels{ 4 };  // Number of channels
-    QList<QList<QPointF>> m_data;           // (nChannel x windowSize) data to display
-    std::array<double, 4> m_chLastValues{}; // Store temporary last reads per each channel for plotting
-    std::array<double, 4> m_chMaxValues{};  // Store temporary maxValue per each channel for autoscaling plot
+    int m_data_idx{ -1 };                           // X axis index
+    int m_windowSizeInPoint{ 128 };                 // Size of horizontal x as number of points
+    static constexpr int m_nChannels{ 4 };          // Number of channels
+    QList<QList<QPointF>> m_data;                   // (nChannel x windowSize) data to display
+    std::array<double, 4> m_chLastValues{};         // Store temporary last reads per each channel for plotting
+    std::array<double, 4> m_chMaxValues{};          // Store temporary maxValue per each channel for autoscaling plot
+    std::array<double, 4> m_chIntegralValues{};     // Store total cumulative values
 
 public:
     // Avoid name collision with multiple inheritance
@@ -67,9 +68,10 @@ public:
     [[nodiscard]] int windowSize() const;
 
 
-
 private:
     void pingHandler();
+
+    void onReadingsReceived(message<MsgTypes> &msg);
 
 // Listen for events
 public slots:
@@ -86,6 +88,13 @@ public slots:
 
     [[nodiscard]] double getMaxChannelValue(int channel) const;
 
+    [[nodiscard]] double getIntegralChannelValue(int channel) const;
+
+    void sendStartUpdateCommand();
+
+    void sendStopUpdateCommand();
+
+
 // Emit signals
 signals:
 
@@ -94,6 +103,8 @@ signals:
     void connectionFailed(QString error_message);
 
     void pingReceived(double ping);
+
+    void readingsReceived();
 
     void windowSizeChanged();
 
