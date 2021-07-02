@@ -164,7 +164,7 @@ ToolBar {
                     text: "Threshold"
                 }
                 TextField {
-                    text: "10"
+                    text: "1"
                     validator: DoubleValidator{
                         bottom: 0
                         top: 10000

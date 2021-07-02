@@ -18,7 +18,7 @@ ApplicationWindow {
     readonly property int nChannels: 4
     property var charts: []
     property var gauges: []
-    property double threshold: 10
+    property double threshold: 1
     property double thresholdIntegral: 100
 
     /*
