@@ -61,6 +61,24 @@ Rectangle {
         }
     }
 
+    function start() {
+        timer.start()
+    }
+
+    function stop() {
+        timer.stop()
+    }
+
+    Timer {
+        id: timer
+        interval: 50
+        running: isRunning
+        repeat: true
+        onTriggered: {
+           update()
+        }
+    }
+
     function update() {
         let maxValue = backend.getMaxChannelValue(channel)
 

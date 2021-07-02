@@ -169,19 +169,21 @@ ApplicationWindow {
         }
     }
 
-    Connections {
-        target: backend
-        function onReadingsReceived() {
-            charts.forEach(c => c.update())
-        }
-    }
+//    Connections {
+//        target: backend
+//        function onReadingsReceived() {
+//            charts.forEach(c => c.update())
+//        }
+//    }
 
     function start() {
         gauges.forEach(g => g.start())
+        charts.forEach(c => c.start())
     }
 
     function stop() {
         gauges.forEach(g => g.stop())
+        charts.forEach(c => c.stop())
     }
 }
 

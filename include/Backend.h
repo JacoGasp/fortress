@@ -13,6 +13,8 @@
 #include <QtQuick/QQuickView>
 #include <iostream>
 #include <thread>
+#include <QFile>
+#include <QDir>
 #include "Networking/client.h"
 #include "Constants.h"
 
@@ -32,12 +34,15 @@ private:
     static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
 
     int m_data_idx{ -1 };                           // X axis index
-    int m_windowSizeInPoint{ 128 };                 // Size of horizontal x as number of points
+    int m_windowSizeInPoint{ 2048 };                 // Size of horizontal x as number of points
     static constexpr int m_nChannels{ 4 };          // Number of channels
     QList<QList<QPointF>> m_data;                   // (nChannel x windowSize) data to display
     std::array<double, 4> m_chLastValues{};         // Store temporary last reads per each channel for plotting
     std::array<double, 4> m_chMaxValues{};          // Store temporary maxValue per each channel for autoscaling plot
     std::array<double, 4> m_chIntegralValues{};     // Store total cumulative values
+
+    QFile m_file;
+    QTextStream m_textStream{&m_file};
 
 public:
     // Avoid name collision with multiple inheritance
@@ -72,6 +77,10 @@ private:
     void pingHandler();
 
     void onReadingsReceived(message<MsgTypes> &msg);
+
+    void openFile();
+
+    void closeFile();
 
 // Listen for events
 public slots:

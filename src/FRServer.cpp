@@ -81,7 +81,7 @@ void FRServer::onSetSampleFrequency(message<MsgTypes> &msg) {
 void FRServer::updateHelper() {
     while (m_bIsUpdating) {
         m_updateCallback(this);
-        std::this_thread::sleep_for(std::chrono::milliseconds (30));
+        std::this_thread::sleep_for(std::chrono::milliseconds (1));
     }
 }
 

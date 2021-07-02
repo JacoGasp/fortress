@@ -12,6 +12,7 @@ Backend::Backend(QObject *parent)
 
 Backend::~Backend() {
     disconnectFromHost();
+    closeFile();
 }
 
 
@@ -130,8 +131,15 @@ void Backend::pingHandler() {
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     msg >> m_chLastValues;
 
-    for (int i = 0; i < m_nChannels; ++i)
+    for (int i = 0; i < m_nChannels; ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
+
+        m_textStream << m_chLastValues[i];
+
+        if (i < m_nChannels - 1)
+            m_textStream << ',';
+    }
+    m_textStream << '\n';
 
     addPointsToSeries(m_chLastValues);
     emit readingsReceived();
@@ -145,6 +153,21 @@ void Backend::togglePingUpdate() {
         m_isPinging = true;
         m_pingThread = std::thread{ &Backend::pingHandler, this };
     }
+}
+
+void Backend::openFile() {
+    QDir::setCurrent("/tmp");
+    m_file.setFileName("output.csv");
+    m_file.open(QIODevice::WriteOnly);
+    m_textStream << "channel1,channel2,channel3,channel4\n";
+}
+
+void Backend::closeFile() {
+    if (m_file.isOpen())
+        m_file.close();
+
+    m_textStream.flush();
+    m_textStream.reset();
 }
 
 double Backend::getLastPingValue() const {
@@ -169,6 +192,7 @@ void Backend::addPointsToSeries(const std::array<double, m_nChannels> &values) {
 
     static int t{ 0 };
     m_data_idx = t % m_windowSizeInPoint;
+
     for (int ch = 0; ch < m_nChannels; ++ch) {
 
         auto chSeries = &m_data[ch];
@@ -188,18 +212,22 @@ void Backend::addPointsToSeries(const std::array<double, m_nChannels> &values) {
 }
 
 void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel) {
+
     if (newSeries && oldSeries) {
         auto *xyNewSeries = dynamic_cast<QXYSeries *>(newSeries);
         auto *xyOldSeries = dynamic_cast<QXYSeries *>(oldSeries);
+        auto channelData = &m_data[channel];
 
-        if (m_data_idx == 0) {
-            xyNewSeries->removePoints(0, xyNewSeries->count());
-            xyOldSeries->replace(m_data[channel]);
-        } else {
-            xyOldSeries->remove(0);
+        auto leftSeries = QList(channelData->begin(), channelData->begin() + m_data_idx - 1);
+        xyNewSeries->replace(leftSeries);
+
+        // FIXME: to prevent glitches the first time the we span from left to right (right series is empty) we use
+        // as workaround m_data_idx + 1, thus we need a sanity check to prevent out of bound. This check is heavy and
+        // should be removed
+        if (m_data_idx < m_windowSizeInPoint - 2) {
+            auto rightSeries = QList(channelData->begin() + m_data_idx + 1, channelData->end());
+            xyOldSeries->replace(rightSeries);
         }
-
-        xyNewSeries->append(m_data[channel][m_data_idx]);
     }
 }
 
@@ -230,12 +258,14 @@ double Backend::getIntegralChannelValue(int channel) const {
 }
 
 void Backend::sendStartUpdateCommand() {
+    openFile();
     message<MsgTypes> msg;
     msg.header.id = ClientStartUpdating;
     send(msg);
 }
 
 void Backend::sendStopUpdateCommand() {
+    closeFile();
     message<MsgTypes> msg;
     msg.header.id = ClientStopUpdating;
     send(msg);
