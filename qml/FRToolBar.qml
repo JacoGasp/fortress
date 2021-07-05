@@ -87,7 +87,7 @@ ToolBar {
                         id: connectButton
                         Layout.preferredWidth: 100
                         text: backend ? backend.bIsConnected ? "Disconnect" : "Connect" : "Disconnected"
-                        enabled: bIpIsValid && bIsPortValid
+                        enabled: bIpIsValid && bIsPortValid && !bIsConnecting
                         onClicked: {
                             !backend.bIsConnected ? connect() : disconnect()
                         }
@@ -147,7 +147,6 @@ ToolBar {
                     enabled: backend ? backend.bIsConnected : false
                     onClicked: {
                         !bIsReceiving ? start() : stop()
-
                         bIsReceiving = !bIsReceiving;
                     }
                 }

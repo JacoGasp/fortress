@@ -47,21 +47,23 @@ Rectangle {
         }
 
         LineSeries {
-            id: lineSeries
-            name: "LineSeries"
+            id: leftSeries
+            name: ""
             axisX: axisX
             axisY: axisY
         }
 
         LineSeries {
-            id: lineSeriesOld
-            name: "LineSeriesOld"
+            id: rightSeries
+            name: "rightSeries"
             axisX: axisX
             axisY: axisY
         }
     }
 
     function start() {
+        leftSeries.removePoints(0, leftSeries.count)
+        rightSeries.removePoints(0, rightSeries.count)
         timer.start()
     }
 
@@ -85,12 +87,12 @@ Rectangle {
         if (axisY.max !== maxValue)
             axisY.max = maxValue
 
-        backend.updatePlotSeries(lineSeries, lineSeriesOld, channel)
+        backend.updatePlotSeries(leftSeries, rightSeries, channel)
     }
 
     Component.onCompleted: {
-        lineSeries.color = lineColor
-        lineSeriesOld.color = lineColor
+        leftSeries.color = lineColor
+        rightSeries.color = lineColor
     }
 }
 /*##^##

@@ -169,12 +169,6 @@ ApplicationWindow {
         }
     }
 
-//    Connections {
-//        target: backend
-//        function onReadingsReceived() {
-//            charts.forEach(c => c.update())
-//        }
-//    }
 
     function start() {
         gauges.forEach(g => g.start())
@@ -184,7 +178,9 @@ ApplicationWindow {
     function stop() {
         gauges.forEach(g => g.stop())
         charts.forEach(c => c.stop())
+        backend.clearData();
     }
+
 }
 
 

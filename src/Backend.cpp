@@ -52,6 +52,18 @@ void Backend::sendGreetings() {
     send(msg);
 }
 
+void Backend::clearData() {
+    for (auto &ch : m_data)
+        ch.clear();
+
+    m_data.clear();
+    m_data_idx = 0;
+    m_t = 0;
+    generatePlotSeries(fortress::consts::N_CHANNELS, fortress::consts::WINDOW_SIZE_IN_POINT);
+}
+
+// Callbacks
+
 void Backend::onConnectionFailed(std::error_code &ec) {
     stopListening();
     emit connectionFailed(QString::fromStdString(ec.message()));
@@ -192,8 +204,7 @@ void Backend::generatePlotSeries(int n_channels, int length) {
 void Backend::addPointsToSeries(const std::array<double, fortress::consts::N_CHANNELS> &values) {
     using namespace fortress::consts;
 
-    static int t{ 0 };
-    m_data_idx = t % WINDOW_SIZE_IN_POINT;
+    m_data_idx = m_t % WINDOW_SIZE_IN_POINT;
 
     for (int ch = 0; ch < N_CHANNELS; ++ch) {
 
@@ -210,7 +221,7 @@ void Backend::addPointsToSeries(const std::array<double, fortress::consts::N_CHA
         m_chMaxValues[ch] = max.y();
         m_chIntegralValues[ch] += values[ch];
     }
-    ++t;
+    ++m_t;
 }
 
 void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel) {
@@ -220,7 +231,7 @@ void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldS
         auto *xyOldSeries = dynamic_cast<QXYSeries *>(oldSeries);
         auto channelData = &m_data[channel];
 
-        auto leftSeries = QList(channelData->begin(), channelData->begin() + m_data_idx - 1);
+        auto leftSeries = QList(channelData->begin(), channelData->begin() + m_data_idx);
         xyNewSeries->replace(leftSeries);
 
         // FIXME: to prevent glitches the first time the we span from left to right (right series is empty) we use

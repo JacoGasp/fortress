@@ -34,6 +34,7 @@ private:
     static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
 
     int m_data_idx{ -1 };                                                  // X axis index
+    int m_t{ 0 };
     QList<QList<QPointF>> m_data;                                          // (nChannel x windowSize) data to display
     std::array<double, fortress::consts::N_CHANNELS> m_chLastValues{};     // Store temporary last reads per each channel for plotting
     std::array<double, fortress::consts::N_CHANNELS> m_chMaxValues{};      // Store temporary maxValue per each channel for autoscaling plot
@@ -57,6 +58,8 @@ public:
     Q_INVOKABLE void sendGreetings();
 
     Q_INVOKABLE void togglePingUpdate();
+
+    Q_INVOKABLE void clearData();
 
     void onMessage(message<MsgTypes> &msg) override;
 
