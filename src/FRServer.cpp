@@ -86,9 +86,11 @@ void FRServer::updateHelper() {
 }
 
 void FRServer::startUpdating() {
-    m_bIsUpdating = true;
-    m_thUpdate = std::thread{ &FRServer::updateHelper, this };
-    std::cout << "[SERVER]: Start updating\n";
+    if (!m_bIsUpdating) {
+        m_bIsUpdating = true;
+        m_thUpdate = std::thread{&FRServer::updateHelper, this};
+        std::cout << "[SERVER]: Start updating\n";
+    }
 }
 
 void FRServer::stopUpdating() {
