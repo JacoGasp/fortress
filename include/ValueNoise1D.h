@@ -5,29 +5,30 @@
 #ifndef FORTRESS_VALUENOISE1D_H
 #define FORTRESS_VALUENOISE1D_H
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <Constants.h>
 
 template<typename T = float>
 inline T lerp(const T &lo, const T &hi, const T &t) { return lo * (1 - t) + hi * t; }
 
 class ValueNoise1D {
 public:
-    static const unsigned kMaxVertices = 256;
-    static const unsigned kMaxVerticesMask = kMaxVertices - 1;
-    float r[ kMaxVertices ];
+    static const uint16_t kMaxVertices = fortress::consts::WINDOW_SIZE_IN_POINT * 1.5;
+    static const uint16_t kMaxVerticesMask = kMaxVertices - 1;
+    double r[ kMaxVertices ]{};
 
-    ValueNoise1D(unsigned seed = 2021) {
+    explicit ValueNoise1D(unsigned seed = 2021) {
         srand48(seed);
 
-        for (unsigned i = 0; i < kMaxVertices; ++i) {
-            r[i] = drand48();
+        for (double & i : r) {
+            i = drand48();
         }
     }
 
-    float eval(const float &x) {
+    double eval(const double &x) {
         // Floor
         int xi = (int)x - (x < 0 && x != (int)x);
-        float t = x - xi;
+        double t = x - xi;
         // Modulo using &
         int xMin = xi & kMaxVerticesMask;
         int xMax = (xMin + 1) & kMaxVerticesMask;

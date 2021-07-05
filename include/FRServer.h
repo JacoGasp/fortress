@@ -18,7 +18,7 @@ class FRServer : public ServerInterface<MsgTypes> {
 private:
     std::thread m_thUpdate;
     std::atomic_bool m_bIsUpdating{};
-    int m_nSamplingFrequency{ 1 };
+    int m_nSamplingPeriodsMs{ 10 };
     std::function<void(FRServer *)> m_updateCallback;
 
 public:

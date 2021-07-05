@@ -6,7 +6,8 @@
 
 Backend::Backend(QObject *parent)
         : QObject{ parent } {
-    generatePlotSeries(4, m_windowSizeInPoint);
+    using namespace fortress::consts;
+    generatePlotSeries(N_CHANNELS, WINDOW_SIZE_IN_POINT);
     std::cout << "Instantiated backend helper\n";
 }
 
@@ -89,7 +90,7 @@ void Backend::onMessage(message<MsgTypes> &msg) {
             m_chLastValues[2] = 8 - m_lastPingValue;
             m_chLastValues[3] = 4 + m_lastPingValue * .5;
 
-            for (int i = 0; i < m_nChannels; ++i)
+            for (int i = 0; i < fortress::consts::N_CHANNELS; ++i)
                 if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
 
             addPointsToSeries(m_chLastValues);
@@ -131,12 +132,12 @@ void Backend::pingHandler() {
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     msg >> m_chLastValues;
 
-    for (int i = 0; i < m_nChannels; ++i) {
+    for (int i = 0; i < fortress::consts::N_CHANNELS; ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
 
         m_textStream << m_chLastValues[i];
 
-        if (i < m_nChannels - 1)
+        if (i < fortress::consts::N_CHANNELS - 1)
             m_textStream << ',';
     }
     m_textStream << '\n';
@@ -188,16 +189,17 @@ void Backend::generatePlotSeries(int n_channels, int length) {
     }
 }
 
-void Backend::addPointsToSeries(const std::array<double, m_nChannels> &values) {
+void Backend::addPointsToSeries(const std::array<double, fortress::consts::N_CHANNELS> &values) {
+    using namespace fortress::consts;
 
     static int t{ 0 };
-    m_data_idx = t % m_windowSizeInPoint;
+    m_data_idx = t % WINDOW_SIZE_IN_POINT;
 
-    for (int ch = 0; ch < m_nChannels; ++ch) {
+    for (int ch = 0; ch < N_CHANNELS; ++ch) {
 
         auto chSeries = &m_data[ch];
 
-        double x{ static_cast<double>(m_data_idx % (m_windowSizeInPoint)) };
+        double x{ static_cast<double>(m_data_idx % (WINDOW_SIZE_IN_POINT)) };
         double y{ values[ch] };
         chSeries->replace(m_data_idx, QPointF{ x, y });
 
@@ -224,7 +226,7 @@ void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldS
         // FIXME: to prevent glitches the first time the we span from left to right (right series is empty) we use
         // as workaround m_data_idx + 1, thus we need a sanity check to prevent out of bound. This check is heavy and
         // should be removed
-        if (m_data_idx < m_windowSizeInPoint - 2) {
+        if (m_data_idx < fortress::consts::WINDOW_SIZE_IN_POINT - 2) {
             auto rightSeries = QList(channelData->begin() + m_data_idx + 1, channelData->end());
             xyOldSeries->replace(rightSeries);
         }
@@ -238,12 +240,9 @@ QList<QPointF> Backend::getSeries() const {
 }
 
 int Backend::windowSize() const {
-    return m_windowSizeInPoint;
+    return fortress::consts::WINDOW_SIZE_IN_POINT;
 }
 
-void Backend::setWindowSize(int windowSize) {
-    m_windowSizeInPoint = windowSize;
-}
 
 double Backend::getLastChannelValue(int channel) const {
     return m_chLastValues[channel];

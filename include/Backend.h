@@ -33,13 +33,11 @@ private:
     std::thread m_pingThread;
     static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
 
-    int m_data_idx{ -1 };                           // X axis index
-    int m_windowSizeInPoint{ 2048 };                 // Size of horizontal x as number of points
-    static constexpr int m_nChannels{ 4 };          // Number of channels
-    QList<QList<QPointF>> m_data;                   // (nChannel x windowSize) data to display
-    std::array<double, 4> m_chLastValues{};         // Store temporary last reads per each channel for plotting
-    std::array<double, 4> m_chMaxValues{};          // Store temporary maxValue per each channel for autoscaling plot
-    std::array<double, 4> m_chIntegralValues{};     // Store total cumulative values
+    int m_data_idx{ -1 };                                                  // X axis index
+    QList<QList<QPointF>> m_data;                                          // (nChannel x windowSize) data to display
+    std::array<double, fortress::consts::N_CHANNELS> m_chLastValues{};     // Store temporary last reads per each channel for plotting
+    std::array<double, fortress::consts::N_CHANNELS> m_chMaxValues{};      // Store temporary maxValue per each channel for autoscaling plot
+    std::array<double, fortress::consts::N_CHANNELS> m_chIntegralValues{}; // Store total cumulative values
 
     QFile m_file;
     QTextStream m_textStream{&m_file};
@@ -87,11 +85,9 @@ public slots:
 
     void generatePlotSeries(int n_channels, int length);
 
-    void addPointsToSeries(const std::array<double, m_nChannels> &values);
+    void addPointsToSeries(const std::array<double, fortress::consts::N_CHANNELS> &values);
 
     void updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel);
-
-    void setWindowSize(int windowSize);
 
     [[nodiscard]] double getLastChannelValue(int channel) const;
 

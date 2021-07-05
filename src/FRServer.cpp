@@ -75,13 +75,13 @@ void FRServer::onPingReceive(const std::shared_ptr<Connection<MsgTypes>> &client
 }
 
 void FRServer::onSetSampleFrequency(message<MsgTypes> &msg) {
-    msg >> m_nSamplingFrequency;
+    msg >> m_nSamplingPeriodsMs;
 }
 
 void FRServer::updateHelper() {
     while (m_bIsUpdating) {
         m_updateCallback(this);
-        std::this_thread::sleep_for(std::chrono::milliseconds (1));
+        std::this_thread::sleep_for(std::chrono::milliseconds (m_nSamplingPeriodsMs));
     }
 }
 

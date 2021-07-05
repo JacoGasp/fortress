@@ -6,7 +6,8 @@
 #define FORTRESS_CONSTANTS_H
 
 namespace fortress::consts {
-
+    constexpr uint16_t WINDOW_SIZE_IN_POINT = 512;
+    constexpr uint8_t N_CHANNELS = 4;
 }
 
 namespace fortress::net {
