@@ -13,8 +13,8 @@ env:
   QT_NAME: qt6
   QT_VERSION: 6.1.1
   
-  DESKTOP_APP_NAME: Fortress
-  SERVER_APP_NAME:  SimpleServer
+  DESKTOP_APP_BUILD_FILE: app/Fortress
+  SERVER_APP_BUILD_FILE:  server/Server
   
 jobs:
   build:
@@ -154,17 +154,17 @@ jobs:
 
           if [ $RUNNER_OS == "Linux" ]; then
             mkdir ${bundle_dir}/Fortress
-            ./cqtdeployer/cqtdeployer.sh -bin ./build/app/Fortress -qmlDir ./qml -targetDir ${bundle_dir}/Fortress
-            mv ./build/NetworkingExample/SimpleServer ./${bundle_dir}
+            ./cqtdeployer/cqtdeployer.sh -bin ./build/${DESKTOP_APP_BUILD_FILE} -qmlDir ./qml -targetDir ${bundle_dir}/Fortress
+            mv ./build/${SERVER_APP_BUILD_FILE} ./${bundle_dir}
             tar -cvf ${{ matrix.config.artifact }} ./${bundle_dir}
 
           elif [ "$RUNNER_OS" == macOS ]; then
             # Fix macdeployqt not copying this framework
             mkdir ./build/app/Fortress.app/Contents/Frameworks/
             cp -r ${{ steps.qt.outputs.qt_dir }}/lib/QtQuickControls2Impl.framework ./build/app/Fortress.app/Contents/Frameworks/
-            ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/app/Fortress.app -qmldir=./qml -dmg
-            mv ./build/app/Fortress.dmg ${bundle_dir}
-            mv ./build/NetworkingExample/SimpleServer ${bundle_dir}
+            ${{ steps.qt.outputs.qt_dir }}/bin/macdeployqt ./build/${DESKTOP_APP_BUILD_FILE}.app -qmldir=./qml -dmg
+            mv ./build/app/${DESKTOP_APP_BUILD_FILE}.dmg ${bundle_dir}
+            mv ./build/${SERVER_APP_BUILD_FILE} ${bundle_dir}
             zip -r ${{ matrix.config.artifact }} ./${bundle_dir} 
           fi
 
