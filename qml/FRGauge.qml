@@ -118,7 +118,7 @@ Rectangle {
         id: textValue
         anchors.centerIn: parent
         font.family: "Helvetica"
-        font.pointSize: 48
+        font.pointSize: 32
         horizontalAlignment: Text.AlignHCenter
         color: backgroundColor
         text: "--"
