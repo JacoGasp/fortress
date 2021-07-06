@@ -57,8 +57,7 @@ void Backend::clearData() {
         ch.clear();
 
     m_data.clear();
-    m_data_idx = 0;
-    m_t = 0;
+    m_t = m_data_idx = 0;
     generatePlotSeries(fortress::consts::N_CHANNELS, fortress::consts::WINDOW_SIZE_IN_POINT);
 }
 
@@ -93,21 +92,7 @@ void Backend::onMessage(message<MsgTypes> &msg) {
             std::chrono::system_clock::time_point timeThen;
 
             msg >> timeThen;
-
             m_lastPingValue = std::chrono::duration<double>(timeNow - timeThen).count() * 1000;
-            // std::cout << "Ping: " << m_lastPingValue << " ms.\n";
-
-            m_chLastValues[0] = m_lastPingValue;
-            m_chLastValues[1] = 2 + m_lastPingValue / 0.7;
-            m_chLastValues[2] = 8 - m_lastPingValue;
-            m_chLastValues[3] = 4 + m_lastPingValue * .5;
-
-            for (int i = 0; i < fortress::consts::N_CHANNELS; ++i)
-                if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
-
-            addPointsToSeries(m_chLastValues);
-            emit pingReceived(m_lastPingValue);
-
             break;
         }
 

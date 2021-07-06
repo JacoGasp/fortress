@@ -23,7 +23,7 @@ using namespace fortress::net;
 class Backend : public QObject, public ClientInterface<MsgTypes> {
 Q_OBJECT
     Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
-    Q_PROPERTY(double dPingValue READ getLastPingValue NOTIFY pingReceived)
+    Q_PROPERTY(double dPingValue READ getLastPingValue())
     Q_PROPERTY(int windowSize READ windowSize() NOTIFY windowSizeChanged)
     Q_PROPERTY(QList<QPointF> series READ getSeries())
 

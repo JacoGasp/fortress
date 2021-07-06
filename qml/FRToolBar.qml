@@ -7,7 +7,6 @@ ToolBar {
 
     property bool bIpIsValid: false
     property bool bIsPortValid: true    // Workaround for default port
-    property bool bIsPinging: false
     property bool bIsConnecting: false
     property bool bIsReceiving: false
 
@@ -127,22 +126,6 @@ ToolBar {
             GridLayout {
                 columns: 2
                 Button {
-                    text: !bIsPinging ? "Ping" : "Stop"
-                    enabled: backend ? backend.bIsConnected : false
-                    onClicked: {
-                        backend.togglePingUpdate();
-                        bIsPinging = !bIsPinging;
-                        bIsPinging ? start() : stop()
-                    }
-                }
-
-                Label {
-                    id: pingLabel
-                    text: backend ? (backend.dPingValue >= Infinity ? "--" : `${backend.dPingValue.toFixed(1)} ms`) : "--"
-                }
-
-
-                Button {
                     text: !bIsReceiving ? "Start" : "Stop"
                     enabled: backend ? backend.bIsConnected : false
                     onClicked: {
@@ -200,8 +183,6 @@ ToolBar {
     function disconnect() {
         console.log("Disconnecting...")
         backend.disconnectFromHost()
-        // Stop ping
-        bIsPinging = false
     }
 
 
