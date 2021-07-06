@@ -58,6 +58,8 @@ void Backend::clearData() {
 
     m_data.clear();
     m_t = m_data_idx = 0;
+    m_chIntegralValues = { 0.0, 0.0, 0.0, 0.0 };
+    m_chLastValues = { 0.0, 0.0, 0.0, 0.0 };
     generatePlotSeries(fortress::consts::N_CHANNELS, fortress::consts::WINDOW_SIZE_IN_POINT);
 }
 

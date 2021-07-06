@@ -152,7 +152,7 @@ ToolBar {
                 }
                 TextField {
                     text: "1"
-                    validator: DoubleValidator{
+                    validator: DoubleValidator {
                         bottom: 0
                         top: 10000
                     }
