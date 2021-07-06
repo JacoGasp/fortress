@@ -46,8 +46,8 @@ void update(FRServer *server) {
     std::array<double, 4> values{
             valueNoise1D.eval(static_cast<float>(t)),
             valueNoise1D.eval(static_cast<float>(t + 42)),
-            valueNoise1D.eval(static_cast<float>(t + 666)),
-            valueNoise1D.eval(static_cast<float>(t - 123))
+            valueNoise1D.eval(static_cast<float>(t + 666)) + 0.3,
+            valueNoise1D.eval(static_cast<float>(t - 123) + 0.1)
     };
 
     msg << values;
