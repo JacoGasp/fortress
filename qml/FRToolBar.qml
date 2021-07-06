@@ -9,6 +9,7 @@ ToolBar {
     property bool bIsPortValid: true    // Workaround for default port
     property bool bIsConnecting: false
     property bool bIsReceiving: false
+    property int dFrequency: 1
 
     Connections {
         target: backend
@@ -109,7 +110,6 @@ ToolBar {
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
-
             }
         }
 
@@ -134,6 +134,20 @@ ToolBar {
             GridLayout {
                 columns: 2
                 Label {
+                    text: "Sampl. Freq (Hz):"
+                }
+
+                TextField {
+                    text: dFrequency
+                    validator: IntValidator { bottom: 1; top: 1000 }
+                    enabled: !bIsReceiving
+                    onAccepted: {
+                        dFrequency = this.text
+                    }
+                    Layout.preferredWidth: 50
+                }
+
+                Label {
                     text: "Threshold"
                 }
                 TextField {
@@ -145,8 +159,8 @@ ToolBar {
                     onAccepted: {
                         root.threshold = this.text
                     }
+                    Layout.preferredWidth: 50
                 }
-
             }
         }
 
