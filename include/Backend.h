@@ -31,7 +31,7 @@ private:
     double m_lastPingValue{ std::numeric_limits<double>::infinity() };
     bool m_isPinging{ false };
     std::thread m_pingThread;
-    static constexpr std::chrono::milliseconds PING_DELAY{ 100 };
+    static constexpr std::chrono::milliseconds PING_DELAY{ 1000 };
 
     int m_data_idx{ -1 };                                                  // X axis index
     int m_t{ 0 };
