@@ -9,7 +9,7 @@ ToolBar {
     property bool bIsPortValid: true    // Workaround for default port
     property bool bIsConnecting: false
     property bool bIsReceiving: false
-    property int dFrequency: 1
+    property int dFrequency: 100        // Hertz
 
     Connections {
         target: backend
@@ -104,7 +104,7 @@ ToolBar {
                     color: "red"
                     Label {
                         id: statusLabel
-                        text: "Status: disconnected"
+                        text: "Status: Disconnected"
                         anchors.left: parent.right
                         anchors.leftMargin: 5
                         anchors.verticalCenter: parent.verticalCenter
@@ -148,7 +148,7 @@ ToolBar {
                 }
 
                 Label {
-                    text: "Threshold"
+                    text: "Threshold (mSv):"
                 }
                 TextField {
                     text: "1"
@@ -194,15 +194,15 @@ ToolBar {
     function changeStatus(status) {
         switch (status) {
         case "disconnected":
-            statusLabel.text = "Status: disconnected"
+            statusLabel.text = "Status: Disconnected"
             statusIcon.color = "red"
             break
         case "connecting":
-            statusLabel.text = "Status: connecting"
+            statusLabel.text = "Status: Connecting..."
             statusIcon.color = "orange"
             break
         case "connected":
-            statusLabel.text = "Status: connected"
+            statusLabel.text = "Status: Connected"
             statusIcon.color = "green"
             break
         }
