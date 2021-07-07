@@ -33,7 +33,7 @@ private:
     std::thread m_pingThread;
     static constexpr std::chrono::milliseconds PING_DELAY{ 1000 };
 
-    int m_data_idx{ -1 };                                                  // X axis index
+    int m_data_idx{ 0 };                                                  // X axis index
     int m_t{ 0 };
     QList<QList<QPointF>> m_data;                                          // (nChannel x windowSize) data to display
     std::array<double, fortress::consts::N_CHANNELS> m_chLastValues{};     // Store temporary last reads per each channel for plotting
