@@ -61,6 +61,13 @@ public:
 
     Q_INVOKABLE void clearData();
 
+    Q_INVOKABLE void setSamplingFrequency(double frequency);
+
+    Q_INVOKABLE void sendStartUpdateCommand(double frequency);
+
+    Q_INVOKABLE void sendStopUpdateCommand();
+
+
     void onMessage(message<MsgTypes> &msg) override;
 
     void onConnectionFailed(std::error_code &ec) override;
@@ -71,7 +78,7 @@ public:
 
     [[nodiscard]] QList<QPointF> getSeries() const;
 
-    [[nodiscard]] int windowSize() const;
+    [[nodiscard]] static int windowSize() ;
 
 
 private:
@@ -97,10 +104,6 @@ public slots:
     [[nodiscard]] double getMaxChannelValue(int channel) const;
 
     [[nodiscard]] double getIntegralChannelValue(int channel) const;
-
-    void sendStartUpdateCommand();
-
-    void sendStopUpdateCommand();
 
 
 // Emit signals

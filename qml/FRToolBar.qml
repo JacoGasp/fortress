@@ -139,9 +139,9 @@ ToolBar {
 
                 TextField {
                     text: dFrequency
-                    validator: IntValidator { bottom: 1; top: 1000 }
+                    validator: DoubleValidator { bottom: 1; top: 1000 }
                     enabled: !bIsReceiving
-                    onAccepted: {
+                    onTextChanged: {
                         dFrequency = this.text
                     }
                     Layout.preferredWidth: 50
@@ -156,7 +156,7 @@ ToolBar {
                         bottom: 0
                         top: 10000
                     }
-                    onAccepted: {
+                    onTextChanged: {
                         root.threshold = this.text
                     }
                     Layout.preferredWidth: 50
@@ -167,7 +167,7 @@ ToolBar {
     }
 
     function start() {
-        backend.sendStartUpdateCommand()
+        backend.sendStartUpdateCommand(dFrequency)
         root.start()
     }
 

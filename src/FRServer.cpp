@@ -31,16 +31,13 @@ void FRServer::onMessage(const FRClient client, message<MsgTypes> &msg) {
             onPingReceive(client, msg);
             break;
         case ClientStartUpdating:
-            startUpdating();
+            startUpdating(msg);
             break;
         case ClientStopUpdating:
             stopUpdating();
             break;
         case ClientDisconnect:
             std::cout << '[' << client->getID() << "] Client Disconnects\n";
-            break;
-        case ClientSetSampleFrequency:
-            onSetSampleFrequency(msg);
             break;
         case MessageAll:
             break;
@@ -74,22 +71,22 @@ void FRServer::onPingReceive(const std::shared_ptr<Connection<MsgTypes>> &client
               << " ms.\n";
 }
 
-void FRServer::onSetSampleFrequency(message<MsgTypes> &msg) {
-    msg >> m_nSamplingPeriodsMs;
-}
-
 void FRServer::updateHelper() {
     while (m_bIsUpdating) {
         m_updateCallback(this);
-        std::this_thread::sleep_for(std::chrono::milliseconds (m_nSamplingPeriodsMs));
+        std::this_thread::sleep_for(std::chrono::microseconds(m_nSamplingPeriodsMicroseconds));
     }
 }
 
-void FRServer::startUpdating() {
+void FRServer::startUpdating(message<MsgTypes> &msg) {
     if (!m_bIsUpdating) {
+        double frequency;
+        msg >> frequency;
+        m_nSamplingPeriodsMicroseconds = static_cast<int>(1 / frequency * 1'000'000);
         m_bIsUpdating = true;
-        m_thUpdate = std::thread{&FRServer::updateHelper, this};
-        std::cout << "[SERVER]: Start updating\n";
+        m_thUpdate = std::thread{ &FRServer::updateHelper, this };
+        std::cout << "[SERVER]: Start updating width sampling period of " << m_nSamplingPeriodsMicroseconds / 1000
+                  << " ms.\n";
     }
 }
 

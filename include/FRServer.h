@@ -18,7 +18,7 @@ class FRServer : public ServerInterface<MsgTypes> {
 private:
     std::thread m_thUpdate;
     std::atomic_bool m_bIsUpdating{};
-    int m_nSamplingPeriodsMs{ 10 };
+    int m_nSamplingPeriodsMicroseconds{ 10'000};
     std::function<void(FRServer *)> m_updateCallback;
 
 public:
@@ -42,11 +42,9 @@ private:
 
     static void onPingReceive(const std::shared_ptr<Connection<MsgTypes>> &client, message<MsgTypes> &msg);
 
-    void onSetSampleFrequency(message<MsgTypes> &msg);
-
     void updateHelper();
 
-    void startUpdating();
+    void startUpdating(message<MsgTypes> &msg);
 
     void stopUpdating();
 };

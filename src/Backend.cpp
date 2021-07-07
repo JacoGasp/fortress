@@ -237,7 +237,7 @@ QList<QPointF> Backend::getSeries() const {
     return m_data.at(0);
 }
 
-int Backend::windowSize() const {
+int Backend::windowSize() {
     return fortress::consts::WINDOW_SIZE_IN_POINT;
 }
 
@@ -254,10 +254,11 @@ double Backend::getIntegralChannelValue(int channel) const {
     return m_chIntegralValues[channel];
 }
 
-void Backend::sendStartUpdateCommand() {
+void Backend::sendStartUpdateCommand(double frequency) {
     openFile();
     message<MsgTypes> msg;
     msg.header.id = ClientStartUpdating;
+    msg << frequency;
     send(msg);
 }
 
@@ -265,5 +266,12 @@ void Backend::sendStopUpdateCommand() {
     closeFile();
     message<MsgTypes> msg;
     msg.header.id = ClientStopUpdating;
+    send(msg);
+}
+
+void Backend::setSamplingFrequency(double frequency) {
+    message<MsgTypes> msg;
+    msg.header.id = ClientSetSampleFrequency;
+    msg << frequency;
     send(msg);
 }
