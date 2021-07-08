@@ -101,7 +101,7 @@ public slots:
 
     void addPointsToSeries(const std::array<double, fortress::consts::N_CHANNELS> &values);
 
-    void updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel);
+    void updatePlotSeries(QAbstractSeries *qtQuickLeftSeries, QAbstractSeries *qtQuickRightSeries, int channel);
 
     [[nodiscard]] double getLastChannelValue(int channel) const;
 

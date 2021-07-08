@@ -215,22 +215,22 @@ void Backend::addPointsToSeries(const std::array<double, fortress::consts::N_CHA
     ++m_t;
 }
 
-void Backend::updatePlotSeries(QAbstractSeries *newSeries, QAbstractSeries *oldSeries, int channel) {
+void Backend::updatePlotSeries(QAbstractSeries *qtQuickLeftSeries, QAbstractSeries *qtQuickRightSeries, int channel) {
 
-    if (newSeries && oldSeries) {
-        auto *xyNewSeries = dynamic_cast<QXYSeries *>(newSeries);
-        auto *xyOldSeries = dynamic_cast<QXYSeries *>(oldSeries);
+    if (qtQuickLeftSeries && qtQuickRightSeries) {
+        auto *xyQtQuickLeftSeries = dynamic_cast<QXYSeries *>(qtQuickLeftSeries);
+        auto *xyQtQuickRightSeries = dynamic_cast<QXYSeries *>(qtQuickRightSeries);
         auto channelData = &m_data[channel];
 
         auto leftSeries = QList(channelData->begin(), channelData->begin() + m_data_idx);
-        xyNewSeries->replace(leftSeries);
+        xyQtQuickLeftSeries->replace(leftSeries);
 
         // FIXME: to prevent glitches the first time the we span from left to right (right series is empty) we use
         // as workaround m_data_idx + 1, thus we need a sanity check to prevent out of bound. This check is heavy and
         // should be removed
         if (m_data_idx < fortress::consts::WINDOW_SIZE_IN_POINT - 2) {
             auto rightSeries = QList(channelData->begin() + m_data_idx + 1, channelData->end());
-            xyOldSeries->replace(rightSeries);
+            xyQtQuickRightSeries->replace(rightSeries);
         }
     }
 }
