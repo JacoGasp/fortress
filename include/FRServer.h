@@ -1,6 +1,10 @@
 //
 // Created by Jacopo Gasparetto on 15/06/21.
 //
+// SPDX-FileCopyrightText: 2021 INFN
+// SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileContributor: Jacopo Gasparetto
+//
 
 #ifndef FORTRESS_FR_SERVER_H
 #define FORTRESS_FR_SERVER_H

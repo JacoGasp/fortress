@@ -1,7 +1,12 @@
 //
 // Created by Jacopo Gasparetto on 16/06/21.
 //
+// SPDX-FileCopyrightText: 2021 INFN
+// SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileContributor: Jacopo Gasparetto
+//
 // https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-1D-noise
+
 #ifndef FORTRESS_VALUENOISE1D_H
 #define FORTRESS_VALUENOISE1D_H
 
