@@ -19,6 +19,7 @@
 #include <thread>
 #include <QFile>
 #include <QDir>
+#include <QTemporaryFile>
 #include "Networking/client.h"
 #include "Constants.h"
 
@@ -29,7 +30,6 @@ Q_OBJECT
     Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
     Q_PROPERTY(double dPingValue READ getLastPingValue())
     Q_PROPERTY(int windowSize READ windowSize() NOTIFY windowSizeChanged)
-    Q_PROPERTY(QList<QPointF> series READ getSeries())
 
 private:
     double m_lastPingValue{ std::numeric_limits<double>::infinity() };
@@ -43,7 +43,7 @@ private:
     std::array<double, fortress::consts::N_CHANNELS> m_chMaxValues{};      // Store temporary maxValue per each channel for autoscaling plot
     std::array<double, fortress::consts::N_CHANNELS> m_chIntegralValues{}; // Store total cumulative values
 
-    QFile m_file;                                                          // Csv output file
+    QTemporaryFile m_file{"fortress_out.csv"};              // Csv output file
     QTextStream m_textStream{&m_file};                             // Csv stream to write on file
 
     std::unique_ptr<asio::steady_timer> m_pPingTimer;
@@ -71,6 +71,8 @@ public:
     Q_INVOKABLE void sendStartUpdateCommand(double frequency);
 
     Q_INVOKABLE void sendStopUpdateCommand();
+
+    Q_INVOKABLE void saveFile(QUrl &destination_path);
 
 
     void onMessage(message<MsgTypes> &msg) override;
@@ -119,8 +121,6 @@ signals:
     void connectionFailed(QString error_message);
 
     void pingReceived(double ping);
-
-    void readingsReceived();
 
     void windowSizeChanged();
 

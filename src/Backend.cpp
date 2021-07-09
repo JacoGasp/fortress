@@ -10,9 +10,10 @@
 
 Backend::Backend(QObject *parent)
         : QObject{ parent },
-        m_pPingTimer(std::make_unique<asio::steady_timer >(m_context, PING_DELAY)) {
+        m_pPingTimer{ std::make_unique<asio::steady_timer >(m_context, PING_DELAY) } {
     using namespace fortress::consts;
     generatePlotSeries(N_CHANNELS, WINDOW_SIZE_IN_POINT);
+    m_file.setAutoRemove(true);
     std::cout << "Instantiated backend helper\n";
 }
 
@@ -135,7 +136,6 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     m_textStream << '\n';
 
     addPointsToSeries(m_chLastValues);
-    emit readingsReceived();
 }
 
 void Backend::pingHandler() {
@@ -162,9 +162,7 @@ void Backend::togglePingUpdate() {
 }
 
 void Backend::openFile() {
-    QDir::setCurrent("/tmp");
-    m_file.setFileName("output.csv");
-    m_file.open(QIODevice::WriteOnly);
+    m_file.open();
     m_textStream << "channel1,channel2,channel3,channel4\n";
 }
 
@@ -247,7 +245,6 @@ int Backend::windowSize() {
     return fortress::consts::WINDOW_SIZE_IN_POINT;
 }
 
-
 double Backend::getLastChannelValue(int channel) const {
     return m_chLastValues[channel];
 }
@@ -273,6 +270,10 @@ void Backend::sendStopUpdateCommand() {
     message<MsgTypes> msg;
     msg.header.id = ClientStopUpdating;
     send(msg);
+}
+
+void Backend::saveFile(QUrl &destinationPath) {
+    QFile::copy(m_file.fileName(), destinationPath.path());
 }
 
 void Backend::setSamplingFrequency(double frequency) {
