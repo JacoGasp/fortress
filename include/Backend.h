@@ -33,9 +33,8 @@ Q_OBJECT
 
 private:
     double m_lastPingValue{ std::numeric_limits<double>::infinity() };
-    bool m_isPinging{ false };
-    std::thread m_pingThread;
-    static constexpr std::chrono::milliseconds PING_DELAY{ 1000 };
+    bool m_bIsPinging{ false };
+    static constexpr asio::chrono::milliseconds PING_DELAY{ 1000 };
 
     int m_data_idx{ 0 };                                                  // X axis index
     int m_t{ 0 };
@@ -44,8 +43,10 @@ private:
     std::array<double, fortress::consts::N_CHANNELS> m_chMaxValues{};      // Store temporary maxValue per each channel for autoscaling plot
     std::array<double, fortress::consts::N_CHANNELS> m_chIntegralValues{}; // Store total cumulative values
 
-    QFile m_file;
-    QTextStream m_textStream{&m_file};
+    QFile m_file;                                                          // Csv output file
+    QTextStream m_textStream{&m_file};                             // Csv stream to write on file
+
+    std::unique_ptr<asio::steady_timer> m_pPingTimer;
 
 public:
     // Avoid name collision with multiple inheritance

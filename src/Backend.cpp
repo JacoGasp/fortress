@@ -9,13 +9,15 @@
 #include "Backend.h"
 
 Backend::Backend(QObject *parent)
-        : QObject{ parent } {
+        : QObject{ parent },
+        m_pPingTimer(std::make_unique<asio::steady_timer >(m_context, PING_DELAY)) {
     using namespace fortress::consts;
     generatePlotSeries(N_CHANNELS, WINDOW_SIZE_IN_POINT);
     std::cout << "Instantiated backend helper\n";
 }
 
 Backend::~Backend() {
+    m_pPingTimer->cancel();
     disconnectFromHost();
     closeFile();
 }
@@ -35,7 +37,7 @@ void Backend::disconnectFromHost() {
 
     stopListening();
 
-    if (m_isPinging)
+    if (m_bIsPinging)
         togglePingUpdate();
 
     bool prevIsConnected{ isConnected() };
@@ -118,19 +120,6 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 }
 
 // Helpers
-void Backend::pingHandler() {
-    std::cout << "[BACKEND] Ping thread started\n";
-
-    while (m_isPinging) {
-        message<MsgTypes> pingMsg;
-        pingMsg.header.id = ServerPing;
-        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-        pingMsg << timeNow;
-        send(pingMsg);
-        std::this_thread::sleep_for(PING_DELAY);
-    }
-    std::cout << "[BACKEND] Ping thread stopped\n";
-}
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     msg >> m_chLastValues;
@@ -149,13 +138,27 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     emit readingsReceived();
 }
 
+void Backend::pingHandler() {
+    if (m_bIsPinging) {
+        message<MsgTypes> pingMsg;
+        pingMsg.header.id = ServerPing;
+        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+        pingMsg << timeNow;
+        send(pingMsg);
+
+        m_pPingTimer->expires_from_now(PING_DELAY);
+        m_pPingTimer->async_wait([this](asio::error_code ec) {
+            pingHandler();
+        });
+    }
+}
+
 void Backend::togglePingUpdate() {
-    if (m_isPinging) {
-        m_isPinging = false;
-        m_pingThread.detach();
+    if (m_bIsPinging) {
+        m_bIsPinging = false;
     } else {
-        m_isPinging = true;
-        m_pingThread = std::thread{ &Backend::pingHandler, this };
+        m_bIsPinging = true;
+        pingHandler();
     }
 }
 
