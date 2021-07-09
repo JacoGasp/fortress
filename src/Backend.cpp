@@ -142,8 +142,7 @@ void Backend::pingHandler() {
     if (m_bIsPinging) {
         message<MsgTypes> pingMsg;
         pingMsg.header.id = ServerPing;
-        std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-        pingMsg << timeNow;
+        pingMsg << std::chrono::system_clock::now();
         send(pingMsg);
 
         m_pPingTimer->expires_from_now(PING_DELAY);
