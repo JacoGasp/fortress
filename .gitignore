@@ -4,6 +4,7 @@ build
 .idea/
 .DS_Store
 qt6/
+.vscode/
 
 # Prerequisites
 *.d
