@@ -15,7 +15,7 @@
 #include <memory>
 #include <deque>
 #include <mutex>
-#include <memory>
+#include <utility>
 #include <atomic>
 
 #define ASIO_STANDALONE
