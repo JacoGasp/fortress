@@ -16,6 +16,12 @@ namespace fortress::net {
     struct MessageHeader {
         T id{};
         uint32_t size = 0;
+
+        template<typename DataType>
+        friend MessageHeader<T> &operator<<(MessageHeader<T> &header, const DataType &data) {
+            std::memcpy(&header, &data, sizeof(DataType));
+            return header;
+        }
     };
 
     template<typename T>
