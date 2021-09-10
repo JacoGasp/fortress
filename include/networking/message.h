@@ -39,7 +39,7 @@ namespace fortress {
 
 
             // The size of entire message packet in bytes
-            [[nodiscard]] size_t size() const {
+            size_t size() const {
                 return body.size();
             }
 
