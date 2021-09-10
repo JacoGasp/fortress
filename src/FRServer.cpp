@@ -8,26 +8,26 @@
 
 #include "FRServer.h"
 
-bool FRServer::onClientConnect(std::shared_ptr<Connection<MsgTypes>> client) {
+// ---- Protected Methods ----
+
+bool FRServer::onClientConnect(std::shared_ptr<tcp_connection> client) {
     std::cout << "[SERVER] New Client Connected\n";
-    return true;
-}
-
-void FRServer::onClientDisconnect(std::shared_ptr<Connection<MsgTypes>> client) {
-    std::cout << '[' << client->getID() << "] Client Disconnected\n";
-}
-
-void FRServer::onClientValidated(FRClient client) {
     message<MsgTypes> newMessage;
     newMessage.header.id = ServerAccept;
     newMessage << client->getID();
     sendMessage(client, newMessage);
     std::cout << '[' << client->getID() << "] Client Validated" << std::endl;
+    return true;
+}
+
+void FRServer::onClientDisconnect(std::shared_ptr<tcp_connection> client) {
+    std::cout << '[' << client->getID() << "] Client Disconnected\n";
+    if (m_bIsUpdating)
+        stopUpdating();
 }
 
 void FRServer::onMessage(const FRClient client, message<MsgTypes> &msg) {
     switch (msg.header.id) {
-
         case ServerPing:
             respondToPing(client, msg);
             break;
@@ -50,6 +50,17 @@ void FRServer::onMessage(const FRClient client, message<MsgTypes> &msg) {
     }
 }
 
+// ---- Public Methods ----
+
+void FRServer::togglePingUpdate() {
+    if (!m_bIsPinging) {
+        m_bIsPinging = true;
+        pingAllHandler();
+    } else {
+        m_bIsPinging = false;
+    }
+}
+
 void FRServer::pingAll() {
     std::cout << "[SERVER]: Ping All\n";
     message<MsgTypes> msg;
@@ -60,13 +71,25 @@ void FRServer::pingAll() {
     sendMessageToAllClients(msg);
 }
 
-void FRServer::respondToPing(const std::shared_ptr<Connection<MsgTypes>> &client, const message<MsgTypes> &msg) {
-    std::cout << '[' << client->getID() << "]: Server Ping\n";
-    //Simply bounce message back to client
+// ---- Private Methods ----
+
+void FRServer::pingAllHandler() {
+    if (m_bIsPinging) {
+        pingAll();
+        m_pPingTimer->expires_from_now(PING_DELAY);
+        m_pPingTimer->async_wait([this](asio::error_code ec) {
+            pingAllHandler();
+        });
+    }
+}
+
+void FRServer::respondToPing(const std::shared_ptr<tcp_connection> &client, const message<MsgTypes> &msg) {
+    // std::cout << '[' << client_interface->getID() << "]: Server Ping\n";
+    // Simply bounce message back to client_interface
     client->send(msg);
 }
 
-void FRServer::onPingReceive(const std::shared_ptr<Connection<MsgTypes>> &client, message<MsgTypes> &msg) {
+void FRServer::onPingReceive(const std::shared_ptr<tcp_connection> &client, message<MsgTypes> &msg) {
     std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
     std::chrono::system_clock::time_point timeThen;
     msg >> timeThen;
@@ -76,26 +99,35 @@ void FRServer::onPingReceive(const std::shared_ptr<Connection<MsgTypes>> &client
 }
 
 void FRServer::updateHelper() {
-    while (m_bIsUpdating) {
+    if (m_bIsUpdating) {
         m_updateCallback(this);
-        std::this_thread::sleep_for(std::chrono::microseconds(m_nSamplingPeriodsMicroseconds));
+        m_pUpdateTimer->expires_from_now(m_nSamplingPeriodMilliseconds);
+        m_pUpdateTimer->async_wait([this](asio::error_code ec) {
+            if (!ec) {
+                updateHelper();
+            } else {
+                m_bIsUpdating = false;
+                std::cout << "[SEVER] An error occurred during readings update\n";
+            }
+        });
     }
 }
 
 void FRServer::startUpdating(message<MsgTypes> &msg) {
     if (!m_bIsUpdating) {
-        double frequency;
+        uint16_t frequency;
         msg >> frequency;
-        m_nSamplingPeriodsMicroseconds = static_cast<int>(1 / frequency * 1'000'000);
+        auto delay = static_cast<int>(1.0 / frequency * 1'000);
+        m_nSamplingPeriodMilliseconds = asio::chrono::milliseconds{ delay };
         m_bIsUpdating = true;
-        m_thUpdate = std::thread{ &FRServer::updateHelper, this };
-        std::cout << "[SERVER]: Start updating width sampling period of " << m_nSamplingPeriodsMicroseconds / 1000
+        updateHelper();
+
+        std::cout << "[SERVER]: Start updating width sampling period of " << m_nSamplingPeriodMilliseconds.count()
                   << " ms.\n";
     }
 }
 
 void FRServer::stopUpdating() {
     m_bIsUpdating = false;
-    m_thUpdate.join();
     std::cout << "[SERVER]: Stop updating\n";
 }

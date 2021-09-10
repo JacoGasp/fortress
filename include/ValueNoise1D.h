@@ -11,7 +11,7 @@
 #define FORTRESS_VALUENOISE1D_H
 
 #include <cstdlib>
-#include <Constants.h>
+#include <constants.h>
 
 template<typename T = float>
 inline T lerp(const T &lo, const T &hi, const T &t) { return lo * (1 - t) + hi * t; }

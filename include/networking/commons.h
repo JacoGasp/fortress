@@ -17,10 +17,15 @@
 #include <mutex>
 #include <utility>
 #include <atomic>
+#include <cstring>
+#include <iomanip>
 
+#if !defined(ESP32 )
 #define ASIO_STANDALONE
 #include <asio.hpp>
 #include <asio/ts/buffer.hpp>
 #include <asio/ts/internet.hpp>
+#endif
 
 #endif //FORTRESS_COMMONS_H
+

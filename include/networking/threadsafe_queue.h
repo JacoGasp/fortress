@@ -14,7 +14,7 @@
 
 namespace fortress::net {
     template<typename T>
-    class threadSafeQueue {
+    class ts_queue {
 
     protected:
         std::mutex m_muxQueue;
@@ -26,12 +26,12 @@ namespace fortress::net {
         bool m_bForceAwake = false;
 
     public:
-        threadSafeQueue() = default;
+        ts_queue() = default;
 
         // Prevent the queue to be copied because probably it already changed in the thread
-        threadSafeQueue(const threadSafeQueue<T> &) = delete;
+        ts_queue(const ts_queue<T> &) = delete;
 
-        virtual ~threadSafeQueue() { clear(); }
+        virtual ~ts_queue() { clear(); }
 
         const T& front() {
             std::scoped_lock lock(m_muxQueue);
@@ -89,6 +89,8 @@ namespace fortress::net {
             std::scoped_lock lock(m_muxQueue);
             m_deque.clear();
         }
+
+        // TODO: the following two methods can be safely removed
 
         void wait() {
             // Checks whether the queue is empty or not.

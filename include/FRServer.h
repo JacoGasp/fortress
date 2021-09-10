@@ -12,39 +12,53 @@
 #include <iostream>
 #include <thread>
 #include <utility>
-#include "Networking/server.h"
-#include "Constants.h"
+#include "networking/server_interface.h"
+#include "constants.h"
 
 using namespace fortress::net;
-using FRClient = std::shared_ptr<Connection<MsgTypes>>;
+using FRClient = std::shared_ptr<tcp_connection>;
 
-class FRServer : public ServerInterface<MsgTypes> {
+class FRServer : public server_interface {
+
 private:
-    std::thread m_thUpdate;
-    std::atomic_bool m_bIsUpdating{};
-    int m_nSamplingPeriodsMicroseconds{ 10'000};
+
+    // Emulate ADC readings to send repeatedly
     std::function<void(FRServer *)> m_updateCallback;
+    std::unique_ptr<asio::steady_timer> m_pPingTimer;
+    std::unique_ptr<asio::steady_timer> m_pUpdateTimer;
+
+    bool m_bIsPinging = false;
+    bool m_bIsUpdating = false;
+
+    static constexpr asio::chrono::milliseconds PING_DELAY{ 1000 };
+    asio::chrono::milliseconds m_nSamplingPeriodMilliseconds { 1000 };
 
 public:
-    explicit FRServer(uint16_t port, std::function<void(FRServer *)> updateCallback) :
-            ServerInterface<MsgTypes>(port), m_updateCallback{std::move( updateCallback )} {};
+    explicit FRServer(asio::io_context &io_context, uint16_t port, std::function<void(FRServer *)> updateCallback) :
+            server_interface(io_context, port),
+            m_updateCallback{ std::move(updateCallback) },
+            m_pPingTimer{ std::make_unique<asio::steady_timer>(io_context) },
+            m_pUpdateTimer{std::make_unique<asio::steady_timer>(io_context) } {};
 
 protected:
-    bool onClientConnect(std::shared_ptr<Connection<MsgTypes>> client) override;
+    bool onClientConnect(std::shared_ptr<tcp_connection> client) override;
 
-    void onClientDisconnect(std::shared_ptr<Connection<MsgTypes>> client) override;
+    void onClientDisconnect(std::shared_ptr<tcp_connection> client) override;
 
-    void onClientValidated(std::shared_ptr<Connection<MsgTypes>> client) override;
-
-    void onMessage(std::shared_ptr<Connection<MsgTypes>> client, message<MsgTypes> &msg) override;
+    void onMessage(std::shared_ptr<tcp_connection> client, message<MsgTypes> &msg) override;
 
 public:
     void pingAll();
 
-private:
-    static void respondToPing(const std::shared_ptr<Connection<MsgTypes>> &client, const message<MsgTypes> &msg);
+    void togglePingUpdate();
 
-    static void onPingReceive(const std::shared_ptr<Connection<MsgTypes>> &client, message<MsgTypes> &msg);
+private:
+
+    void pingAllHandler();
+
+    static void respondToPing(const std::shared_ptr<tcp_connection> &client, const message<MsgTypes> &msg);
+
+    static void onPingReceive(const std::shared_ptr<tcp_connection> &client, message<MsgTypes> &msg);
 
     void updateHelper();
 

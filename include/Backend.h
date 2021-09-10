@@ -9,23 +9,21 @@
 #ifndef FORTRESS_BACKEND_H
 #define FORTRESS_BACKEND_H
 
-#include <QtCore/QtMath>
-#include <QtCore/QObject>
-#include <QtCore/QRandomGenerator>
 #include <QtCharts/QAbstractSeries>
 #include <QtCharts/QXYSeries>
 #include <QtQuick/QQuickView>
+#include <QTemporaryFile>
+#include <QtCore/QObject>
+#include <QtCore/QtMath>
 #include <iostream>
-#include <thread>
 #include <QFile>
 #include <QDir>
-#include <QTemporaryFile>
-#include "Networking/client.h"
-#include "Constants.h"
+#include "networking/client_interface.h"
+#include "constants.h"
 
 using namespace fortress::net;
 
-class Backend : public QObject, public ClientInterface<MsgTypes> {
+class Backend : public QObject, public client_interface {
 Q_OBJECT
     Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
     Q_PROPERTY(double dPingValue READ getLastPingValue())
@@ -36,7 +34,7 @@ private:
     bool m_bIsPinging{ false };
     static constexpr asio::chrono::milliseconds PING_DELAY{ 1000 };
 
-    int m_data_idx{ 0 };                                                  // X axis index
+    int m_data_idx{ 0 };                                                   // X axis index
     int m_t{ 0 };
     QList<QList<QPointF>> m_data;                                          // (nChannel x windowSize) data to display
     std::array<double, fortress::consts::N_CHANNELS> m_chLastValues{};     // Store temporary last reads per each channel for plotting
@@ -46,11 +44,13 @@ private:
     QTemporaryFile m_file{"fortress_out.csv"};              // Csv output file
     QTextStream m_textStream{&m_file};                             // Csv stream to write on file
 
+    asio::io_context m_context{};
     std::unique_ptr<asio::steady_timer> m_pPingTimer;
+    std::thread m_threadContext;
 
 public:
     // Avoid name collision with multiple inheritance
-    using ClientInterface<MsgTypes>::connect;
+    using client_interface::connect;
 
     explicit Backend(QObject *parent = nullptr);
 
@@ -60,24 +60,19 @@ public:
 
     Q_INVOKABLE void disconnectFromHost();
 
-    Q_INVOKABLE void sendGreetings();
-
     Q_INVOKABLE void togglePingUpdate();
 
     Q_INVOKABLE void clearData();
 
-    Q_INVOKABLE void setSamplingFrequency(double frequency);
-
-    Q_INVOKABLE void sendStartUpdateCommand(double frequency);
+    Q_INVOKABLE void sendStartUpdateCommand(uint16_t frequency);
 
     Q_INVOKABLE void sendStopUpdateCommand();
 
     Q_INVOKABLE void saveFile(QUrl &destination_path);
 
-
     void onMessage(message<MsgTypes> &msg) override;
 
-    void onConnectionFailed(std::error_code &ec) override;
+//    void onConnectionFailed(std::error_code &ec) override;
 
     // Accessors
 
@@ -110,7 +105,7 @@ public slots:
 
     [[nodiscard]] double getMaxChannelValue(int channel) const;
 
-    [[nodiscard]] double getIntegralChannelValue(int channel) const;
+    [[nodiscard]] double getIntegralChannelValue(uint8_t channel) const;
 
 
 // Emit signals

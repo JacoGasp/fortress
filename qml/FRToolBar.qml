@@ -161,7 +161,7 @@ ToolBar {
                     validator: DoubleValidator { bottom: 1; top: 1000 }
                     enabled: !bIsReceiving
                     onTextChanged: {
-                        dFrequency = this.text
+                        dFrequency = parseInt(this.text)
                     }
                     Layout.preferredWidth: 50
                 }

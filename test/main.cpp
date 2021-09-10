@@ -1,5 +1,5 @@
 #include "Networking/message.h"
-#include "Constants.h"
+#include "constants.h"
 #include <iostream>
 #include <cstdint>
 #include <cstring>
@@ -27,15 +27,15 @@ int main() {
     std::cout << msg << '\n';
 
     // Encode header and message
-    char dataHeader[sizeof(MessageHeader<MsgTypes>)];
+    char dataHeader[sizeof(message_header<MsgTypes>)];
     char dataBody[msg.size()];
 
     // Encode header
-    std::memcpy(dataHeader, &msg.header, sizeof(MessageHeader<MsgTypes>));
+    std::memcpy(dataHeader, &msg.header, sizeof(message_header<MsgTypes>));
     std::memcpy(dataBody, msg.body.data(), sizeof(dataBody));
 
     std::cout << "Encoded header: ";
-    printByteArray(&dataHeader[0], &dataHeader[0] + sizeof(MessageHeader<MsgTypes>));
+    printByteArray(&dataHeader[0], &dataHeader[0] + sizeof(message_header<MsgTypes>));
     std::cout << '\n';
 
     std::cout << "Encoded body: ";
@@ -44,7 +44,7 @@ int main() {
 
 
     // Read encoded header
-    MessageHeader<MsgTypes> decodedHeader;
+    message_header<MsgTypes> decodedHeader;
     decodedHeader << dataHeader;
     std::cout << "Decoded header id: " << decodedHeader.id << ", message size: " << decodedHeader.size << '\n';
 

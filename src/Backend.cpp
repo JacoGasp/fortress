@@ -10,7 +10,9 @@
 
 Backend::Backend(QObject *parent)
         : QObject{ parent },
-        m_pPingTimer{ std::make_unique<asio::steady_timer >(m_context, PING_DELAY) } {
+          client_interface{ m_context },
+          m_pPingTimer{ std::make_unique<asio::steady_timer>(m_context, PING_DELAY) } {
+
     using namespace fortress::consts;
     generatePlotSeries(N_CHANNELS, WINDOW_SIZE_IN_POINT);
     m_file.setAutoRemove(true);
@@ -20,29 +22,29 @@ Backend::Backend(QObject *parent)
 Backend::~Backend() {
     m_pPingTimer->cancel();
     disconnectFromHost();
+    m_threadContext.join();
     closeFile();
 }
 
 
 bool Backend::connectToHost(const QString &host, uint16_t port) {
-    startListening();
-    return connect(host.toStdString(), port);
+    bool bConnectionSuccessful = connect(host.toStdString(), port);
+    m_threadContext = std::thread([&]() { m_context.run(); });
+    return bConnectionSuccessful;
 }
 
 void Backend::disconnectFromHost() {
     if (isConnected()) {
         message<MsgTypes> disconnectMsg;
         disconnectMsg.header.id = ClientDisconnect;
-        send(disconnectMsg);
+        sendMessage(disconnectMsg);
     }
-
-    stopListening();
 
     if (m_bIsPinging)
         togglePingUpdate();
 
     bool prevIsConnected{ isConnected() };
-    ClientInterface<MsgTypes>::disconnect();
+    client_interface::disconnect();
 
     if (prevIsConnected != isConnected())
             emit connectionStatusChanged(isConnected());
@@ -52,15 +54,9 @@ void Backend::disconnectFromHost() {
     }
 }
 
-void Backend::sendGreetings() {
-    message<MsgTypes> msg;
-    msg.header.id = ClientMessage;
-    msg << "John";
-    send(msg);
-}
 
 void Backend::clearData() {
-    for (auto &ch : m_data)
+    for (auto &ch: m_data)
         ch.clear();
 
     m_data.clear();
@@ -72,10 +68,10 @@ void Backend::clearData() {
 
 // Callbacks
 
-void Backend::onConnectionFailed(std::error_code &ec) {
-    stopListening();
-    emit connectionFailed(QString::fromStdString(ec.message()));
-}
+//void Backend::onConnectionFailed(std::error_code &ec) {
+//    stopListening();
+//    emit connectionFailed(QString::fromStdString(ec.message()));
+//}
 
 void Backend::onMessage(message<MsgTypes> &msg) {
     switch (msg.header.id) {
@@ -106,7 +102,7 @@ void Backend::onMessage(message<MsgTypes> &msg) {
         }
 
         case MsgTypes::ClientPing: {
-            send(msg);
+            sendMessage(msg);
             break;
         }
 
@@ -143,7 +139,8 @@ void Backend::pingHandler() {
         message<MsgTypes> pingMsg;
         pingMsg.header.id = ServerPing;
         pingMsg << std::chrono::system_clock::now();
-        send(pingMsg);
+
+        sendMessage(pingMsg);
 
         m_pPingTimer->expires_from_now(PING_DELAY);
         m_pPingTimer->async_wait([this](asio::error_code ec) {
@@ -253,32 +250,25 @@ double Backend::getMaxChannelValue(int channel) const {
     return m_chMaxValues[channel];
 }
 
-double Backend::getIntegralChannelValue(int channel) const {
+double Backend::getIntegralChannelValue(uint8_t channel) const {
     return m_chIntegralValues[channel];
 }
 
-void Backend::sendStartUpdateCommand(double frequency) {
+void Backend::sendStartUpdateCommand(uint16_t frequency) {
     openFile();
     message<MsgTypes> msg;
     msg.header.id = ClientStartUpdating;
     msg << frequency;
-    send(msg);
+    sendMessage(msg);
 }
 
 void Backend::sendStopUpdateCommand() {
     closeFile();
     message<MsgTypes> msg;
     msg.header.id = ClientStopUpdating;
-    send(msg);
+    sendMessage(msg);
 }
 
 void Backend::saveFile(QUrl &destinationPath) {
     QFile::copy(m_file.fileName(), destinationPath.path());
-}
-
-void Backend::setSamplingFrequency(double frequency) {
-    message<MsgTypes> msg;
-    msg.header.id = ClientSetSampleFrequency;
-    msg << frequency;
-    send(msg);
 }
