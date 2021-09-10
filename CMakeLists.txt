@@ -4,5 +4,5 @@ project(Fortress)
 
 add_subdirectory(app)
 add_subdirectory(server)
-add_subdirectory(NetworkingExample)
+add_subdirectory(networking_examples)
 add_subdirectory(test)
