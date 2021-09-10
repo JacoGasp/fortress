@@ -18,6 +18,9 @@ namespace fortress::net {
     public:
         explicit client_interface(asio::io_context &context) : m_context{ context } {}
 
+    protected:
+        virtual void onMessage(message<MsgTypes> &msg) = 0;
+
     public:
         bool connect(const std::string &host, const uint16_t port) {
             std::cout << "Connecting to server: " << host << ':' << port << '\n';
@@ -57,11 +60,6 @@ namespace fortress::net {
         void sendMessage(message<MsgTypes> &msg) const {
             m_connection->send(msg);
         }
-
-    protected:
-        virtual void onMessage(message<MsgTypes> &msg) {
-            std::cout << msg << '\n';
-        };
     };
 }
 
