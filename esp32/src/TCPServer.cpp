@@ -5,11 +5,16 @@ TCPServer::TCPServer(uint16_t port) : m_server(port) {
         c->onData([&](void *arg, AsyncClient *client, void *data, size_t len) {
             onData(arg, client, data, len);
         });
+        onConnect(arg, c);
     }, this);
 }
 
 void TCPServer::onConnect(void *arg, AsyncClient *client) {
-    std::cout << "connect!" << '\n';
+    std::cout << "New client connected from " << client->remoteIP().toString().c_str() << '\n';
+    // Dummy handshake
+    Message msg;
+    msg.header.id = fortress::net::MsgTypes::ServerAccept;
+    sendMessage(msg, client);
 }
 
 void TCPServer::begin() {
@@ -42,7 +47,7 @@ void TCPServer::readBody(uint8_t *data) {
 }
 
 void TCPServer::onMessage(const Message &msg, AsyncClient *client) {
-    std::cout << msg << std::endl;
+    std::cout << msg.header << std::endl;
     
     // Make an action according to the Header ID
     switch (msg.header.id) {
@@ -57,9 +62,9 @@ void TCPServer::onMessage(const Message &msg, AsyncClient *client) {
 }
 
 // Here we can have data of any length: smaller, greater or equal to the full message (header + body), 
-// so we have to keep track of the amout of data we already stored
+// so we have to keep track of the amount of data we already stored
 void TCPServer::onData(void *arg, AsyncClient *client, void *data, size_t len) {
-    // Cast the pointer in oreder to have a valid arithmetic
+    // Cast the pointer in order to have a valid arithmetic
     uint8_t *buffer = static_cast<uint8_t*>(data);
     size_t offset = 0;
     // Keep processing data until we have processed all the valid messages in the queue
@@ -69,7 +74,7 @@ void TCPServer::onData(void *arg, AsyncClient *client, void *data, size_t len) {
             readHeader(buffer + offset);
             offset += sizeof(Header);
         } 
-        // We already read the header and we expect a not-null body
+        // We already read the header, thus we expect a not-null body
         else {
             readBody(buffer + offset);
             offset += m_tempInMessage.size();
@@ -77,7 +82,7 @@ void TCPServer::onData(void *arg, AsyncClient *client, void *data, size_t len) {
             m_expectedBodyLength = 0;
         }
 
-        // There is no more data to process and we have a valid message
+        // There is no more data to process, thus we have a valid message
         if (m_expectedBodyLength == 0) {
             onMessage(m_tempInMessage, client);
         }
