@@ -4,7 +4,7 @@ This repository provides source code to build a TCP/IP client-server system to s
 sensors readings collected by an ESP32 board connected to Wi-Fi.
 
 In this framework, the ESP32 board plays the role of the server (accepts connections) and the desktop application
-is the client, (sending the ESP32 a connect request). 
+is the client (sending the ESP32 a connect request). 
 
 The client has the ability to send custom commands, such as asking
 the ESP32 to start reading the ADC at a certain frequency, and continuously send those readings to the client.
