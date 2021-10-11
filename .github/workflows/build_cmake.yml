@@ -13,6 +13,8 @@ env:
   QT_NAME: qt6
   QT_VERSION: 6.1.1
   
+  DESKTOP_APP_TARGET: Fortress
+  SERVER_APP_TARGET: Server
   DESKTOP_APP_BUILD_FILE: app/Fortress
   SERVER_APP_BUILD_FILE:  server/Server
   
@@ -140,7 +142,7 @@ jobs:
           include(ProcessorCount)
           ProcessorCount(N) 
           
-          set(make_cmd make -j ${N})
+          set(make_cmd make $ENV{DESKTOP_APP_TARGET} $ENV{SERVER_APP_TARGET} -j ${N})
           execute_process(COMMAND ${make_cmd} WORKING_DIRECTORY build RESULT_VARIABLE result)
           
           if (NOT result EQUAL 0)
