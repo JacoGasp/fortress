@@ -56,6 +56,7 @@ namespace fortress::net {
                                         std::cout << "Connected to: " << endpoint.address().to_string() << '\n';
                                         readHeader();
                                     } else {
+                                        std::cout << "Failed to connected with error: " << ec.message() << std::endl;
                                         m_socket.close();
                                     }
                                 });
@@ -125,6 +126,7 @@ namespace fortress::net {
                                       default:
                                           std::cout << '[' << m_id << "] Write header failed: " << ec.message() << '\n';
                                   }
+                                  m_socket.close();
                               });
         }
 

@@ -18,6 +18,8 @@ namespace fortress::net {
     public:
         explicit client_interface(asio::io_context &context) : m_context{ context } {}
 
+        virtual void onServerDisconnected() = 0;
+
     protected:
         virtual void onMessage(message<MsgTypes> &msg) = 0;
 
@@ -55,10 +57,16 @@ namespace fortress::net {
 
         void disconnect() {
             asio::dispatch(m_context, [this]() { m_connection->disconnect(); });
+            while(isConnected());
         }
 
-        void sendMessage(message<MsgTypes> &msg) const {
-            m_connection->send(msg);
+        void sendMessage(message<MsgTypes> &msg) {
+            if (m_connection->isConnected()) {
+                m_connection->send(msg);
+            } else {
+                m_connection->disconnect();
+                onServerDisconnected();
+            }
         }
     };
 }

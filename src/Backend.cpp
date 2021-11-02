@@ -28,7 +28,11 @@ Backend::~Backend() {
 
 
 bool Backend::connectToHost(const QString &host, uint16_t port) {
+    m_context.restart();
+
     bool bConnectionSuccessful = connect(host.toStdString(), port);
+    if (m_threadContext.joinable())
+        m_threadContext.join();
     m_threadContext = std::thread([&]() { m_context.run(); });
     return bConnectionSuccessful;
 }
@@ -43,15 +47,20 @@ void Backend::disconnectFromHost() {
     if (m_bIsPinging)
         togglePingUpdate();
 
-    bool prevIsConnected{ isConnected() };
-    client_interface::disconnect();
 
-    if (prevIsConnected != isConnected())
-            emit connectionStatusChanged(isConnected());
+    client_interface::disconnect();
+    m_context.stop();
+
+
+    emit connectionStatusChanged(isConnected());
 
     if (!isConnected()) {
         std::cout << "[BACKEND] Disconnected from host" << std::endl;
     }
+}
+
+void Backend::onServerDisconnected() {
+    disconnectFromHost();
 }
 
 
