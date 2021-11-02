@@ -83,6 +83,8 @@ void TCPServer::onData(void *arg, AsyncClient *client, void *data, size_t len) {
 }
 
 void TCPServer::writeHeader(AsyncClient *client) {
+    assert(!m_qMessagesOut.empty() && "Write header: empty message queue");
+
     auto msg = &m_qMessagesOut.front();
 
     std::array<char, sizeof(Header)> headerData;
@@ -93,7 +95,7 @@ void TCPServer::writeHeader(AsyncClient *client) {
     if (!msg->body.empty())
         writeBody(client);
     
-    // If the message has no body, pop the message out from the queue and send it.
+    // If the message hasn't body, pop the message out from the queue and send it.
     else {
         m_qMessagesOut.pop_front();
         client->send();
@@ -103,8 +105,15 @@ void TCPServer::writeHeader(AsyncClient *client) {
 }
 
 void TCPServer::writeBody(AsyncClient *client) {
+    assert(!m_qMessagesOut.empty() && "Write body: empty message queue");
+
     auto msg = &m_qMessagesOut.front();
-    client->add(reinterpret_cast<const char *>(msg->body.data()), msg->size());
+    // Cast msg.body to vector of chars
+    std::vector<char> data;
+    data.resize(msg->body.size());
+    std::memcpy(data.data(), msg->body.data(), msg->body.size());
+    // Append data and dispatch it
+    client->add(data.data(), msg->size());
     client->send();
     // Message sent, remove it from the queue
     m_qMessagesOut.pop_front();
@@ -120,7 +129,8 @@ void TCPServer::sendMessage(const Message &msg, AsyncClient *client) {
 
     // If the queue was not empty before inserting a new message, the client is still
     // busy to finish sending previous messages
-    if (!isWritingMessage) writeHeader(client);
+    if (!isWritingMessage)
+        writeHeader(client);
 }
 
 void TCPServer::setOnMessageCallback(

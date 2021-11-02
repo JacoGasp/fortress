@@ -13,6 +13,7 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <deque>
+#include <cassert>
 #include "../../include/networking/message.h"
 #include "../../include/constants.h"
 
