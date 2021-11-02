@@ -119,7 +119,10 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 // Helpers
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
-    msg >> m_chLastValues;
+    msg >> m_chLastValues[0];
+    msg >> m_chLastValues[1];
+    msg >> m_chLastValues[2];
+    msg >> m_chLastValues[3];
 
     for (int i = 0; i < fortress::consts::N_CHANNELS; ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
