@@ -56,8 +56,7 @@ namespace fortress::net {
         }
 
         void disconnect() {
-            asio::dispatch(m_context, [this]() { m_connection->disconnect(); });
-            while(isConnected());
+            m_connection->disconnect();
         }
 
         void sendMessage(message<MsgTypes> &msg) {

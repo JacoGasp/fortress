@@ -47,10 +47,7 @@ void Backend::disconnectFromHost() {
     if (m_bIsPinging)
         togglePingUpdate();
 
-
     client_interface::disconnect();
-    m_context.stop();
-
 
     emit connectionStatusChanged(isConnected());
 

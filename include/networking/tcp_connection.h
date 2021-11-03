@@ -71,9 +71,10 @@ namespace fortress::net {
 
         void disconnect() {
             if (isConnected()) {
-                asio::post(m_asioContext, [this]() {
-                    m_socket.shutdown(asio::socket_base::shutdown_both);
-                });
+                // https://stackoverflow.com/a/3068106/6882933
+                m_socket.shutdown(asio::socket_base::shutdown_both);
+                m_socket.close();
+                std::cout << "m_socket shut down\n";
             }
         }
 
