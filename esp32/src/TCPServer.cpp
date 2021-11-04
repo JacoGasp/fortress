@@ -109,11 +109,12 @@ void TCPServer::writeBody(AsyncClient *client) {
 
     auto msg = &m_qMessagesOut.front();
     // Cast msg.body to vector of chars
-    std::vector<char> data;
-    data.resize(msg->body.size());
-    std::memcpy(data.data(), msg->body.data(), msg->body.size());
+    // std::vector<char> data;
+    // data.resize(msg->body.size());
+    // std::memcpy(data.data(), msg->body.data(), msg->body.size());
     // Append data and dispatch it
-    client->add(data.data(), msg->size());
+    // client->add(data.data(), msg->size());
+    client->add(reinterpret_cast<char*>(msg->body.data()), msg->size());
     client->send();
     // Message sent, remove it from the queue
     m_qMessagesOut.pop_front();
