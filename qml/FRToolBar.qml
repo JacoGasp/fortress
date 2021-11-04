@@ -37,6 +37,7 @@ ToolBar {
             console.log(bIsConnected ? "Connected to host" : "Disconnected from host")
             changeStatus(bIsConnected ? "connected" : "disconnected")
             bIsConnecting = false
+            bIsReceiving = false
         }
     }
 

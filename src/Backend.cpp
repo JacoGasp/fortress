@@ -22,12 +22,13 @@ Backend::Backend(QObject *parent)
 Backend::~Backend() {
     m_pPingTimer->cancel();
     disconnectFromHost();
-    m_threadContext.join();
     closeFile();
 }
 
 
 bool Backend::connectToHost(const QString &host, uint16_t port) {
+    m_context.restart();
+
     bool bConnectionSuccessful = connect(host.toStdString(), port);
     m_threadContext = std::thread([&]() { m_context.run(); });
     return bConnectionSuccessful;
@@ -43,15 +44,22 @@ void Backend::disconnectFromHost() {
     if (m_bIsPinging)
         togglePingUpdate();
 
-    bool prevIsConnected{ isConnected() };
     client_interface::disconnect();
+    m_context.stop();
+    m_context.restart();
 
-    if (prevIsConnected != isConnected())
-            emit connectionStatusChanged(isConnected());
+    if (m_threadContext.joinable())
+        m_threadContext.join();
+
+    emit connectionStatusChanged(isConnected());
 
     if (!isConnected()) {
         std::cout << "[BACKEND] Disconnected from host" << std::endl;
     }
+}
+
+void Backend::onServerDisconnected() {
+    disconnectFromHost();
 }
 
 
@@ -119,7 +127,10 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 // Helpers
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
-    msg >> m_chLastValues;
+    msg >> m_chLastValues[0];
+    msg >> m_chLastValues[1];
+    msg >> m_chLastValues[2];
+    msg >> m_chLastValues[3];
 
     for (int i = 0; i < fortress::consts::N_CHANNELS; ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
@@ -164,11 +175,11 @@ void Backend::openFile() {
 }
 
 void Backend::closeFile() {
-    if (m_file.isOpen())
-        m_file.close();
-
     m_textStream.flush();
     m_textStream.reset();
+
+    if (m_file.isOpen())
+        m_file.close();
 }
 
 double Backend::getLastPingValue() const {

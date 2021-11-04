@@ -12,6 +12,8 @@
 #include <FreeRTOS.h>
 #include <Arduino.h>
 #include <AsyncTCP.h>
+#include <deque>
+#include <cassert>
 #include "../../include/networking/message.h"
 #include "../../include/constants.h"
 
@@ -23,8 +25,11 @@ class TCPServer {
 private:
     AsyncServer m_server;
     size_t m_expectedBodyLength = 0;
+    bool m_isWriting = false;
     
     Message m_tempInMessage;
+    std::deque<Message> m_qMessagesOut;
+    std::function<void(Message&, AsyncClient*)> m_onMessageCallback;
 
 public:
     TCPServer(uint16_t port);
@@ -35,14 +40,20 @@ public:
 
     void sendMessage(const Message &msg, AsyncClient * client);
 
+    void setOnMessageCallback(std::function<void(Message&, AsyncClient*)> callback);
+
 protected:
     void onConnect(void *arg, AsyncClient *client);
 
     void onData(void *arg, AsyncClient *client, void *data, size_t len);
 
-    void onMessage(const Message &msg, AsyncClient *client);
+    void onMessage(Message &msg, AsyncClient *client);
 
 private:
+    void writeHeader(AsyncClient *client);
+
+    void writeBody(AsyncClient *client);
+
     void readHeader(uint8_t *data);
 
     void readBody(uint8_t *data);

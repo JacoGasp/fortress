@@ -56,6 +56,8 @@ public:
 
     ~Backend() override;
 
+    void onServerDisconnected() override;
+
     Q_INVOKABLE bool connectToHost(const QString &host, uint16_t port);
 
     Q_INVOKABLE void disconnectFromHost();
@@ -69,6 +71,7 @@ public:
     Q_INVOKABLE void sendStopUpdateCommand();
 
     Q_INVOKABLE void saveFile(QUrl &destination_path);
+
 
     void onMessage(message<MsgTypes> &msg) override;
 

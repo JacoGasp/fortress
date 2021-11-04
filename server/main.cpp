@@ -27,15 +27,11 @@ void update(FRServer *server) {
     static int t;
     message<MsgTypes> msg;
     msg.header.id = ServerReadings;
+    msg << valueNoise1D.eval(static_cast<double>(t))
+    << valueNoise1D.eval(static_cast<double>(t + 42))
+    << valueNoise1D.eval(static_cast<double>(t + 666) + 0.3)
+    << valueNoise1D.eval(static_cast<double>(t - 123) + 0.1);
 
-    std::array<double, 4> values {
-            valueNoise1D.eval(static_cast<double>(t)),
-            valueNoise1D.eval(static_cast<double>(t + 42)),
-            valueNoise1D.eval(static_cast<double>(t + 666)) + 0.3,
-            valueNoise1D.eval(static_cast<double>(t - 123) + 0.1)
-    };
-
-    msg << values;
     server->sendMessageToAllClients(msg);
     ++t;
 }
