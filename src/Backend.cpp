@@ -22,7 +22,6 @@ Backend::Backend(QObject *parent)
 Backend::~Backend() {
     m_pPingTimer->cancel();
     disconnectFromHost();
-    m_threadContext.join();
     closeFile();
 }
 
@@ -31,8 +30,6 @@ bool Backend::connectToHost(const QString &host, uint16_t port) {
     m_context.restart();
 
     bool bConnectionSuccessful = connect(host.toStdString(), port);
-    if (m_threadContext.joinable())
-        m_threadContext.join();
     m_threadContext = std::thread([&]() { m_context.run(); });
     return bConnectionSuccessful;
 }
@@ -48,6 +45,11 @@ void Backend::disconnectFromHost() {
         togglePingUpdate();
 
     client_interface::disconnect();
+    m_context.stop();
+    m_context.restart();
+
+    if (m_threadContext.joinable())
+        m_threadContext.join();
 
     emit connectionStatusChanged(isConnected());
 
@@ -173,11 +175,11 @@ void Backend::openFile() {
 }
 
 void Backend::closeFile() {
-    if (m_file.isOpen())
-        m_file.close();
-
     m_textStream.flush();
     m_textStream.reset();
+
+    if (m_file.isOpen())
+        m_file.close();
 }
 
 double Backend::getLastPingValue() const {

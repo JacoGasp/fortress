@@ -127,7 +127,8 @@ namespace fortress::net {
                                       default:
                                           std::cout << '[' << m_id << "] Write header failed: " << ec.message() << '\n';
                                   }
-                                  m_socket.close();
+                                  // FIXME: Here should turn off the client in case of connection drop
+//                                  disconnect();
                               });
         }
 
@@ -146,7 +147,8 @@ namespace fortress::net {
 
                         } else {
                             std::cout << '[' << m_id << "] Write body failed: " << ec.message() << '\n';
-                            m_socket.close();
+                            // FIXME: Here should turn off the client in case of connection drop
+//                            disconnect();
                         }
                     });
         }
@@ -166,7 +168,8 @@ namespace fortress::net {
                                      }
                                  } else {
                                      std::cout << "Read header failed: " << ec.message() << '\n';
-                                     m_socket.close();
+                                     // FIXME: Here should turn off the client in case of connection drop
+//                                     disconnect();
                                  }
                              });
         }
@@ -180,7 +183,8 @@ namespace fortress::net {
                                      m_tempInMessage.body.clear();
                                  } else {
                                      std::cout << "Read body failed: " << ec.message() << '\n';
-                                     m_socket.close();
+                                     // FIXME: Here should turn off the client in case of connection drop
+//                                     disconnect();
                                  }
                              });
         }
