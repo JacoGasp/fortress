@@ -23,7 +23,7 @@ ApplicationWindow {
     readonly property int nChannels: 4
     property var charts: []
     property var gauges: []
-    property double threshold: 1
+    property double threshold: 1024
     property double thresholdIntegral: 100
     property double ping: -1.0
 

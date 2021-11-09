@@ -59,7 +59,7 @@ ToolBar {
                     Layout.minimumWidth: 120
                     id: ipAddressField
                     placeholderText: "192.168.1.7"
-                    text: "127.0.0.1"
+                    text: "192.168.178.20"
 
                     enabled: backend ? !(backend.bIsConnected || bIsConnecting) : false
 
@@ -171,7 +171,7 @@ ToolBar {
                     text: "Threshold (mSv):"
                 }
                 TextField {
-                    text: "1"
+                    text: root.threshold
                     validator: DoubleValidator {
                         bottom: 0
                         top: 10000
