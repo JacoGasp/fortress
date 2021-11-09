@@ -37,8 +37,8 @@ private:
     int m_data_idx{ 0 };                                                   // X axis index
     int m_t{ 0 };
     QList<QList<QPointF>> m_data;                                          // (nChannel x windowSize) data to display
-    std::array<double, fortress::consts::N_CHANNELS> m_chLastValues{};     // Store temporary last reads per each channel for plotting
-    std::array<double, fortress::consts::N_CHANNELS> m_chMaxValues{};      // Store temporary maxValue per each channel for autoscaling plot
+    std::array<uint16_t , fortress::consts::N_CHANNELS> m_chLastValues{};     // Store temporary last reads per each channel for plotting
+    std::array<uint16_t, fortress::consts::N_CHANNELS> m_chMaxValues{};      // Store temporary maxValue per each channel for autoscaling plot
     std::array<double, fortress::consts::N_CHANNELS> m_chIntegralValues{}; // Store total cumulative values
 
     QTemporaryFile m_file{"fortress_out.csv"};              // Csv output file
@@ -100,7 +100,7 @@ public slots:
 
     void generatePlotSeries(int n_channels, int length);
 
-    void addPointsToSeries(const std::array<double, fortress::consts::N_CHANNELS> &values);
+    void addPointsToSeries(const std::array<uint16_t, 4> &values);
 
     void updatePlotSeries(QAbstractSeries *qtQuickLeftSeries, QAbstractSeries *qtQuickRightSeries, int channel);
 

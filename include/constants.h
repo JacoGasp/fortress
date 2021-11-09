@@ -16,7 +16,7 @@ namespace fortress {
     }
 
     namespace net {
-        enum MsgTypes : uint8_t {
+        enum MsgTypes : uint32_t {
             ServerAccept,
             ServerDeny,
             ServerMessage,

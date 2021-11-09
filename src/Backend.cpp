@@ -70,7 +70,7 @@ void Backend::clearData() {
     m_data.clear();
     m_t = m_data_idx = 0;
     m_chIntegralValues = { 0.0, 0.0, 0.0, 0.0 };
-    m_chLastValues = { 0.0, 0.0, 0.0, 0.0 };
+    m_chLastValues = { 0, 0, 0, 0 };
     generatePlotSeries(fortress::consts::N_CHANNELS, fortress::consts::WINDOW_SIZE_IN_POINT);
 }
 
@@ -200,7 +200,7 @@ void Backend::generatePlotSeries(int n_channels, int length) {
     }
 }
 
-void Backend::addPointsToSeries(const std::array<double, fortress::consts::N_CHANNELS> &values) {
+void Backend::addPointsToSeries(const std::array<uint16_t, 4> &values) {
     using namespace fortress::consts;
 
     m_data_idx = m_t % WINDOW_SIZE_IN_POINT;
@@ -210,7 +210,7 @@ void Backend::addPointsToSeries(const std::array<double, fortress::consts::N_CHA
         auto chSeries = &m_data[ch];
 
         double x{ static_cast<double>(m_data_idx % (WINDOW_SIZE_IN_POINT)) };
-        double y{ values[ch] };
+        double y{ static_cast<double>(values[ch]) };
         chSeries->replace(m_data_idx, QPointF{ x, y });
 
         auto max = *std::max_element(chSeries->begin(), chSeries->end(), [](const QPointF &p1, const QPointF &p2) {

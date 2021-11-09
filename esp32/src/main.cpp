@@ -12,7 +12,10 @@ const uint16_t port = 60000;
 TCPServer tcp_server(port);
 AsyncClient *tcp_client;  // Caveat: only one client which respond to
 bool isUpdating = false;
-int delayTime = 0;
+
+unsigned long previousMicros = 0;
+long samplingInterval = 1000;
+
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 
@@ -24,12 +27,12 @@ void startUpdating(Message &msg, AsyncClient *client) {
 
     uint16_t frequency;
     msg >> frequency;
-    delayTime = static_cast<int>(1.0 / frequency * 1'000);
+    samplingInterval = static_cast<long>(1.0 / frequency * 1'000'000);
 
-    if (delayTime > 0) {
+    if (samplingInterval > 0) {
         tcp_client = client;
         isUpdating = true;
-        std::cout << "Start updating every " << delayTime << " us" << std::endl;
+        std::cout << "Start updating every " << samplingInterval << " us" << std::endl;
     }
 }
 
@@ -83,13 +86,18 @@ void setup() {
 }
 
 void loop() {
-    if (isUpdating) {
+    unsigned long currentMicros = micros();
+
+    if (isUpdating && currentMicros - previousMicros >= samplingInterval) {
+        previousMicros = currentMicros;
+
         Message msg;
         msg.header.id = fortress::net::MsgTypes::ServerReadings;
         // Insert 4 double channel readings
-        msg << random(100) / 1000.0 << random(100) / 1000.0
-            << random(100) / 1000.0 << random(100) / 1000.0;
+        msg << static_cast<uint16_t>(random(1024))      // Ch. 4
+            << static_cast<uint16_t>(random(1024))      // Ch. 3
+            << static_cast<uint16_t>(random(1024))      // Ch. 2
+            << static_cast<uint16_t>(random(1024));     // Ch. 1
         tcp_server.sendMessage(msg, tcp_client);
-        delayMicroseconds(delayTime * 1000);
     }
 }
