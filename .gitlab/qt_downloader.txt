@@ -73,3 +73,5 @@ string(REPLACE "licheck.exe" "" qtconfig "${qtconfig}")
 string(REPLACE "licheck64" "" qtconfig "${qtconfg}")
 string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
 file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
+
+set(ENV{QT_PATH} "${qt_name}/${qt_dir_prefix}")
