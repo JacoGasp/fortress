@@ -1,3 +1,6 @@
+set (qt_name $ENV{qt_name})
+set (qt_versoion $ENV{qt_version})
+
 string(REPLACE "." "" qt_version_dotless "${qt_version}")
 
 message("QT Name: ${qt_name}")
