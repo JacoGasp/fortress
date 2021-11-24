@@ -1,5 +1,5 @@
-set (qt_name $ENV{qt_name})
-set (qt_versoion $ENV{qt_version})
+set (qt_name $ENV{QT_NAME})
+set (qt_version $ENV{QT_VERSION})
 
 string(REPLACE "." "" qt_version_dotless "${qt_version}")
 
