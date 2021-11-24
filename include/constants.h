@@ -29,6 +29,7 @@ namespace fortress {
             ClientStartUpdating,
             ClientStopUpdating,
             ClientSetSampleFrequency,
+            ClientSetSensorHV,
 
             MessageAll
         };
