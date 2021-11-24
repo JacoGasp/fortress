@@ -48,6 +48,9 @@ private:
     std::unique_ptr<asio::steady_timer> m_pPingTimer;
     std::thread m_threadContext;
 
+    std::chrono::time_point<std::chrono::steady_clock> m_startUpdateTime;
+    unsigned long m_bytesRead;
+
 public:
     // Avoid name collision with multiple inheritance
     using client_interface::connect;
