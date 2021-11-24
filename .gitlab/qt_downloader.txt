@@ -1,11 +1,3 @@
-QT_NAME: qt6
-QT_VERSION: 6.1.1
-
-DESKTOP_APP_TARGET: Fortress
-SERVER_APP_TARGET: Server
-DESKTOP_APP_BUILD_FILE: app/Fortress
-SERVER_APP_BUILD_FILE:  server/Server
-
 string(REPLACE "." "" qt_version_dotless "${qt_version}")
 
 if (UNIX AND NOT APPLE)
