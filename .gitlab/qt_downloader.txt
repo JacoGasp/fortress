@@ -1,5 +1,7 @@
 string(REPLACE "." "" qt_version_dotless "${qt_version}")
 
+message("QT Name: ${qt_name}")
+
 if (UNIX AND NOT APPLE)
     set(url_os "linux_x64")
     set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.gcc_64")
