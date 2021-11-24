@@ -2,6 +2,7 @@
 #include <AsyncTCP.h>
 #include <WiFi.h>
 #include <SPI.h>
+#include <Wire.h>
 
 #include "../../include/networking/message.h"
 #include "TCPServer.h"
@@ -9,6 +10,7 @@
 #include "pinMapping.h"
 #include "ADS8332.h"
 #include "ACF2101.h"
+#include "MCP4726.h"
 
 const char *ssid = "SSID";
 const char *password = "PASSWORD";
@@ -32,6 +34,10 @@ std::array<uint16_t, fortress::consts::N_CHANNELS> sensorReadings = {0, 0, 0, 0}
 ACF2101 chargeIntegrator(ACF2101_SEL, ACF2101_HLD, ACF2101_RST);
 const uint16_t integratorThreshold = 65500;  //threshold on ADC reading (16 bit)
 
+//Sensor HV
+TwoWire I2CHV = TwoWire(0);
+MCP4726 HVDAC;
+uint16_t sensorHV = 0; 
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 
@@ -60,6 +66,13 @@ void stopUpdating() {
     chargeIntegrator.stop();
 }
 
+void setSensorHV(Message &msg){
+    msg >> sensorHV;
+    HVDAC.setVoltage(sensorHV);
+    std::cout << "Sensor HV set to: " << sensorHV << std::endl;
+}
+
+
 void onMessage(Message &msg, AsyncClient *client) {
     // std::cout << "A message arrived " << msg << std::endl;
 
@@ -73,19 +86,30 @@ void onMessage(Message &msg, AsyncClient *client) {
             stopUpdating();
             break;
 
+        case MsgTypes::ClientSetSensorHV:
+            setSensorHV(msg);
+            break;
+
         default:
             break;
     }
 }
 
 void setup() {
-    hspi = new SPIClass(HSPI);
-    hspi->begin();
     Serial.begin(115200);
     delay(10);
-    ADC.begin(hspi);
 
-    ADC.setVref(Vref);   
+    hspi = new SPIClass(HSPI);
+    hspi->begin();
+    I2CHV.begin(I2C_SDA, I2C_SCL, 100000);
+    
+    ADC.begin(hspi);
+    ADC.setVref(Vref);
+
+    HVDAC.begin(&I2CHV);
+    HVDAC.setVref(MCP4726_VREF_VREFPIN_BUFF);
+    HVDAC.setGain(MCP4726_GAIN_1X);
+    HVDAC.setVoltage(sensorHV);
     
     Serial.print("Connecting to ");
     Serial.println(ssid);
