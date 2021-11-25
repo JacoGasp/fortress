@@ -1,19 +1,33 @@
-build:
-  image: ubuntu:latest
+image: ubuntu:latest
+
+before_script:
+  - apt update
+
+desktop:
   stage: build
+  only:
+    - merge_requests
   variables:
     QT_NAME: qt6
-    QT_VERSION: 6.2.0
+    QT_VERSION: 6.1.1
     QT_PLATFORM: gcc_64
-    DEBIAN_FRONTEND: noninteractive # Stop tzdata asking for user input
 
-  before_script:
-    - apt update
-    - apt install -y libgl1-mesa-dev libasio-dev libxkbcommon-x11-0 cmake build-essential libglib2.0-0 libfontconfig1 libdbus-1-3
+  script:
+    - apt install -y curl libgl1-mesa-dev libasio-dev libxkbcommon-x11-0 g++ cmake libdbus-1-3 libfreetype6 libglib2.0-0 libfontconfig1
     - cmake -P .gitlab/qt_downloader.txt
     - export CMAKE_PREFIX_PATH="${CI_PROJECT_DIR}/${QT_NAME}/${QT_VERSION}/${QT_PLATFORM}/lib/cmake"
-    
-  script:
     - mkdir build && cd build
     - cmake configure ../ -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target Fortress Server -j `nproc`
+
+esp32:
+  stage: build
+  only:
+    - merge_requests
+  script:
+    - apt install -y python3-dev curl
+    - python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+    - source ~/.platformio/penv/bin/activate
+    - cd ${CI_PROJECT_DIR}/esp32
+    - platformio run
+    - pio system prune -f
