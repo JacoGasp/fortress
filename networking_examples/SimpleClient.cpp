@@ -13,6 +13,8 @@ private:
     std::unique_ptr<asio::steady_timer> m_pPingTimer;
     static constexpr asio::chrono::milliseconds PING_DELAY{ 1000 };
 
+    void onServerDisconnected() override {}
+
 public:
     explicit Client(asio::io_context &io_context) :
             fortress::net::client_interface(io_context),
