@@ -132,6 +132,8 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     msg >> m_chLastValues[2];
     msg >> m_chLastValues[3];
 
+    m_bytesRead += sizeof(uint16_t) * 4;
+
     for (int i = 0; i < fortress::consts::N_CHANNELS; ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
 
@@ -270,14 +272,25 @@ void Backend::sendStartUpdateCommand(uint16_t frequency) {
     message<MsgTypes> msg;
     msg.header.id = ClientStartUpdating;
     msg << frequency;
+    m_startUpdateTime = std::chrono::steady_clock::now();
+    m_bytesRead = 0;
     sendMessage(msg);
 }
 
 void Backend::sendStopUpdateCommand() {
-    closeFile();
+
     message<MsgTypes> msg;
     msg.header.id = ClientStopUpdating;
     sendMessage(msg);
+
+    closeFile();
+    std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - m_startUpdateTime;
+
+    auto kilobytes = m_bytesRead / 1024.0;
+
+    std::cout << "Transferred " << kilobytes << " KB in " << elapsedTime.count() << "s\n"
+              << kilobytes / elapsedTime.count() << " KB/s\n";
+
 }
 
 void Backend::saveFile(QUrl &destinationPath) {
