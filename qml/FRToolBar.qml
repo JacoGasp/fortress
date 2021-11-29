@@ -7,8 +7,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQml
+import QtQml.Models
 import Qt.labs.platform
+// import SharedConstants
 
 ToolBar {
     id: toolbar
@@ -18,7 +19,6 @@ ToolBar {
     property bool bIsReceiving: false
     property bool bIsSaveEnabled: false
     property bool bHasSaved: true
-    property int dFrequency: 100        // Hertz
 
     FRNotSavedAlert {
         id: saveAlert
@@ -58,8 +58,8 @@ ToolBar {
                 TextField {
                     Layout.minimumWidth: 120
                     id: ipAddressField
-                    placeholderText: "192.168.1.7"
-                    text: "192.168.178.20"
+                    placeholderText: SharedParams ? SharedParams.IP_PLACEHOLDER : ""
+                    text: SharedParams ?  SharedParams.ip : ""
 
                     enabled: backend ? !(backend.bIsConnected || bIsConnecting) : false
 
@@ -82,7 +82,7 @@ ToolBar {
 
                 TextField {
                     id: portField
-                    text: "60000"
+                    text: SharedParams ? SharedParams.defaultPort : 0
                     Layout.maximumWidth: 60
                     enabled: backend ? !(backend.bIsConnected | bIsConnecting) : false
                     validator: IntValidator {
@@ -158,23 +158,34 @@ ToolBar {
                 }
 
                 TextField {
-                    text: dFrequency
-                    validator: DoubleValidator { bottom: 1; top: 1000 }
+                    text: SharedParams ? SharedParams.samplingFreq : 0
+                    validator: IntValidator {
+                        bottom: 3
+                        top: SharedParams ? SharedParams.MAX_ALLOWED_FREQ : 0
+                    }
                     enabled: !bIsReceiving
                     onTextChanged: {
-                        dFrequency = parseInt(this.text)
+                        if (SharedParams)
+                            SharedParams.samplingFreq = parseInt(this.text)
                     }
+                    onEditingFinished: {
+                        console.log("edit finished")
+                        if (!acceptableInput)
+                            this.text = SharedParams.samplingFreq
+                    }
+
                     Layout.preferredWidth: 50
                 }
 
                 Label {
                     text: "Threshold (mSv):"
                 }
+
                 TextField {
                     text: root.threshold
-                    validator: DoubleValidator {
-                        bottom: 0
-                        top: 10000
+                    validator: IntValidator {
+                        bottom: 1
+                        top: SharedParams ? SharedParams.MAX_ALLOWED_FREQ : 1
                     }
                     onTextChanged: {
                         root.threshold = this.text
@@ -183,7 +194,6 @@ ToolBar {
                 }
             }
         }
-
     }
 
 

@@ -12,15 +12,14 @@ import QtQml
 ApplicationWindow {
     id: root
     visible: true
-    minimumWidth: 1280
-    minimumHeight: 840
+    minimumWidth: SharedParams ? SharedParams.MIN_SCREEN_WIDTH : 0
+    minimumHeight: SharedParams ? SharedParams.MAX_SCREEN_HEIGHT : 0
     title: {qsTr("Fortress")}
     color: "#373A3C"
 
 
     property bool isRunning: false
     readonly property int margins: 16
-    readonly property int nChannels: 4
     property var charts: []
     property var gauges: []
     property double threshold: 1024
