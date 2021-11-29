@@ -9,7 +9,9 @@
 #include <QApplication>
 #include <QQmlEngine>
 #include <QtQuick>
+#include <QtQml>
 #include "Backend.h"
+#include "SharedParams.h"
 
 
 int main(int argc, char *argv[]) {
@@ -25,6 +27,9 @@ int main(int argc, char *argv[]) {
 
     Backend backend;
     engine.rootContext()->setContextProperty("backend", &backend);
+
+    SharedParams sharedParams;
+    engine.rootContext()->setContextProperty("SharedParams", &sharedParams);
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 

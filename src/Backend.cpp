@@ -23,6 +23,7 @@ Backend::~Backend() {
     m_pPingTimer->cancel();
     disconnectFromHost();
     closeFile();
+    std::cout << "Backend helper closed\n";
 }
 
 
@@ -35,18 +36,18 @@ bool Backend::connectToHost(const QString &host, uint16_t port) {
 }
 
 void Backend::disconnectFromHost() {
+    if (m_bIsPinging)
+        togglePingUpdate();
+
     if (isConnected()) {
         message<MsgTypes> disconnectMsg;
         disconnectMsg.header.id = ClientDisconnect;
         sendMessage(disconnectMsg);
+
+        client_interface::disconnect();
+        m_context.stop();
+        m_context.restart();
     }
-
-    if (m_bIsPinging)
-        togglePingUpdate();
-
-    client_interface::disconnect();
-    m_context.stop();
-    m_context.restart();
 
     if (m_threadContext.joinable())
         m_threadContext.join();
