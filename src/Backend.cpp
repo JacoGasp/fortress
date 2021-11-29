@@ -15,7 +15,7 @@ Backend::Backend(QObject *parent)
 
     using namespace fortress::consts;
     generatePlotSeries(N_CHANNELS, WINDOW_SIZE_IN_POINT);
-    m_file.setAutoRemove(true);
+    // m_file.setAutoRemove(true);
     std::cout << "Instantiated backend helper\n";
 }
 
@@ -135,6 +135,7 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
 
     m_bytesRead += sizeof(uint16_t) * 4;
 
+    m_textStream << m_readingsReceived++ << ',';
     for (int i = 0; i < fortress::consts::N_CHANNELS; ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
 
@@ -174,12 +175,11 @@ void Backend::togglePingUpdate() {
 
 void Backend::openFile() {
     m_file.open();
-    m_textStream << "channel1,channel2,channel3,channel4\n";
+    m_textStream << "i,channel1,channel2,channel3,channel4\n";
 }
 
 void Backend::closeFile() {
     m_textStream.flush();
-    m_textStream.reset();
 
     if (m_file.isOpen())
         m_file.close();
@@ -274,6 +274,7 @@ void Backend::sendStartUpdateCommand(uint16_t frequency) {
     msg.header.id = ClientStartUpdating;
     msg << frequency;
     m_startUpdateTime = std::chrono::steady_clock::now();
+    m_readingsReceived = 0;
     m_bytesRead = 0;
     sendMessage(msg);
 }
@@ -284,16 +285,21 @@ void Backend::sendStopUpdateCommand() {
     msg.header.id = ClientStopUpdating;
     sendMessage(msg);
 
-    closeFile();
     std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - m_startUpdateTime;
 
     auto kilobytes = m_bytesRead / 1024.0;
 
+    std::cout << "Received " << m_readingsReceived + 1 << " readings\n";
     std::cout << "Transferred " << kilobytes << " KB in " << elapsedTime.count() << "s\n"
               << kilobytes / elapsedTime.count() << " KB/s\n";
 
 }
 
 void Backend::saveFile(QUrl &destinationPath) {
+    closeFile();
+    if (QFile::exists(destinationPath.path())) {
+        std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.";
+        QFile::remove(destinationPath.path());
+    }
     QFile::copy(m_file.fileName(), destinationPath.path());
 }

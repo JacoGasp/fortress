@@ -19,6 +19,7 @@ ToolBar {
     property bool bIsReceiving: false
     property bool bIsSaveEnabled: false
     property bool bHasSaved: true
+    property var startDate: new Date()
 
     FRNotSavedAlert {
         id: saveAlert
@@ -206,6 +207,7 @@ ToolBar {
     FileDialog {
         id: fileDialog
         fileMode: FileDialog.SaveFile
+        currentFile: `file:///${Qt.formatDate(startDate, "yyyyMMdd")}_${Qt.formatTime(startDate, "hhmmss")}_fortress.csv`
         onAccepted: {
             console.log(file)
             backend.saveFile(file)
@@ -214,6 +216,7 @@ ToolBar {
     }
 
     function start() {
+        startDate = new Date()
         if (!bHasSaved) {
             saveAlert.show()
         } else {
