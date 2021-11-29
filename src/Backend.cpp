@@ -289,7 +289,7 @@ void Backend::sendStopUpdateCommand() {
 
     auto kilobytes = m_bytesRead / 1024.0;
 
-    std::cout << "Received " << m_readingsReceived << " readings\n";
+    std::cout << "Received " << m_readingsReceived + 1 << " readings\n";
     std::cout << "Transferred " << kilobytes << " KB in " << elapsedTime.count() << "s\n"
               << kilobytes / elapsedTime.count() << " KB/s\n";
 
@@ -297,5 +297,9 @@ void Backend::sendStopUpdateCommand() {
 
 void Backend::saveFile(QUrl &destinationPath) {
     closeFile();
+    if (QFile::exists(destinationPath.path())) {
+        std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.";
+        QFile::remove(destinationPath.path());
+    }
     QFile::copy(m_file.fileName(), destinationPath.path());
 }

@@ -50,8 +50,8 @@ private:
 
     std::chrono::time_point<std::chrono::steady_clock> m_startUpdateTime;
 
-    unsigned long m_readingsReceived;
-    unsigned long m_bytesRead{};
+    unsigned long m_readingsReceived{0};
+    unsigned long m_bytesRead{0};
 
 public:
     // Avoid name collision with multiple inheritance
