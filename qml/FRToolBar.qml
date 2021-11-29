@@ -164,13 +164,13 @@ ToolBar {
                         top: SharedParams ? SharedParams.MAX_ALLOWED_FREQ : 0
                     }
                     enabled: !bIsReceiving
-                    onTextChanged: {
-                        if (SharedParams)
-                            SharedParams.samplingFreq = parseInt(this.text)
-                    }
+
                     onEditingFinished: {
-                        console.log("edit finished")
-                        if (!acceptableInput)
+                        SharedParams.samplingFreq = this.text
+                    }
+
+                    onFocusChanged: {
+                        if(!focus && !acceptableInput)
                             this.text = SharedParams.samplingFreq
                     }
 
@@ -187,8 +187,14 @@ ToolBar {
                         bottom: 1
                         top: SharedParams ? SharedParams.MAX_ALLOWED_FREQ : 1
                     }
-                    onTextChanged: {
+
+                    onEditingFinished: {
                         root.threshold = this.text
+                    }
+
+                    onFocusChanged: {
+                        if(!focus && !acceptableInput)
+                            this.text = root.threshold
                     }
                     Layout.preferredWidth: 50
                 }
@@ -213,7 +219,7 @@ ToolBar {
         } else {
             bIsSaveEnabled = false
             bIsReceiving = true
-            backend.sendStartUpdateCommand(dFrequency)
+            backend.sendStartUpdateCommand(SharedParams.samplingFreq)
             root.start()
         }
     }
