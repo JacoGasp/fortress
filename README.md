@@ -75,8 +75,8 @@ cmake --build . -j4 --target Fortress
 
 ## 3.2 ESP32 (VSCode + Platformio)
 
-The simplest way to build and upload the ESP32 firmware is directly VSCode and Platformio integration.
-Simply open the `esp32` folder with VSCode with automatically recognize the ESP32 project. Then press the Build button
+The simplest way to build and upload the ESP32 firmware is to use VSCode with Platformio integration.
+Simply open the `esp32` folder with VSCode and it will automatically recognize the ESP32 project. Then press the Build button
 to build and the Upload button to flash the ESP.
 
 **Important!** Before build change Wi-Fi parameters in `esp32/src/main.cpp`
