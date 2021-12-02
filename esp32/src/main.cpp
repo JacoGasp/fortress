@@ -38,8 +38,10 @@ const double DAC_OPAMP_GAIN = 24.66796875;
 SPIClass * hspi = NULL;
 
 //TCP
-const char *ssid = "SSID";
-const char *password = "PASSWORD";
+//const char *ssid = "SSID";
+//const char *password = "PASSWORD";
+const char *ssid = "AndroidAP47E6";
+const char *password = "valentina";
 
 const uint16_t port = 60000;
 TCPServer tcp_server(port);
@@ -50,6 +52,47 @@ bool isUpdating = false;
 unsigned long previousMicros = 0;
 long samplingInterval = 1000;
 
+//------------hardware functions-----------------
+void bipSpeaker(int bipNum){
+    for (int i=0; i <= bipNum; i++){
+        ledcWrite(BUZZER_PWM_CHAN, 50);
+        delay(100);
+        ledcWrite(BUZZER_PWM_CHAN, 0);
+        delay(100);
+    }
+}
+
+void enableAnalog(){
+    digitalWrite(VAN_EN, HIGH);
+}
+
+
+void disableAnalog(){
+    digitalWrite(VAN_EN, LOW);
+}
+
+
+//RTOS task to check if button power is pressed, priority 1(?)
+static void checkPowerOffTask(void* pvParameters){    
+    for ( ;; ) {
+        if (digitalRead(LTC3101_PBSTAT)){
+            //tasto non premuto
+            digitalWrite(LTC3101_PWRON, HIGH);
+        }
+        else {
+            //tasto premuto
+            digitalWrite(LED_GREEN, LOW);
+            digitalWrite(LED_BLUE, HIGH);
+            bipSpeaker(5);
+            digitalWrite(LTC3101_PWRON, LOW);
+        }
+        vTaskDelay(150/portTICK_PERIOD_MS);
+    }
+}
+
+
+
+//----------------ON MESSAGE--------------- 
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 
@@ -80,7 +123,7 @@ void stopUpdating() {
 
 void setSensorHV(Message &msg){
     msg >> sensorHV;
-    HVDAC.setVoltage(sensorHV);
+    HVDAC.setOutputValue(sensorHV);
     std::cout << "Sensor HV set to: " << sensorHV << std::endl;
 }
 
@@ -138,26 +181,40 @@ void setup() {
     //aspetta 1 secondo per evitare che venga letto il tasto come spegnimento
     delay(1000); 
 
+    //check power off task
+    xTaskCreate(checkPowerOffTask, "PowerOFF", 1024, NULL, 1, NULL);
+    
     //turn on analog circuit
     enableAnalog();
 
     //serial, i2c, spi init
     Serial.begin(115200);
     delay(10);
+    
+    Serial.println("Pin set, analog enabled");
 
     hspi = new SPIClass(HSPI);
     hspi->begin();
     I2CHV.begin(I2C_SDA, I2C_SCL, 100000);
     
+    Serial.println("hspi, I2C OK");
+
     //ADC init
     ADC.begin(hspi);
     ADC.setVref(Vref);
     
+    Serial.println("ADC init");
+
     //DAC HV init
     HVDAC.begin(&I2CHV);
+    Serial.print("test i2c connection to DAC: ");
+    bool DACConnect = HVDAC.testConnection();
+    Serial.println(DACConnect);
     HVDAC.setVref(MCP4726_VREF_VREFPIN_BUFF);
     HVDAC.setGain(MCP4726_GAIN_1X);
-    HVDAC.setVoltage(sensorHV);
+    HVDAC.setOutputValue(sensorHV);
+    
+    Serial.println("HV dac init");
     
     //wifi connection
     Serial.print("Connecting to ");
@@ -177,6 +234,7 @@ void setup() {
 
     tcp_server.setOnMessageCallback(onMessage);
     tcp_server.begin();
+    
 }
 
 void loop() {
@@ -190,14 +248,20 @@ void loop() {
         * important: getSample with no ADC connected adds 100 ms delay due to ADC timeout 
         */
 
-        uint8_t adcstatus = ADC.getSample(&sensorReadings[0], 0);
-        //ADC.getSample(&sensorReadings[1], 1);
-        //ADC.getSample(&sensorReadings[2], 2);
-        //ADC.getSample(&sensorReadings[3], 3);
+        uint8_t adcstat0 = ADC.getSample(&sensorReadings[0], 0);
+        uint8_t adcstat1 = ADC.getSample(&sensorReadings[1], 1);
+        uint8_t adcstat2 = ADC.getSample(&sensorReadings[2], 2);
+        uint8_t adcstat3 = ADC.getSample(&sensorReadings[3], 3);
 
         //Serial.println(sensorReadings[0]);
-        //Serial.print("ADC status: ");
-        //Serial.print(adcstatus);
+        Serial.print("ADC status: ");
+        Serial.print(adcstat0);
+        Serial.print(" , ");
+        Serial.print(adcstat1);
+        Serial.print(" , ");
+        Serial.print(adcstat2);
+        Serial.print(" , ");
+        Serial.println(adcstat3);
         //Serial.println(micros());
         
         if (std::any_of(sensorReadings.begin(), sensorReadings.end(), [](uint16_t x){return x >= integratorThreshold;})) {
@@ -207,51 +271,19 @@ void loop() {
         Message msg;
         msg.header.id = fortress::net::MsgTypes::ServerReadings;
         // Insert 4 double channel readings
-        msg << static_cast<uint16_t>(random(1024))      // Ch. 4
+        /*msg << static_cast<uint16_t>(random(1024))      // Ch. 4
             << static_cast<uint16_t>(random(1024))      // Ch. 3
             << static_cast<uint16_t>(random(1024))      // Ch. 2
             << static_cast<uint16_t>(random(1024));     // Ch. 1
-        
-        /*msg << sensorReadings[3]      // Ch. 4
+       */
+        msg << sensorReadings[3]      // Ch. 4
             << sensorReadings[2]      // Ch. 3
             << sensorReadings[1]      // Ch. 2
             << sensorReadings[0];     // Ch. 1
-        */   
+           
         tcp_server.sendMessage(msg, tcp_client);
   
     }
 }
 
 
-
-void bipSpeaker(int bipNum){
-    for (int i=0; i <= bipNum; i++){
-        ledcWrite(BUZZER_PWM_CHAN, 50);
-        delay(100);
-        ledcWrite(BUZZER_PWM_CHAN, 0);
-        delay(100);
-    }
-}
-
-void enableAnalog(){
-    digitalWrite(VAN_EN, HIGH);
-}
-
-
-void disableAnalog(){
-    digitalWrite(VAN_EN, LOW);
-}
-
-void checkPowerOff(){
-    if (digitalRead(LTC3101_PBSTAT)){
-        //tasto non premuto
-        digitalWrite(LTC3101_PWRON, HIGH);
-    }
-    else {
-        //tasto premuto
-        digitalWrite(LED_GREEN, LOW);
-        digitalWrite(LED_BLUE, HIGH);
-        bipSpeaker(5);
-        digitalWrite(LTC3101_PWRON, LOW);
-    }
-}
