@@ -13,7 +13,15 @@
 #define ADS8332_SDI         13
 #define ADS8332_CS          15
 
-#define I2C_SDA         17
-#define I2C_SCL         16
+#define I2C_SDA             17
+#define I2C_SCL             16
+
+#define LTC3101_PBSTAT      34
+#define LTC3101_PWRON        2
+#define VAN_EN               5
+
+#define LED_BLUE            19
+#define LED_GREEN           23
+#define BUZZER              18
 
 #endif
