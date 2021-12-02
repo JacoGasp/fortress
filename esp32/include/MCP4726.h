@@ -31,9 +31,10 @@ class MCP4726{
         MCP4726();
         void begin(TwoWire * w);
         void begin(uint8_t a, TwoWire * w);  
-        void setVoltage( uint16_t output);
+        void setOutputValue( uint16_t output);
         void setVref(uint8_t vref);
         void setGain(uint8_t gain);
+        bool testConnection();
 
     private:
         uint8_t i2caddr;

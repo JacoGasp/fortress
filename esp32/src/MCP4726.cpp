@@ -18,7 +18,12 @@ void MCP4726::begin(uint8_t addr, TwoWire *theWire) {
   //return init();
 }
  
-void MCP4726::setVoltage( uint16_t output)
+bool MCP4726::testConnection() {
+    wire->beginTransmission(i2caddr);
+    return (wire->endTransmission() == 0);
+}
+
+void MCP4726::setOutputValue( uint16_t output)
 {
   wire->beginTransmission(i2caddr);
   wire->write((configRegister | MCP4726_VOLALL ) & MCP4726_PWR_MASK);
