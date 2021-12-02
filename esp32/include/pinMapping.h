@@ -24,4 +24,6 @@
 #define LED_GREEN           23
 #define BUZZER              18
 
+#define VBATT_ADC           4
+
 #endif
