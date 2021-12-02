@@ -16,9 +16,8 @@
 #include "ACF2101.h"
 #include "MCP4726.h"
 
-const char *ssid = "SSID";
-const char *password = "PASSWORD";
 
+<<<<<<< HEAD
 const uint16_t port = 60000;
 TCPServer tcp_server(port);
 AsyncClient *tcp_client;  // Caveat: only one client which respond to
@@ -32,6 +31,12 @@ long diplayInfoInterval = 5 * 1E6;
 
 SPIClass * hspi = NULL;
 unsigned long totalReadings;
+=======
+//BUZZER pwm properties
+const int PWM_FREQ = 4000;
+const int BUZZER_PWM_CHAN = 0;
+const int PWM_RESOLUTION = 8;
+>>>>>>> Features: added led, buzzer and power management
 
 //ADC 
 ADS8332 ADC(ADS8332_CS, ADS8332_CONVST, ADS8332_EOC_INT);
@@ -45,7 +50,26 @@ const uint16_t integratorThreshold = 65500;  //threshold on ADC reading (16 bit)
 //Sensor HV
 TwoWire I2CHV = TwoWire(0);
 MCP4726 HVDAC;
-uint16_t sensorHV = 0; 
+uint16_t sensorHV = 0;    //HV level 0-4095
+const float DACVref = 2.048;   //Volt
+const double DAC_OPAMP_GAIN = 24.66796875;  
+
+//SPI
+SPIClass * hspi = NULL;
+
+//TCP
+const char *ssid = "SSID";
+const char *password = "PASSWORD";
+
+const uint16_t port = 60000;
+TCPServer tcp_server(port);
+AsyncClient *tcp_client;  // Caveat: only one client which respond to
+
+//reading variables
+bool isUpdating = false;
+unsigned long previousMicros = 0;
+long samplingInterval = 1000;
+
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 
@@ -112,7 +136,41 @@ void onMessage(Message &msg, AsyncClient *client) {
     }
 }
 
+
+
 void setup() {
+    //pin led configuration
+    pinMode(LED_BLUE, OUTPUT);
+    pinMode(LED_GREEN, OUTPUT);
+
+    //power controller LTC3101 configuration
+    pinMode(LTC3101_PWRON, OUTPUT);
+    digitalWrite(LTC3101_PWRON, HIGH);
+    
+    //enable analog configuration;
+    pinMode(VAN_EN, OUTPUT);
+    digitalWrite(VAN_EN, LOW);
+
+    chargeIntegrator.begin();
+    
+    //pwm configuration and buzzer
+    ledcSetup(BUZZER_PWM_CHAN, PWM_FREQ, PWM_RESOLUTION);
+    ledcAttachPin(BUZZER, BUZZER_PWM_CHAN);
+
+    //ritardo per evitare autospegnimento LTC3101
+    //l'utente quando vede il led verde acceso può rilasciare il pulsante
+    delay(200);
+    digitalWrite(LED_GREEN, HIGH);
+    bipSpeaker(2);
+
+    pinMode(LTC3101_PBSTAT, INPUT);
+    //aspetta 1 secondo per evitare che venga letto il tasto come spegnimento
+    delay(1000); 
+
+    //turn on analog circuit
+    enableAnalog();
+
+    //serial, i2c, spi init
     Serial.begin(115200);
     delay(10);
 
@@ -120,14 +178,17 @@ void setup() {
     hspi->begin();
     I2CHV.begin(I2C_SDA, I2C_SCL, 100000);
     
+    //ADC init
     ADC.begin(hspi);
     ADC.setVref(Vref);
-
+    
+    //DAC HV init
     HVDAC.begin(&I2CHV);
     HVDAC.setVref(MCP4726_VREF_VREFPIN_BUFF);
     HVDAC.setGain(MCP4726_GAIN_1X);
     HVDAC.setVoltage(sensorHV);
     
+    //wifi connection
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
@@ -196,5 +257,39 @@ void loop() {
     if (currentMicros - prevInfoMicros >= diplayInfoInterval) {
         printFreeMemory();
         prevInfoMicros = currentMicros;
+    }
+}
+
+
+
+void bipSpeaker(int bipNum){
+    for (int i=0; i <= bipNum; i++){
+        ledcWrite(BUZZER_PWM_CHAN, 50);
+        delay(100);
+        ledcWrite(BUZZER_PWM_CHAN, 0);
+        delay(100);
+    }
+}
+
+void enableAnalog(){
+    digitalWrite(VAN_EN, HIGH);
+}
+
+
+void disableAnalog(){
+    digitalWrite(VAN_EN, LOW);
+}
+
+void checkPowerOff(){
+    if (digitalRead(LTC3101_PBSTAT)){
+        //tasto non premuto
+        digitalWrite(LTC3101_PWRON, HIGH);
+    }
+    else {
+        //tasto premuto
+        digitalWrite(LED_GREEN, LOW);
+        digitalWrite(LED_BLUE, HIGH);
+        bipSpeaker(5);
+        digitalWrite(LTC3101_PWRON, LOW);
     }
 }
