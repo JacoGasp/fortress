@@ -18,6 +18,9 @@ const int PWM_FREQ = 4000;
 const int BUZZER_PWM_CHAN = 0;
 const int PWM_RESOLUTION = 8;
 
+//battery level properties
+const int VBATT_ADC_MIN = 3030; 
+
 //ADC 
 ADS8332 ADC(ADS8332_CS, ADS8332_CONVST, ADS8332_EOC_INT);
 const float Vref = 4.096;   // Volt
@@ -38,10 +41,9 @@ const double DAC_OPAMP_GAIN = 24.66796875;
 SPIClass * hspi = NULL;
 
 //TCP
-//const char *ssid = "SSID";
-//const char *password = "PASSWORD";
-const char *ssid = "AndroidAP47E6";
-const char *password = "valentina";
+const char *ssid = "SSID";
+const char *password = "PASSWORD";
+
 
 const uint16_t port = 60000;
 TCPServer tcp_server(port);
@@ -90,6 +92,15 @@ static void checkPowerOffTask(void* pvParameters){
     }
 }
 
+//battery level task
+static void checkBatteryLevel(void* pvParameters){
+    for( ;; ){
+        if (analogRead(VBATT_ADC) <= VBATT_ADC_MIN){
+            bipSpeaker(3);
+        }
+    }
+    vTaskDelay(2000/portTICK_PERIOD_MS);
+}
 
 
 //----------------ON MESSAGE--------------- 
@@ -181,9 +192,13 @@ void setup() {
     //aspetta 1 secondo per evitare che venga letto il tasto come spegnimento
     delay(1000); 
 
-    //check power off task
-    xTaskCreate(checkPowerOffTask, "PowerOFF", 1024, NULL, 1, NULL);
-    
+    //battery level
+    pinMode(VBATT_ADC, INPUT);
+
+    //brackground tasks:
+    xTaskCreate(checkPowerOffTask, "PowerOFF", 1024, NULL, 2, NULL);
+    xTaskCreate(checkBatteryLevel, "batteryLevel", 512, NULL, 1, NULL);
+
     //turn on analog circuit
     enableAnalog();
 
