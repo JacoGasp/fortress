@@ -120,6 +120,12 @@ void Backend::onMessage(message<MsgTypes> &msg) {
             break;
         }
 
+        case MsgTypes::ServerFinishedUpload: {
+            std::cout << "[BACKEND] Server finished upload\n";
+            onServerFinishedUpload();
+            break;
+        }
+
         default:
             std::cout << "???\n";
     }
@@ -128,24 +134,40 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 // Helpers
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
-    uint16_t deltaTime;
+    // Get channels values
+    uint32_t deltaTime;
     msg >> deltaTime;
     msg >> m_chLastValues[0];
     msg >> m_chLastValues[1];
     msg >> m_chLastValues[2];
     msg >> m_chLastValues[3];
 
-    m_bytesRead += sizeof(uint16_t) * 4;
+    // Count the amount of data received
+    m_bytesRead += sizeof(msg);
     ++m_readingsReceived;
-    m_textStream << deltaTime;
 
+    // Write data to disk
+    m_textStream << deltaTime;
     for (int i = 0; i < SharedParams::n_channel(); ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
         m_textStream << ',' << m_chLastValues[i];
     }
     m_textStream << '\n';
 
+    // Draw
     addPointsToSeries(m_chLastValues);
+}
+
+
+void Backend::onServerFinishedUpload() {
+    // How long the session was
+    std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - m_startUpdateTime;
+
+    auto kilobytes = m_bytesRead / 1024.0;
+
+    std::cout << "Received " << m_readingsReceived + 1 << " readings. Transferred "
+              << kilobytes << " KB in " << elapsedTime.count() << " s: "
+              << kilobytes / elapsedTime.count() << " KB/s\n";
 }
 
 void Backend::pingHandler() {
@@ -174,6 +196,9 @@ void Backend::togglePingUpdate() {
 
 void Backend::openFile(uint16_t frequency) {
     m_file.open();
+    m_file.seek(0);
+    m_textStream.flush();
+
     auto now = QDateTime::currentDateTime();
     auto offset = now.offsetFromUtc();
     now.setOffsetFromUtc(offset);
@@ -182,10 +207,10 @@ void Backend::openFile(uint16_t frequency) {
                  << "Timestamp: " << now.toString(Qt::ISODate) << '\n'
                  << "Sampling Frequency (Hz): " << frequency << '\n'
                  << "##################################" << '\n'
-                 << "t,";
+                 << "t";
 
     for (int i = 0; i < SharedParams::n_channel(); ++i)
-        m_textStream << "channel" << i + 1 << ',';
+        m_textStream << ",channel" << i + 1;
     m_textStream << Qt::endl;
 }
 
@@ -296,15 +321,6 @@ void Backend::sendStopUpdateCommand() {
     message<MsgTypes> msg;
     msg.header.id = ClientStopUpdating;
     sendMessage(msg);
-
-    std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - m_startUpdateTime;
-
-    auto kilobytes = m_bytesRead / 1024.0;
-
-    std::cout << "Received " << m_readingsReceived + 1 << " readings. Transferred "
-              << kilobytes << " KB in " << elapsedTime.count() << " s: " <<
-              kilobytes / elapsedTime.count() << " KB/s\n";
-
 }
 
 void Backend::saveFile(QUrl &destinationPath) {

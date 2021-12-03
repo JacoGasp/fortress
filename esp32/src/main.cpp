@@ -44,7 +44,6 @@ void startUpdating(Message &msg, AsyncClient *client) {
 
     uint16_t frequency;
     msg >> frequency;
-    previousMicros = micros();
     samplingInterval = static_cast<long>(1.0 / frequency * 1'000'000);
 
     if (samplingInterval > 0) {
@@ -52,14 +51,17 @@ void startUpdating(Message &msg, AsyncClient *client) {
         isUpdating = true;
         totalReadings = 0;
         std::cout << "Start updating every " << samplingInterval << " us" << std::endl;
+        previousMicros = micros();
         chargeIntegrator.reset();
     }
 }
 
 void stopUpdating() {
     isUpdating = false;
-    std::cout << "Stop updating. Sent " << totalReadings << " readings" << std::endl;
-    //tcp_client = nullptr;         //crashes if nullptr before sending message 
+    Message msg;
+    msg.header.id = fortress::net::MsgTypes::ServerFinishedUpload;
+    tcp_server.sendMessage(msg, tcp_client);
+    std::cout << "Stop updating. Sent " << totalReadings + 1 << " readings" << std::endl;
     chargeIntegrator.stop();
 }
 
@@ -111,9 +113,10 @@ void setup() {
 
 void loop() {
     unsigned long currentMicros = micros();
-
-    if (isUpdating && currentMicros - previousMicros >= samplingInterval) {
-        
+    
+    // Because of async, can happen that currentMicros < previousMicros and since they are unsigned, the difference
+    // can overflow
+    if (isUpdating && currentMicros > previousMicros && currentMicros - previousMicros >= samplingInterval) {
         
         /*
         * read all ADC channels
@@ -130,9 +133,9 @@ void loop() {
         //Serial.print(adcstatus);
         //Serial.println(micros());
         
-        if (std::any_of(sensorReadings.begin(), sensorReadings.end(), [](uint16_t x){return x >= integratorThreshold;})) {
-            chargeIntegrator.reset();
-        }
+        // if (std::any_of(sensorReadings.begin(), sensorReadings.end(), [](uint16_t x){return x >= integratorThreshold;})) {
+        //     chargeIntegrator.reset();
+        // }
         
         Message msg;
         msg.header.id = fortress::net::MsgTypes::ServerReadings;
@@ -141,8 +144,8 @@ void loop() {
             << static_cast<uint16_t>(random(1024))      // Ch. 3
             << static_cast<uint16_t>(random(1024))      // Ch. 2
             << static_cast<uint16_t>(random(1024))      // Ch. 1
-            << static_cast<uint16_t>(currentMicros - previousMicros);
-        
+            << static_cast<uint32_t>(currentMicros - previousMicros);
+
         /*msg << sensorReadings[3]      // Ch. 4
             << sensorReadings[2]      // Ch. 3
             << sensorReadings[1]      // Ch. 2

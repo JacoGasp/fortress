@@ -97,6 +97,8 @@ private:
 
     void onReadingsReceived(message<MsgTypes> &msg);
 
+    void onServerFinishedUpload();
+
     void openFile(uint16_t frequency);
 
     void closeFile();
