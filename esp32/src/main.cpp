@@ -2,6 +2,7 @@
 #include <AsyncTCP.h>
 #include <WiFi.h>
 #include <SPI.h>
+#include <Esp.h>
 
 #include "../../include/networking/message.h"
 #include "TCPServer.h"
@@ -21,6 +22,9 @@ bool isUpdating = false;
 unsigned long previousMicros = 0;
 long samplingInterval = 1000;
 
+unsigned long prevInfoMicros = 0;
+long diplayInfoInterval = 5 * 1E6;
+
 SPIClass * hspi = NULL;
 unsigned long totalReadings;
 
@@ -35,6 +39,11 @@ const uint16_t integratorThreshold = 65500;  //threshold on ADC reading (16 bit)
 
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
+
+void printFreeMemory() {
+    Serial.print("Free heap memory ");
+    Serial.println(ESP.getFreeHeap());
+}
 
 void startUpdating(Message &msg, AsyncClient *client) {
     if (isUpdating) {
@@ -150,10 +159,15 @@ void loop() {
             << sensorReadings[2]      // Ch. 3
             << sensorReadings[1]      // Ch. 2
             << sensorReadings[0]     // Ch. 1
-            << static_cast<uint16_t>(currentMicros - previousMicros);
+            << static_cast<uint32_t>(currentMicros - previousMicros);
         */   
         tcp_server.sendMessage(msg, tcp_client);
         previousMicros = currentMicros;
         ++totalReadings;
+    }
+
+    if (currentMicros - prevInfoMicros >= diplayInfoInterval) {
+        printFreeMemory();
+        prevInfoMicros = currentMicros;
     }
 }

@@ -118,7 +118,7 @@ void TCPServer::writeBody(AsyncClient *client) {
     client->send();
     // Message sent, remove it from the queue
     m_qMessagesOut.pop_front();
-
+    msg->body.clear();
     // If there are left messages in the queue, send the next one.
     if (!m_qMessagesOut.empty())
         writeHeader(client);
