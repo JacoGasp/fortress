@@ -135,7 +135,7 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     // Get channels values
-    uint16_t deltaTime;
+    uint32_t deltaTime;
     msg >> deltaTime;
     msg >> m_chLastValues[0];
     msg >> m_chLastValues[1];
@@ -165,7 +165,7 @@ void Backend::onServerFinishedUpload() {
 
     auto kilobytes = m_bytesRead / 1024.0;
 
-    std::cout << "Received " << m_readingsReceived - 1 << " readings. Transferred "
+    std::cout << "Received " << m_readingsReceived + 1 << " readings. Transferred "
               << kilobytes << " KB in " << elapsedTime.count() << " s: "
               << kilobytes / elapsedTime.count() << " KB/s\n";
 }
@@ -196,6 +196,9 @@ void Backend::togglePingUpdate() {
 
 void Backend::openFile(uint16_t frequency) {
     m_file.open();
+    m_file.seek(0);
+    m_textStream.flush();
+
     auto now = QDateTime::currentDateTime();
     auto offset = now.offsetFromUtc();
     now.setOffsetFromUtc(offset);
@@ -204,10 +207,10 @@ void Backend::openFile(uint16_t frequency) {
                  << "Timestamp: " << now.toString(Qt::ISODate) << '\n'
                  << "Sampling Frequency (Hz): " << frequency << '\n'
                  << "##################################" << '\n'
-                 << "t,";
+                 << "t";
 
     for (int i = 0; i < SharedParams::n_channel(); ++i)
-        m_textStream << "channel" << i + 1 << ',';
+        m_textStream << ",channel" << i + 1;
     m_textStream << Qt::endl;
 }
 
