@@ -20,6 +20,7 @@
 #include <QDir>
 #include "networking/client_interface.h"
 #include "constants.h"
+#include "SharedParams.h"
 
 using namespace fortress::net;
 
@@ -96,7 +97,7 @@ private:
 
     void onReadingsReceived(message<MsgTypes> &msg);
 
-    void openFile();
+    void openFile(uint16_t frequency);
 
     void closeFile();
 
