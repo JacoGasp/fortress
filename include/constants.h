@@ -17,12 +17,15 @@ namespace fortress {
 
     namespace net {
         enum MsgTypes : uint32_t {
+            // Messages sent by ESP32
             ServerAccept,
             ServerDeny,
             ServerMessage,
             ServerPing,
             ServerReadings,
+            ServerFinishedUpload,
 
+            // Messages sent by Desktop App
             ClientPing,
             ClientMessage,
             ClientDisconnect,

@@ -58,8 +58,10 @@ void startUpdating(Message &msg, AsyncClient *client) {
 
 void stopUpdating() {
     isUpdating = false;
+    Message msg;
+    msg.header.id = fortress::net::MsgTypes::ServerFinishedUpload;
+    tcp_server.sendMessage(msg, tcp_client);
     std::cout << "Stop updating. Sent " << totalReadings << " readings" << std::endl;
-    //tcp_client = nullptr;         //crashes if nullptr before sending message 
     chargeIntegrator.stop();
 }
 
