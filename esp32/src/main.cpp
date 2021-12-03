@@ -22,6 +22,7 @@ unsigned long previousMicros = 0;
 long samplingInterval = 1000;
 
 SPIClass * hspi = NULL;
+unsigned long totalReadings;
 
 //ADC 
 ADS8332 ADC(ADS8332_CS, ADS8332_CONVST, ADS8332_EOC_INT);
@@ -43,11 +44,13 @@ void startUpdating(Message &msg, AsyncClient *client) {
 
     uint16_t frequency;
     msg >> frequency;
+    previousMicros = micros();
     samplingInterval = static_cast<long>(1.0 / frequency * 1'000'000);
 
     if (samplingInterval > 0) {
         tcp_client = client;
         isUpdating = true;
+        totalReadings = 0;
         std::cout << "Start updating every " << samplingInterval << " us" << std::endl;
         chargeIntegrator.reset();
     }
@@ -55,7 +58,7 @@ void startUpdating(Message &msg, AsyncClient *client) {
 
 void stopUpdating() {
     isUpdating = false;
-    std::cout << "Stop updating" << std::endl;
+    std::cout << "Stop updating. Sent " << totalReadings << " readings" << std::endl;
     //tcp_client = nullptr;         //crashes if nullptr before sending message 
     chargeIntegrator.stop();
 }
@@ -110,14 +113,14 @@ void loop() {
     unsigned long currentMicros = micros();
 
     if (isUpdating && currentMicros - previousMicros >= samplingInterval) {
-        previousMicros = currentMicros;
+        
         
         /*
         * read all ADC channels
         * important: getSample with no ADC connected adds 100 ms delay due to ADC timeout 
         */
 
-        uint8_t adcstatus = ADC.getSample(&sensorReadings[0], 0);
+        // uint8_t adcstatus = ADC.getSample(&sensorReadings[0], 0);
         //ADC.getSample(&sensorReadings[1], 1);
         //ADC.getSample(&sensorReadings[2], 2);
         //ADC.getSample(&sensorReadings[3], 3);
@@ -137,14 +140,17 @@ void loop() {
         msg << static_cast<uint16_t>(random(1024))      // Ch. 4
             << static_cast<uint16_t>(random(1024))      // Ch. 3
             << static_cast<uint16_t>(random(1024))      // Ch. 2
-            << static_cast<uint16_t>(random(1024));     // Ch. 1
+            << static_cast<uint16_t>(random(1024))      // Ch. 1
+            << static_cast<uint16_t>(currentMicros - previousMicros);
         
         /*msg << sensorReadings[3]      // Ch. 4
             << sensorReadings[2]      // Ch. 3
             << sensorReadings[1]      // Ch. 2
-            << sensorReadings[0];     // Ch. 1
+            << sensorReadings[0]     // Ch. 1
+            << static_cast<uint16_t>(currentMicros - previousMicros);
         */   
         tcp_server.sendMessage(msg, tcp_client);
-  
+        previousMicros = currentMicros;
+        ++totalReadings;
     }
 }

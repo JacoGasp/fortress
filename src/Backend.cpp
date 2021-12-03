@@ -128,21 +128,20 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 // Helpers
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
+    uint16_t deltaTime;
+    msg >> deltaTime;
     msg >> m_chLastValues[0];
     msg >> m_chLastValues[1];
     msg >> m_chLastValues[2];
     msg >> m_chLastValues[3];
 
     m_bytesRead += sizeof(uint16_t) * 4;
+    ++m_readingsReceived;
+    m_textStream << deltaTime;
 
-    m_textStream << m_readingsReceived++ << ',';
-    for (int i = 0; i < fortress::consts::N_CHANNELS; ++i) {
+    for (int i = 0; i < SharedParams::n_channel(); ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
-
-        m_textStream << m_chLastValues[i];
-
-        if (i < fortress::consts::N_CHANNELS - 1)
-            m_textStream << ',';
+        m_textStream << ',' << m_chLastValues[i];
     }
     m_textStream << '\n';
 
@@ -302,9 +301,9 @@ void Backend::sendStopUpdateCommand() {
 
     auto kilobytes = m_bytesRead / 1024.0;
 
-    std::cout << "Received " << m_readingsReceived + 1 << " readings\n";
-    std::cout << "Transferred " << kilobytes << " KB in " << elapsedTime.count() << "s\n"
-              << kilobytes / elapsedTime.count() << " KB/s\n";
+    std::cout << "Received " << m_readingsReceived + 1 << " readings. Transferred "
+              << kilobytes << " KB in " << elapsedTime.count() << " s: " <<
+              kilobytes / elapsedTime.count() << " KB/s\n";
 
 }
 
