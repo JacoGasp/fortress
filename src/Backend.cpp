@@ -173,9 +173,21 @@ void Backend::togglePingUpdate() {
     }
 }
 
-void Backend::openFile() {
+void Backend::openFile(uint16_t frequency) {
     m_file.open();
-    m_textStream << "i,channel1,channel2,channel3,channel4\n";
+    auto now = QDateTime::currentDateTime();
+    auto offset = now.offsetFromUtc();
+    now.setOffsetFromUtc(offset);
+
+    m_textStream << "############ Fortress ############" << '\n'
+                 << "Timestamp: " << now.toString(Qt::ISODate) << '\n'
+                 << "Sampling Frequency (Hz): " << frequency << '\n'
+                 << "##################################" << '\n'
+                 << "t,";
+
+    for (int i = 0; i < SharedParams::n_channel(); ++i)
+        m_textStream << "channel" << i + 1 << ',';
+    m_textStream << Qt::endl;
 }
 
 void Backend::closeFile() {
@@ -269,7 +281,8 @@ double Backend::getIntegralChannelValue(uint8_t channel) const {
 }
 
 void Backend::sendStartUpdateCommand(uint16_t frequency) {
-    openFile();
+    openFile(frequency);
+
     message<MsgTypes> msg;
     msg.header.id = ClientStartUpdating;
     msg << frequency;
