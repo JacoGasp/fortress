@@ -35,7 +35,8 @@ namespace fortress::net {
                         m_context,
                         asio::ip::tcp::socket{ m_context },
                         tcp_connection::owner::client,
-                        [this](owned_message<MsgTypes> &msg) { onMessage(msg.message); }
+                        [this](owned_message<MsgTypes> &msg) { onMessage(msg.message); },
+                        [this](){ onServerDisconnected(); }
                 );
 
                 m_connection->connectToServer(endpoints);
@@ -63,8 +64,7 @@ namespace fortress::net {
             if (m_connection->isConnected()) {
                 m_connection->send(msg);
             } else {
-                m_connection->disconnect();
-                onServerDisconnected();
+                m_context.restart();
             }
         }
     };

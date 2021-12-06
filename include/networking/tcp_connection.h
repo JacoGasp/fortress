@@ -31,6 +31,7 @@ namespace fortress::net {
         asio::ip::tcp::socket m_socket;
         owner m_owner;
         std::function<void(owned_message<MsgTypes> &)> m_onMessageCallback;
+        std::function<void()> m_onConnectionDropped;
 
         message<MsgTypes> m_tempInMessage;
         ts_queue<message<MsgTypes>> m_qMessagesOut;
@@ -38,12 +39,18 @@ namespace fortress::net {
 
 
     public:
-        tcp_connection(asio::io_context &asioContext, asio::ip::tcp::socket socket, tcp_connection::owner owner,
-                       std::function<void(owned_message<MsgTypes> &)> callback) :
+        tcp_connection(asio::io_context &asioContext,
+                       asio::ip::tcp::socket socket,
+                       tcp_connection::owner owner,
+                       std::function<void(owned_message<MsgTypes> &)> callback,
+                       std::function<void()> onConnectionDropped = nullptr
+                       ) :
                 m_asioContext{ asioContext },
                 m_socket{ std::move(socket) },
                 m_owner{ owner },
-                m_onMessageCallback(std::move(callback)) {}
+                m_onMessageCallback(std::move(callback)),
+                m_onConnectionDropped(std::move(onConnectionDropped))
+                {}
 
         [[nodiscard]] bool isConnected() const {
             return m_socket.is_open();
@@ -73,13 +80,19 @@ namespace fortress::net {
             if (isConnected()) {
                 // https://stackoverflow.com/a/3068106/6882933
                 m_socket.shutdown(asio::socket_base::shutdown_both);
-                m_socket.close();
-                std::cout << "m_socket shut down\n";
+                std::cout << "Shutdown socket\n";
             }
         }
 
         void closeSocket() {
-            m_socket.close();
+            if (m_socket.is_open()) {
+                m_socket.close();
+
+                assert(!m_socket.is_open());
+                std::cout << "Close socket\n";
+                if (m_onConnectionDropped != nullptr)
+                    m_onConnectionDropped();
+            }
         }
 
     public:
@@ -126,9 +139,10 @@ namespace fortress::net {
                                           break;
                                       default:
                                           std::cout << '[' << m_id << "] Write header failed: " << ec.message() << '\n';
+                                          break;
                                   }
                                   // FIXME: Here should turn off the client in case of connection drop
-//                                  disconnect();
+                                  closeSocket();
                               });
         }
 
@@ -148,7 +162,7 @@ namespace fortress::net {
                         } else {
                             std::cout << '[' << m_id << "] Write body failed: " << ec.message() << '\n';
                             // FIXME: Here should turn off the client in case of connection drop
-//                            disconnect();
+                            closeSocket();
                         }
                     });
         }
@@ -169,7 +183,7 @@ namespace fortress::net {
                                  } else {
                                      std::cout << "Read header failed: " << ec.message() << '\n';
                                      // FIXME: Here should turn off the client in case of connection drop
-//                                     disconnect();
+                                     closeSocket();
                                  }
                              });
         }
@@ -184,7 +198,7 @@ namespace fortress::net {
                                  } else {
                                      std::cout << "Read body failed: " << ec.message() << '\n';
                                      // FIXME: Here should turn off the client in case of connection drop
-//                                     disconnect();
+                                     closeSocket();
                                  }
                              });
         }

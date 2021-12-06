@@ -64,7 +64,7 @@ public:
 
     void onServerDisconnected() override;
 
-    Q_INVOKABLE bool connectToHost(const QString &host, uint16_t port);
+    Q_INVOKABLE void connectToHost(const QString &host, uint16_t port);
 
     Q_INVOKABLE void disconnectFromHost();
 

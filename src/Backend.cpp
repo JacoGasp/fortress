@@ -22,45 +22,61 @@ Backend::Backend(QObject *parent)
 Backend::~Backend() {
     m_pPingTimer->cancel();
     disconnectFromHost();
-    closeFile();
-    std::cout << "Backend helper closed\n";
-}
 
-
-bool Backend::connectToHost(const QString &host, uint16_t port) {
-    m_context.restart();
-
-    bool bConnectionSuccessful = connect(host.toStdString(), port);
-    m_threadContext = std::thread([&]() { m_context.run(); });
-    return bConnectionSuccessful;
-}
-
-void Backend::disconnectFromHost() {
-    if (m_bIsPinging)
-        togglePingUpdate();
-
-    if (isConnected()) {
-        message<MsgTypes> disconnectMsg;
-        disconnectMsg.header.id = ClientDisconnect;
-        sendMessage(disconnectMsg);
-
-        client_interface::disconnect();
-        m_context.stop();
-        m_context.restart();
-    }
-
+    // Join any dangling thread before exit
     if (m_threadContext.joinable())
         m_threadContext.join();
 
-    emit connectionStatusChanged(isConnected());
-
-    if (!isConnected()) {
-        std::cout << "[BACKEND] Disconnected from host" << std::endl;
-    }
+    closeFile();
+    std::cout << "[BACKEND] Closing. Bye.\n";
 }
 
+
+void Backend::connectToHost(const QString &host, uint16_t port) {
+    // Prepare the context for consecutive use
+    m_context.restart();
+
+    // Join any dangling contextThread
+    if (m_threadContext.joinable())
+        m_threadContext.join();
+
+    // This returns immediately
+    connect(host.toStdString(), port);
+
+    // Start the threadContext
+    m_threadContext = std::thread([&]() {
+        m_context.run();
+        assert(m_context.stopped() == true);
+        std::cout << "[BACKEND] Asio context stopped\n";
+        emit connectionStatusChanged(isConnected());
+    });
+}
+
+void Backend::disconnectFromHost() {
+    if (!client_interface::isConnected())
+        return;
+
+    std::cout << "[BACKEND] Disconnecting... \n";
+
+    message<MsgTypes> disconnectMsg;
+    disconnectMsg.header.id = ClientDisconnect;
+    sendMessage(disconnectMsg);
+
+    client_interface::disconnect();
+}
+
+
 void Backend::onServerDisconnected() {
-    disconnectFromHost();
+    std::cout << "[BACKEND] Connection dropped, disconnect.\n";
+    assert(!client_interface::isConnected());
+
+    if (m_bIsPinging)
+        togglePingUpdate();
+
+    if (!m_context.stopped()) {
+        std::cout << "[BACKEND] Stopping Asio context\n";
+        m_context.stop();
+    }
 }
 
 
@@ -188,9 +204,11 @@ void Backend::pingHandler() {
 void Backend::togglePingUpdate() {
     if (m_bIsPinging) {
         m_bIsPinging = false;
+        std::cout << "[BACKEND] Stopped ping updates\n";
     } else {
         m_bIsPinging = true;
         pingHandler();
+        std::cout << "[BACKEND] Start ping updates\n";
     }
 }
 
