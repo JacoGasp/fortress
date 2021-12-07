@@ -56,7 +56,7 @@ void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_chann
 
         // The integrator has been reset.
         if (newReading < lastReading) {
-            lastReading -= SharedParams::integratorUpperLimit;
+            lastReading -= SharedParams::integratorThreshold;
         }
 
         assert(newReading >= lastReading);
