@@ -147,6 +147,15 @@ ToolBar {
                 }
 
             }
+
+            CheckBox {
+                text: qsTr("Show differential values")
+                checkState: Qt.Checked
+                onCheckStateChanged: {
+                    ChartModel.showDifferentialValues = this.checkState
+                    console.log(`Show differential values: ${ChartModel.showDifferentialValues}`)
+                }
+            }
         }
         ColumnLayout {
             Layout.fillWidth: true
