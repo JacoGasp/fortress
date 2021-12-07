@@ -20,7 +20,7 @@ qt_add_resources(QT_RESOURCES ../qml/qml.qrc)
 # Setup executable
 
 file(GLOB INCLUDES ../include/*.h)
-file(GLOB SOURCES ../src/*.cpp)
+set(SOURCES ../src/Backend.cpp ../src/ChartModel.cpp)
 
 if (APPLE)
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE main.cpp ${QT_RESOURCES} ${SOURCES} ${INCLUDES})

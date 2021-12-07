@@ -25,7 +25,6 @@ Rectangle {
         antialiasing: true
         backgroundColor: "#55595C"
         legend.visible: false
-
         ValueAxis {
             id: axisY
             labelsColor: "darkgray"
@@ -33,6 +32,7 @@ Rectangle {
             max: 10
             titleText: `<font color='lightgray'>Ch ${channel}</font>`
             gridLineColor: "darkgray"
+            labelFormat: "%d"
 
             Behavior on min {
                 NumberAnimation { duration: 200 }
@@ -49,7 +49,7 @@ Rectangle {
             labelsColor: "darkgray"
             visible: false
             min: 0
-            max: backend ? backend.windowSize : 0
+            max: ChartModel ? ChartModel.plotWindowSize : 0
         }
 
         LineSeries {
@@ -88,12 +88,12 @@ Rectangle {
     }
 
     function update() {
-        let maxValue = backend.getMaxChannelValue(channel)
+        let maxValue = ChartModel.getMaxChannelValue(channel)
 
         if (axisY.max !== maxValue)
             axisY.max = maxValue
 
-        backend.updatePlotSeries(leftSeries, rightSeries, channel)
+        ChartModel.updatePlotSeries(leftSeries, rightSeries, channel)
     }
 
     Component.onCompleted: {

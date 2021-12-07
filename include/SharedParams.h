@@ -7,26 +7,29 @@
 
 
 #include <QObject>
+#include <QtQml>
 
 class SharedParams : public QObject {
 Q_OBJECT
     QML_ELEMENT
 
-private:
+public:
     // General
-    static constexpr int m_n_channels = 4;
-    static constexpr int m_minScreenWidth = 1280;
-    static constexpr int m_minScreenHeight = 840;
+    static constexpr int n_channels = 4;
+    static constexpr int defaultMinScreenWidth = 1280;
+    static constexpr int defaultMinScreenHeight = 840;
+    static constexpr int plotWindowSizeInPoint = 512;
 
+private:
     // Toolbar
     const QString m_ipPlaceholder = "192.168.1.7";
-    QString m_ip = "192.168.1.47";
+    QString m_ip = "192.168.178.20";
     static constexpr int m_defaultPort = 60000;
     int m_samplingFreq = 100;
     static constexpr int m_maxAllowedFreq = 1024;
 
 public:
-    Q_PROPERTY(int N_CHANNELS READ n_channel CONSTANT)
+    Q_PROPERTY(int N_CHANNELS READ nChannels CONSTANT)
     Q_PROPERTY(int MIN_SCREEN_WIDTH READ minScreenWidth CONSTANT)
     Q_PROPERTY(int MAX_SCREEN_HEIGHT READ minScreenHeight CONSTANT)
     Q_PROPERTY(QString IP_PLACEHOLDER READ ipPlaceholder CONSTANT)
@@ -35,11 +38,11 @@ public:
     Q_PROPERTY(int samplingFreq READ samplingFreq WRITE setSamplingFreq NOTIFY samplingFreqChanged)
     Q_PROPERTY(int MAX_ALLOWED_FREQ READ maxAllowedFreq CONSTANT)
 
-    [[nodiscard]] static int n_channel() { return m_n_channels; }
+    [[nodiscard]] static int nChannels() { return n_channels; }
 
-    [[nodiscard]] static int minScreenWidth() { return m_minScreenWidth; }
+    [[nodiscard]] static int minScreenWidth() { return defaultMinScreenWidth; }
 
-    [[nodiscard]] static int minScreenHeight() { return m_minScreenHeight; }
+    [[nodiscard]] static int minScreenHeight() { return defaultMinScreenHeight; }
 
     [[nodiscard]] QString ipPlaceholder() const { return m_ipPlaceholder; }
 

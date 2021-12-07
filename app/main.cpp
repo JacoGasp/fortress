@@ -10,8 +10,10 @@
 #include <QQmlEngine>
 #include <QtQuick>
 #include <QtQml>
-#include "Backend.h"
+
 #include "SharedParams.h"
+#include "ChartModel.h"
+#include "Backend.h"
 
 
 int main(int argc, char *argv[]) {
@@ -25,10 +27,12 @@ int main(int argc, char *argv[]) {
 
     QQmlApplicationEngine engine;
 
-    Backend backend;
-    engine.rootContext()->setContextProperty("backend", &backend);
-
+    ChartModel chartModel;
+    Backend backend{&chartModel};
     SharedParams sharedParams;
+
+    engine.rootContext()->setContextProperty("ChartModel", &chartModel);
+    engine.rootContext()->setContextProperty("Backend", &backend);
     engine.rootContext()->setContextProperty("SharedParams", &sharedParams);
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
