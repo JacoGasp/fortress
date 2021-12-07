@@ -23,7 +23,7 @@ ApplicationWindow {
     property var charts: []
     property var gauges: []
     property double threshold: 1024
-    property double thresholdIntegral: 100
+    property double thresholdIntegral: 100 * 1024
     property double ping: -1.0
 
 
@@ -180,10 +180,10 @@ ApplicationWindow {
 
     Timer {
         interval: 1000
-        running: backend ? backend.bIsConnected : false
+        running: Backend ? Backend.bIsConnected : false
         repeat: true
         onTriggered: {
-           ping = backend.dPingValue
+           ping = Backend.dPingValue
         }
     }
 
@@ -195,14 +195,14 @@ ApplicationWindow {
     function stop() {
         gauges.forEach(g => g.stop())
         charts.forEach(c => c.stop())
-        backend.clearData();
+        ChartModel.clearData();
     }
 
     Connections {
-        target: backend
+        target: Backend
         function onConnectionStatusChanged(bIsConnected) {
             if (bIsConnected){
-                backend.togglePingUpdate()
+                Backend.togglePingUpdate()
             } else {
                 ping = -1.0
             }

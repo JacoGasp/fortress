@@ -26,7 +26,7 @@ ToolBar {
     }
 
     Connections {
-        target: backend
+        target: Backend
 
         function onConnectionFailed(error_message) {
             statusLabel.text = `Status: Failed to connect - ${error_message}`
@@ -62,7 +62,7 @@ ToolBar {
                     placeholderText: SharedParams ? SharedParams.IP_PLACEHOLDER : ""
                     text: SharedParams ?  SharedParams.ip : ""
 
-                    enabled: backend ? !(backend.bIsConnected || bIsConnecting) : false
+                    enabled: Backend ? !(Backend.bIsConnected || bIsConnecting) : false
 
                     validator: RegularExpressionValidator {
                         regularExpression: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])/
@@ -85,7 +85,7 @@ ToolBar {
                     id: portField
                     text: SharedParams ? SharedParams.defaultPort : 0
                     Layout.maximumWidth: 60
-                    enabled: backend ? !(backend.bIsConnected | bIsConnecting) : false
+                    enabled: Backend ? !(Backend.bIsConnected | bIsConnecting) : false
                     validator: IntValidator {
                         bottom: 1
                         top: 65535
@@ -101,10 +101,10 @@ ToolBar {
                 Label{}
                 Button {
                     id: connectButton
-                    text: backend ? backend.bIsConnected ? "Disconnect" : "Connect" : "Disconnected"
+                    text: Backend ? Backend.bIsConnected ? "Disconnect" : "Connect" : "Disconnected"
                     enabled: bIpIsValid && bIsPortValid && !bIsConnecting && !bIsReceiving
                     onClicked: {
-                        !backend.bIsConnected ? connect() : disconnect()
+                        !Backend.bIsConnected ? connect() : disconnect()
                     }
                 }
 
@@ -132,7 +132,7 @@ ToolBar {
                 columns: 2
                 Button {
                     text: !bIsReceiving ? "Start" : "Stop"
-                    enabled: backend ? backend.bIsConnected : false
+                    enabled: Backend ? Backend.bIsConnected : false
                     onClicked: {
                         !bIsReceiving ? start() : stop()
                     }
@@ -210,7 +210,7 @@ ToolBar {
         currentFile: `file:///${Qt.formatDate(startDate, "yyyyMMdd")}_${Qt.formatTime(startDate, "hhmmss")}_fortress.csv`
         onAccepted: {
             console.log(file)
-            backend.saveFile(file)
+            Backend.saveFile(file)
             bHasSaved = true
         }
     }
@@ -222,14 +222,14 @@ ToolBar {
         } else {
             bIsSaveEnabled = false
             bIsReceiving = true
-            backend.sendStartUpdateCommand(SharedParams.samplingFreq)
+            Backend.sendStartUpdateCommand(SharedParams.samplingFreq)
             root.start()
         }
     }
 
 
     function stop() {
-        backend.sendStopUpdateCommand()
+        Backend.sendStopUpdateCommand()
         bIsSaveEnabled = true
         bIsReceiving = false
         bHasSaved = false
@@ -241,13 +241,13 @@ ToolBar {
         console.log("Attempting to connect...")
         changeStatus("connecting")
 
-        backend.connectToHost(ipAddressField.text, portField.text)
+        Backend.connectToHost(ipAddressField.text, portField.text)
     }
 
     function disconnect() {
         bIsSaveEnabled = false;
         console.log("Disconnecting...")
-        backend.disconnectFromHost()
+        Backend.disconnectFromHost()
     }
 
 

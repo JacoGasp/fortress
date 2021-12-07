@@ -137,7 +137,8 @@ Rectangle {
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: textValue.bottom
-        text: bIsIntegral ? "Sv" : "mSv"
+        // text: bIsIntegral ? "Sv" : "mSv"
+        text: "ADC"
         font.pointSize: 18
         color: "lightgrey"
         horizontalAlignment: Text.AlignHCenter
@@ -148,13 +149,13 @@ Rectangle {
         running: isRunning
         repeat: true
         onTriggered: {
-           update(bIsIntegral ? backend.getIntegralChannelValue(channel) / 1000 : backend.getLastChannelValue(channel))
+           update(bIsIntegral ? ChartModel.getChannelTotalSum(channel) / 1000 : ChartModel.getLastChannelValue(channel))
         }
     }
 
     function update(newValue) {
 
-        textValue.text = newValue.toFixed(1)
+        textValue.text = newValue.toFixed(0)
 
         if (newValue > maxValue)
             newValue = maxValue
