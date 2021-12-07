@@ -164,7 +164,7 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
 
     // Write data to disk
     m_textStream << deltaTime;
-    for (int i = 0; i < SharedParams::n_channel(); ++i) {
+    for (int i = 0; i < SharedParams::n_channels(); ++i) {
         if (m_chLastValues[i] > m_chMaxValues[i]) m_chMaxValues[i] = m_chLastValues[i];
         m_textStream << ',' << m_chLastValues[i];
     }
@@ -227,7 +227,7 @@ void Backend::openFile(uint16_t frequency) {
                  << "##################################" << '\n'
                  << "t";
 
-    for (int i = 0; i < SharedParams::n_channel(); ++i)
+    for (int i = 0; i < SharedParams::n_channels(); ++i)
         m_textStream << ",channel" << i + 1;
     m_textStream << Qt::endl;
 }

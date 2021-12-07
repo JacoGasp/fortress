@@ -20,13 +20,13 @@ private:
 
     // Toolbar
     const QString m_ipPlaceholder = "192.168.1.7";
-    QString m_ip = "192.168.1.47";
+    QString m_ip = "192.168.178.20";
     static constexpr int m_defaultPort = 60000;
     int m_samplingFreq = 100;
     static constexpr int m_maxAllowedFreq = 1024;
 
 public:
-    Q_PROPERTY(int N_CHANNELS READ n_channel CONSTANT)
+    Q_PROPERTY(int N_CHANNELS READ n_channels CONSTANT)
     Q_PROPERTY(int MIN_SCREEN_WIDTH READ minScreenWidth CONSTANT)
     Q_PROPERTY(int MAX_SCREEN_HEIGHT READ minScreenHeight CONSTANT)
     Q_PROPERTY(QString IP_PLACEHOLDER READ ipPlaceholder CONSTANT)
@@ -35,7 +35,7 @@ public:
     Q_PROPERTY(int samplingFreq READ samplingFreq WRITE setSamplingFreq NOTIFY samplingFreqChanged)
     Q_PROPERTY(int MAX_ALLOWED_FREQ READ maxAllowedFreq CONSTANT)
 
-    [[nodiscard]] static int n_channel() { return m_n_channels; }
+    [[nodiscard]] static int n_channels() { return m_n_channels; }
 
     [[nodiscard]] static int minScreenWidth() { return m_minScreenWidth; }
 
