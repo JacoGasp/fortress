@@ -14,7 +14,6 @@
 #include "MCP4726.h"
 
 
-
 //BUZZER pwm properties
 const int PWM_FREQ = 4000;
 const int BUZZER_PWM_CHAN = 0;
@@ -119,7 +118,6 @@ static void checkPowerOffTask(void* pvParameters){
     last_interrupt_time = interrupt_time;
 }
 */
-
 //battery level task
 static void checkBatteryLevel(void* pvParameters){
     for( ;; ){
