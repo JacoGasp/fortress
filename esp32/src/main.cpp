@@ -305,7 +305,7 @@ void loop() {
 #ifdef EMULATE_SAMPLING
         // Dummy data for test
         for (auto it = sensorReadings.begin(); it != sensorReadings.end(); ++it) {
-            *it += static_cast<uint16_t>(random(10));
+            *it += static_cast<uint16_t>(random(-5, 25));
             if (*it > SharedParams::integratorThreshold) *it -= SharedParams::integratorThreshold;
             // Packet the sample
             msg << *it;
