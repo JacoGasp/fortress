@@ -44,20 +44,20 @@ ApplicationWindow {
 
         GridLayout {
             id: gridLayout
-            columns: 5
-            rows: 5
+            columns: 4
+            rows: 4
 
-            Label {
-                text: "Instant Dose"
-                Layout.column: 3
-                color: "lightGray"
-            }
+//            Label {
+//                text: "Instant Dose"
+//                Layout.column: 3
+//                color: "lightGray"
+//            }
 
-            Label {
-                text: "Total Dose"
-                Layout.column: 4
-                color: "lightGray"
-            }
+//            Label {
+//                text: "Total Dose"
+//                Layout.column: 4
+//                color: "lightGray"
+//            }
 
 
 
@@ -65,109 +65,90 @@ ApplicationWindow {
                 id: chart_0
                 channel: 0
                 lineColor: "#D9534F"
-                Layout.columnSpan: 3
+                Layout.columnSpan: 2
                 Layout.rowSpan: 1
 
-            }
-
-            FRGauge {
-                id: gauge_0
-                channel: 0
-                Layout.columnSpan: 1
-                Layout.rowSpan: 1
-                maxValue: threshold
-            }
-
-            FRGauge {
-                id: gauge_0b
-                channel: 0
-                Layout.columnSpan: 1
-                Layout.rowSpan: 1
-                maxValue: thresholdIntegral
-                bIsIntegral: true
             }
 
             FRCharts {
                 id: chart_1
-                channel: 1
-                lineColor: "#F0AD4E"
-                Layout.columnSpan: 3
+                channel:1
+                lineColor: "#56C0E0"
+                Layout.columnSpan: 2
                 Layout.rowSpan: 1
-            }
 
-            FRGauge {
-                id: gauge_1
-                channel: 1
-                Layout.columnSpan: 1
-                Layout.rowSpan: 1
-                maxValue: threshold
             }
+//            FRGauge {
+//                id: gauge_0
+//                channel: 0
+//                Layout.columnSpan: 1
+//                Layout.rowSpan: 1
+//                maxValue: threshold
+//            }
 
-            FRGauge {
-                id: gauge_1b
-                channel: 1
-                Layout.columnSpan: 1
-                Layout.rowSpan: 1
-                maxValue: thresholdIntegral
-                bIsIntegral: true
-            }
-
+//            FRGauge {
+//                id: gauge_0b
+//                channel: 0
+//                Layout.columnSpan: 1
+//                Layout.rowSpan: 1
+//                maxValue: thresholdIntegral
+//                bIsIntegral: true
+//            }
 
             FRCharts {
                 id: chart_2
                 channel: 2
-                lineColor: "#5CB85C"
-                Layout.columnSpan: 3
+                lineColor: "#F0AD4E"
+                Layout.columnSpan: 2
                 Layout.rowSpan: 1
-            }
-
-            FRGauge {
-                id: gauge_2
-                channel: 2
-                Layout.columnSpan: 1
-                Layout.rowSpan: 1
-                maxValue: threshold
-            }
-
-            FRGauge {
-                id: gauge_2b
-                channel: 2
-                Layout.columnSpan: 1
-                Layout.rowSpan: 1
-                maxValue: thresholdIntegral
-                bIsIntegral: true
             }
 
             FRCharts {
                 id: chart_3
                 channel: 3
+                lineColor: "#5CB85C"
+                Layout.columnSpan: 2
+                Layout.rowSpan: 1
+            }
+
+            FRCharts {
+                id: chart_4
+                channel: 4
+                lineColor: "#D9534F"
+                Layout.columnSpan: 2
+                Layout.rowSpan: 1
+            }
+
+            FRCharts {
+                id: chart_5
+                channel: 5
                 lineColor: "#56C0E0"
-                Layout.columnSpan: 3
+                Layout.columnSpan: 2
                 Layout.rowSpan: 1
             }
 
-            FRGauge {
-                id: gauge_3
-                channel: 3
-                Layout.columnSpan: 1
+            FRCharts {
+                id: chart_6
+                channel: 6
+                lineColor: "#F0AD4E"
+                Layout.columnSpan: 2
                 Layout.rowSpan: 1
-                maxValue: threshold
             }
 
-            FRGauge {
-                id: gauge_3b
-                channel: 3
-                Layout.columnSpan: 1
+            FRCharts {
+                id: chart_7
+                channel: 7
+                lineColor: "#5CB85C"
+                Layout.columnSpan: 2
                 Layout.rowSpan: 1
-                maxValue: thresholdIntegral
-                bIsIntegral: true
             }
 
             Layout.fillHeight: true
 
             Component.onCompleted: {
-                charts = [chart_0, chart_1, chart_2, chart_3]
-                gauges = [gauge_0, gauge_1, gauge_2, gauge_3, gauge_0b, gauge_1b, gauge_2b, gauge_3b]
+
+                for (let i = 0; i < gridLayout.children.length; ++i)
+                    charts.push(gridLayout.children[i]);
             }
         }
 

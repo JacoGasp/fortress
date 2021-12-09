@@ -135,10 +135,11 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     std::array<uint16_t, SharedParams::n_channels> channelsReadings{};
 
     msg >> deltaTime;
-    msg >> channelsReadings[0];
-    msg >> channelsReadings[1];
-    msg >> channelsReadings[2];
-    msg >> channelsReadings[3];
+
+    for (int i = 0; i < SharedParams::n_channels; ++i) {
+        // Note: channels are flipped in respect of ESP 32 oreder
+        msg >> channelsReadings[i];
+    }
 
     // Count the amount of data received
     m_bytesRead += sizeof(msg);
@@ -209,7 +210,7 @@ void Backend::openFile(uint16_t frequency) {
                  << "t";
 
     for (int i = 0; i < SharedParams::n_channels; ++i)
-        m_textStream << ",channel" << i + 1;
+        m_textStream << ",ch_" << i;
     m_textStream << Qt::endl;
 }
 

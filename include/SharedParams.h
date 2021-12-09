@@ -5,7 +5,7 @@
 #ifndef FORTRESS_SHAREDPARAMS_H
 #define FORTRESS_SHAREDPARAMS_H
 
-
+#ifndef ESP32
 #include <QObject>
 #include <QtQml>
 
@@ -13,13 +13,19 @@ class SharedParams : public QObject {
 Q_OBJECT
     QML_ELEMENT
 
+#else
+class SharedParams {
+#endif
+
 public:
     // General
-    static constexpr int n_channels = 4;
+    static constexpr int n_channels = 8;
     static constexpr int defaultMinScreenWidth = 1280;
     static constexpr int defaultMinScreenHeight = 840;
     static constexpr int plotWindowSizeInPoint = 512;
+    static constexpr uint16_t integratorThreshold = 65500;
 
+#ifndef ESP32
 private:
     // Toolbar
     const QString m_ipPlaceholder = "192.168.1.7";
@@ -63,6 +69,8 @@ signals:
     void ipChanged();
 
     void samplingFreqChanged();
+
+#endif
 
 };
 

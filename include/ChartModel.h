@@ -16,6 +16,7 @@
 class ChartModel : public QObject {
 Q_OBJECT
     Q_PROPERTY(int plotWindowSize READ plotWindowSize() CONSTANT)
+    Q_PROPERTY(int showDifferentialValues READ showDifferentialValues() WRITE showDifferentialValues())
 
 private:
     // The current index on the X axis
@@ -24,13 +25,25 @@ private:
     int m_t{ 0 };
     // Store the entire data as (n_channels x plotWindowSize)
     QList<QList<QPointF>> m_chartData;
+    // Store the entire data as (n_channels x plotWindowSize)
+    QList<QList<QPointF>> m_chartDifferentialData;
 
     // Last n_channels points received to display as gauge
-    std::array<uint16_t, SharedParams::n_channels> m_chLastValues{};
-    // The current n_channels max values to auto rescale Y axis
-    std::array<uint16_t, SharedParams::n_channels> m_chMaxValues{};
+    std::array<int, SharedParams::n_channels> m_chLastValues{};
+    std::array<int, SharedParams::n_channels> m_chLastDifferentialValues{};
+    // The current n_channels min/max values to auto rescale Y axis
+    const std::array<int, SharedParams::n_channels> m_chMinValues{};
+    std::array<int, SharedParams::n_channels> m_chMinDifferentialValues{};
+    std::array<int, SharedParams::n_channels> m_chMaxValues{};
+    std::array<int, SharedParams::n_channels> m_chMaxDifferentialValues{};
     // The n_channels total cumulative sum to display as gauge
     std::array<int, SharedParams::n_channels> m_chTotalSums{};
+    std::array<int, SharedParams::n_channels> m_chTotalDifferentialSums{};
+
+    bool m_showDifferentialValues = true;
+
+private:
+    static inline auto compareFunction = [](const QPointF &p1, const QPointF &p2) { return p1.y() < p2.y(); };
 
 public:
     explicit ChartModel(QObject *parent = nullptr);
@@ -46,10 +59,16 @@ public:
 
     [[nodiscard]] static int plotWindowSize();
 
+    [[nodiscard]] bool showDifferentialValues() const;
+
+    void showDifferentialValues(bool show);
+
     // Listen for events
 public slots:
 
     [[nodiscard]] double getLastChannelValue(int channel) const;
+
+    [[nodiscard]] double getMinChannelValue(int channel) const;
 
     [[nodiscard]] double getMaxChannelValue(int channel) const;
 

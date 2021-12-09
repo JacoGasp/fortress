@@ -88,10 +88,12 @@ Rectangle {
     }
 
     function update() {
+        let minValue = ChartModel.getMinChannelValue(channel)
         let maxValue = ChartModel.getMaxChannelValue(channel)
 
-        if (axisY.max !== maxValue)
-            axisY.max = maxValue
+        if (axisY.min !== minValue) axisY.min = minValue
+        if (axisY.max !== maxValue) axisY.max = maxValue
+
 
         ChartModel.updatePlotSeries(leftSeries, rightSeries, channel)
     }
