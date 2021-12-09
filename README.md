@@ -79,8 +79,6 @@ The simplest way to build and upload the ESP32 firmware is to use VSCode with Pl
 Simply open the `esp32` folder with VSCode and it will automatically recognize the ESP32 project. Then press the Build button
 to build and the Upload button to flash the ESP.
 
-**Important!** Before build change Wi-Fi parameters in `esp32/src/main.cpp`
-
 You can also compile and flash the ESP32 using the command line.
 
 Hint: first locate your Platformio installation (as Python virtual environment):
@@ -94,6 +92,27 @@ Then, activate the virtual environment:
 
 ```bash
  source ~/.platformio/penv/bin/activate
+```
+
+Change the `esp32/platformio.ini` file with your WiFi SSID and password editing the build flags.
+Using the `EMULATE_SAMPLIG` flag, the ESP32
+will send synthetic data instead of using the ADC.
+
+```ini
+[env:esp32dev]
+platform = espressif32
+board =  az-delivery-devkit-v4
+framework = arduino
+monitor_speed = 115200
+upload_speed = 921600
+lib_deps = AsyncTCP
+build_unflags =-std=gnu++11
+build_flags =
+    -std=c++17
+    -DWIFI_SSID=\""YOUR WIFI SSID HERE\""
+    -DWIFI_PASSWORD=\""YOUR WIFI PASSWORD HERE\""
+    -DEMULATE_SAMPLING
+monitor_filters = esp32_exception_decoder
 ```
 
 Now you can build and upload the firmware
