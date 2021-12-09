@@ -55,10 +55,8 @@ void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_chann
         int newReading = readings[ch];
 
         // The integrator has been reset.
-//        if (newReading > SharedParams::integratorThreshold) {
-//            newReading -= SharedParams::integratorThreshold;
-//            lastReading -= SharedParams::integratorThreshold;
-//        }
+        if (lastReading - newReading > SharedParams::integratorThreshold * 0.9)
+            lastReading -= SharedParams::integratorThreshold;
 
         auto newDifferentialReading = newReading - lastReading;
 
