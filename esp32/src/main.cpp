@@ -14,19 +14,7 @@
 #include "MCP4726.h"
 
 
-const uint16_t port = 60000;
-TCPServer tcp_server(port);
-AsyncClient *tcp_client;  // Caveat: only one client which respond to
-bool isUpdating = false;
 
-unsigned long previousMicros = 0;
-long samplingInterval = 1000;
-
-unsigned long prevInfoMicros = 0;
-long diplayInfoInterval = 5 * 1E6;
-
-SPIClass * hspi = NULL;
-unsigned long totalReadings;
 //BUZZER pwm properties
 const int PWM_FREQ = 4000;
 const int BUZZER_PWM_CHAN = 0;
@@ -55,10 +43,8 @@ const double DAC_OPAMP_GAIN = 24.66796875;
 SPIClass * hspi = NULL;
 
 //TCP
-//const char *ssid = "SSID";
-//const char *password = "PASSWORD";
-const char *ssid = "AndroidAP47E6";
-const char *password = "valentina";
+const char *ssid = "SSID";
+const char *password = "PASSWORD";
 
 const uint16_t port = 60000;
 TCPServer tcp_server(port);
@@ -68,6 +54,10 @@ AsyncClient *tcp_client;  // Caveat: only one client which respond to
 bool isUpdating = false;
 unsigned long previousMicros = 0;
 long samplingInterval = 1000;
+unsigned long prevInfoMicros = 0;
+long diplayInfoInterval = 5 * 1E6;
+unsigned long totalReadings;
+
 
 //------------hardware functions-----------------
 void bipSpeaker(int bipNum){
@@ -129,6 +119,7 @@ static void checkPowerOffTask(void* pvParameters){
     last_interrupt_time = interrupt_time;
 }
 */
+
 //battery level task
 static void checkBatteryLevel(void* pvParameters){
     for( ;; ){
