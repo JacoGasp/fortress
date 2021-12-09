@@ -6,21 +6,28 @@ ACF2101::ACF2101(uint8_t _SelectPin, uint8_t _HoldPin, uint8_t _ResetPin)
 	SelectPin = _SelectPin;
 	HoldPin = _HoldPin;
     ResetPin = _ResetPin;
+    
+}
 
+void ACF2101::begin()
+{
     pinMode(SelectPin, OUTPUT);
-	digitalWrite(SelectPin, HIGH);
 	pinMode(HoldPin, OUTPUT);
-	digitalWrite(HoldPin, LOW);
 	pinMode(ResetPin, OUTPUT);
-    digitalWrite(ResetPin, HIGH);
+    //hold, sel closed
+    //LOW = on, HIGH = off
+    digitalWrite(SelectPin, LOW);
+	digitalWrite(HoldPin, LOW);
+    //reset integrators
+	digitalWrite(ResetPin, LOW);
 }
 
 void ACF2101::reset()
 {
-    digitalWrite(HoldPin, HIGH);
+    //digitalWrite(HoldPin, HIGH);
     digitalWrite(ResetPin, LOW);
     digitalWrite(ResetPin, HIGH);
-    digitalWrite(HoldPin, LOW);
+    //digitalWrite(HoldPin, LOW);
 
 }
 

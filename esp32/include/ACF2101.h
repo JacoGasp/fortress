@@ -7,6 +7,7 @@ class ACF2101
 {
     public:
         ACF2101(uint8_t SelectPin, uint8_t HoldPin, uint8_t ResetPin);
+        void begin();
         void reset();
         void stop();
 
