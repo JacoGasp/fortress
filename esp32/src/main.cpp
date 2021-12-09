@@ -149,7 +149,7 @@ void startUpdating(Message &msg, AsyncClient *client) {
         tcp_client = client;
         isUpdating = true;
         totalReadings = 0;
-        sensorReadings = {0, 0, 0, 0};
+        sensorReadings = {};
         std::cout << "Start updating every " << samplingInterval << " us" << std::endl;
         previousMicros = micros();
         chargeIntegrator.reset();
@@ -330,10 +330,10 @@ void loop() {
         // Serial.println(micros());
 
         // Reset integrators
-        // if (std::any_of(sensorReadings.begin(), sensorReadings.end(), [](uint16_t x) {
-        //     return x >= SharedParams::integratorThreshold;
-        // })) {
-        //     chargeIntegrator.reset();
+        if (std::any_of(sensorReadings.begin(), sensorReadings.end(), [](uint16_t x) {
+            return x >= SharedParams::integratorThreshold;
+        })) {
+            chargeIntegrator.reset();
 
 #endif
 
