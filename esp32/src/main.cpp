@@ -334,7 +334,7 @@ void loop() {
         //     return x >= SharedParams::integratorThreshold;
         // })) {
         //     chargeIntegrator.reset();
-    }
+
 #endif
 
         // Insert ellapsed time between this frame and the previous one
@@ -342,7 +342,7 @@ void loop() {
 
         // Send the readings
         tcp_server.sendMessage(msg, tcp_client);
-        
+
         previousMicros = currentMicros;
         ++totalReadings;
     }
