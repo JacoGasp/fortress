@@ -55,9 +55,10 @@ const double DAC_OPAMP_GAIN = 24.66796875;
 SPIClass * hspi = NULL;
 
 //TCP
-const char *ssid = "SSID";
-const char *password = "PASSWORD";
-
+//const char *ssid = "SSID";
+//const char *password = "PASSWORD";
+const char *ssid = "AndroidAP47E6";
+const char *password = "valentina";
 
 const uint16_t port = 60000;
 TCPServer tcp_server(port);
@@ -75,6 +76,15 @@ void bipSpeaker(int bipNum){
         delay(100);
         ledcWrite(BUZZER_PWM_CHAN, 0);
         delay(100);
+    }
+}
+
+void blinkLed(uint8_t ledpin, int tmillis, int blinkNum){
+    for (int i = 0; i <= blinkNum; i++){
+        digitalWrite(ledpin, HIGH);
+        delay(tmillis);
+        digitalWrite(ledpin, LOW);
+        delay(tmillis);
     }
 }
 
@@ -102,18 +112,33 @@ static void checkPowerOffTask(void* pvParameters){
             bipSpeaker(5);
             digitalWrite(LTC3101_PWRON, LOW);
         }
-        vTaskDelay(150/portTICK_PERIOD_MS);
+        vTaskDelay(200/portTICK_PERIOD_MS);
     }
 }
 
+
+/*void IRAM_ATTR Ext_INT_ISR(){
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis(); 
+    if (interrupt_time - last_interrupt_time > 100){
+        digitalWrite(LED_GREEN, LOW);
+        digitalWrite(LED_BLUE, HIGH);
+        bipSpeaker(5);
+        digitalWrite(LTC3101_PWRON, LOW);
+    }
+    last_interrupt_time = interrupt_time;
+}
+*/
 //battery level task
 static void checkBatteryLevel(void* pvParameters){
     for( ;; ){
+        Serial.print("battery ");
+        Serial.println(analogRead(VBATT_ADC));
         if (analogRead(VBATT_ADC) <= VBATT_ADC_MIN){
             bipSpeaker(3);
         }
-    }
     vTaskDelay(2000/portTICK_PERIOD_MS);
+    }
 }
 
 
@@ -218,9 +243,12 @@ void setup() {
     //battery level
     pinMode(VBATT_ADC, INPUT);
 
+    //button off interrupt
+    //attachInterrupt(digitalPinToInterrupt(LTC3101_PBSTAT), Ext_INT_ISR, LOW);
+
     //brackground tasks:
-    xTaskCreate(checkPowerOffTask, "PowerOFF", 1024, NULL, 2, NULL);
-    xTaskCreate(checkBatteryLevel, "batteryLevel", 512, NULL, 1, NULL);
+    xTaskCreate(checkPowerOffTask, "PowerOFF", 1024, NULL, 1, NULL);
+    //xTaskCreate(checkBatteryLevel, "batteryLevel", 1024, NULL, 1, NULL);
 
     //turn on analog circuit
     enableAnalog();
@@ -230,6 +258,10 @@ void setup() {
     delay(10);
     
     Serial.println("Pin set, analog enabled");
+
+    float vbatt = (float)analogRead(VBATT_ADC) * 167 / 120;
+    Serial.print("Battery level (V): ");
+    Serial.println(vbatt);
 
     hspi = new SPIClass(HSPI);
     hspi->begin();
@@ -261,8 +293,9 @@ void setup() {
     WiFi.begin(ssid, password);
 
     while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
+        //delay(500);
+        //Serial.print(".");
+        blinkLed(LED_BLUE, 250, 1);
     }
 
     Serial.println("");
