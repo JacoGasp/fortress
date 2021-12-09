@@ -19,7 +19,7 @@ class SharedParams {
 
 public:
     // General
-    static constexpr int n_channels = 4;
+    static constexpr int n_channels = 8;
     static constexpr int defaultMinScreenWidth = 1280;
     static constexpr int defaultMinScreenHeight = 840;
     static constexpr int plotWindowSizeInPoint = 512;

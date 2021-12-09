@@ -24,7 +24,7 @@ const int VBATT_ADC_MIN = 3030;
 // ADC
 ADS8332 ADC(ADS8332_CS, ADS8332_CONVST, ADS8332_EOC_INT);
 const float Vref = 4.096;  // Volt
-std::array<uint16_t, SharedParams::n_channels> sensorReadings = {0, 0, 0, 0};
+std::array<uint16_t, SharedParams::n_channels> sensorReadings = {};
 
 // Charge integrators
 ACF2101 chargeIntegrator(ACF2101_SEL, ACF2101_HLD, ACF2101_RST);
@@ -298,11 +298,17 @@ void loop() {
     // Because of async, can happen that currentMicros < previousMicros and since they are unsigned, the difference
     // can overflow
     if (isUpdating && currentMicros > previousMicros && currentMicros - previousMicros >= samplingInterval) {
+
+        Message msg;
+        msg.header.id = fortress::net::MsgTypes::ServerReadings;
+
 #ifdef EMULATE_SAMPLING
         // Dummy data for test
         for (auto it = sensorReadings.begin(); it != sensorReadings.end(); ++it) {
             *it += static_cast<uint16_t>(random(10));
             if (*it > SharedParams::integratorThreshold) *it -= SharedParams::integratorThreshold;
+            // Packet the sample
+            msg << *it;
         }
 #else
         /*
@@ -310,20 +316,17 @@ void loop() {
          * important: getSample with no ADC connected adds 100 ms delay due to ADC timeout
          */
 
-        uint8_t adcstat0 = ADC.getSample(&sensorReadings[0], 0);
-        uint8_t adcstat1 = ADC.getSample(&sensorReadings[1], 1);
-        uint8_t adcstat2 = ADC.getSample(&sensorReadings[2], 2);
-        uint8_t adcstat3 = ADC.getSample(&sensorReadings[3], 3);
-
-        // Serial.println(sensorReadings[0]);
         Serial.print("ADC status: ");
-        Serial.print(adcstat0);
-        Serial.print(" , ");
-        Serial.print(adcstat1);
-        Serial.print(" , ");
-        Serial.print(adcstat2);
-        Serial.print(" , ");
-        Serial.println(adcstat3);
+        for (int i = 0; i < SharedParams::n_channels; ++i) {
+            // Sample from ADC
+            uint8_t adcstat = ADC.getSample(&sensorReadings[i], i);
+            msg << sensorReadings[i];
+            Serial.print(adcstat);
+            Serial.print(" ");
+        }
+
+        Serial.println();
+
         // Serial.println(micros());
 
         // Reset integrators
@@ -334,15 +337,12 @@ void loop() {
     }
 #endif
 
-        Message msg;
-        msg.header.id = fortress::net::MsgTypes::ServerReadings;
-        msg << sensorReadings[3]                                       // Ch. 4
-            << sensorReadings[2]                                       // Ch. 3
-            << sensorReadings[1]                                       // Ch. 2
-            << sensorReadings[0]                                       // Ch. 1
-            << static_cast<uint32_t>(currentMicros - previousMicros);  // Delta time
+        // Insert ellapsed time between this frame and the previous one
+        msg << static_cast<uint32_t>(currentMicros - previousMicros);  // Delta time
 
+        // Send the readings
         tcp_server.sendMessage(msg, tcp_client);
+        
         previousMicros = currentMicros;
         ++totalReadings;
     }

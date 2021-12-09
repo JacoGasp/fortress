@@ -21,8 +21,8 @@ void ChartModel::clearData() {
     m_chartData.clear();
     m_chartDifferentialData.clear();
     m_t = m_dataXIndex = 0;
-    m_chTotalSums = { 0, 0, 0, 0 };
-    m_chLastValues = { 0, 0, 0, 0 };
+    m_chTotalSums = {};
+    m_chLastValues = {};
     generatePlotSeries(SharedParams::n_channels, SharedParams::plotWindowSizeInPoint);
 }
 
