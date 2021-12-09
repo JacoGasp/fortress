@@ -5,6 +5,8 @@ ADS8332::ADS8332(uint8_t _SelectPin, uint8_t _ConvertPin, uint8_t _EOCPin)
 	SelectPin = _SelectPin;
 	ConvertPin = _ConvertPin;
 	EOCPin = _EOCPin;
+	if (_EOCPin < 32) { EOCPinReg = _EOCPin;}
+	else { EOCPinReg = _EOCPin  - 32; }
 	pinMode(ConvertPin, OUTPUT);
 	digitalWrite(ConvertPin, HIGH);
 	pinMode(SelectPin, OUTPUT);
@@ -12,7 +14,7 @@ ADS8332::ADS8332(uint8_t _SelectPin, uint8_t _ConvertPin, uint8_t _EOCPin)
 	pinMode(EOCPin, INPUT);
 	Vref = 2.5;
 	EOCTimeout = 100000;
-	ConnectionSettings = SPISettings(12000000, MSBFIRST, SPI_MODE1);
+	ConnectionSettings = SPISettings(12000000, MSBFIRST, SPI_MODE0);
 
 	myspi = nullptr;	
 }
@@ -152,7 +154,7 @@ uint16_t ADS8332::sendCommandBuffer(bool SendLong)
 
 	myspi->beginTransaction(ConnectionSettings);
 	digitalWrite(SelectPin,LOW);
-	delayMicroseconds(0);
+	//delayMicroseconds(0);
 	myspi->transfer( 0 );
 	if (SendLong)
 	{
@@ -245,7 +247,7 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 	digitalWrite(ConvertPin, LOW);
 	while(keepwaiting)
 	{
-		if (digitalRead(EOCPin) == 0)    
+		if (digitalRead(EOCPin) == 0)   	//(((GPIO.in1.val >> EOCPinReg) & 0x1) == 0)		 
 		{
 			keepwaiting = false;
 		}
@@ -264,7 +266,7 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 	myspi->beginTransaction(ConnectionSettings);
 	while(keepwaiting)
 	{
-		if (digitalRead(EOCPin) == 1)   
+		if (digitalRead(EOCPin) == 1) //(((GPIO.in1.val >> EOCPinReg) & 0x1) == 1)   
 		{
 			keepwaiting = false;
 		}
@@ -296,13 +298,13 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 		TagBlank = (uint8_t)(TAGData << 3) == (uint8_t)(0);
 		if (ChannelCorrect && TagBlank)
 		{
-			/*Serial.print("ADCS ");
+			Serial.print("ADCS ");
 			Serial.print(ChannelTag);
 			Serial.print(",");
 			Serial.print(Channel);
 			Serial.print(",");
 			Serial.print(TempInput.UIntLargeData);
-			Serial.print("\n");*/
+			Serial.print("\n");
 			*WriteVariable = TempInput.UIntLargeData;
 			return 0;
 		}
@@ -312,13 +314,15 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 			{
 				
 				//Serial.write("timeout!");
-				/*Serial.print("ADCE ");
+				Serial.print("ADCE ");
+				Serial.print(TAGData, BIN);
+				Serial.print(",");
 				Serial.print(ChannelTag);
 				Serial.print(",");
 				Serial.print(Channel);
 				Serial.print(",");
 				Serial.print(TempInput.UIntLargeData);
-				Serial.print("\n");*/
+				Serial.print("\n");
 				
 				return 3;
 			}

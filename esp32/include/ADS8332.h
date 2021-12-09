@@ -83,6 +83,7 @@ class ADS8332
 		uint8_t SelectPin;
 		uint8_t ConvertPin;
 		uint8_t EOCPin;
+		uint8_t EOCPinReg;
         uint32_t EOCPortMask;
 		float Vref;
 		SPISettings ConnectionSettings;
