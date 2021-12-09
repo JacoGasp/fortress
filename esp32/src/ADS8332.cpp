@@ -298,13 +298,13 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 		TagBlank = (uint8_t)(TAGData << 3) == (uint8_t)(0);
 		if (ChannelCorrect && TagBlank)
 		{
-			Serial.print("ADCS ");
+			/*Serial.print("ADCS ");
 			Serial.print(ChannelTag);
 			Serial.print(",");
 			Serial.print(Channel);
 			Serial.print(",");
 			Serial.print(TempInput.UIntLargeData);
-			Serial.print("\n");
+			Serial.print("\n");*/
 			*WriteVariable = TempInput.UIntLargeData;
 			return 0;
 		}
@@ -314,7 +314,7 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 			{
 				
 				//Serial.write("timeout!");
-				Serial.print("ADCE ");
+				/*Serial.print("ADCE ");
 				Serial.print(TAGData, BIN);
 				Serial.print(",");
 				Serial.print(ChannelTag);
@@ -323,7 +323,7 @@ uint8_t ADS8332::getSampleInteger(uint16_t* WriteVariable)
 				Serial.print(",");
 				Serial.print(TempInput.UIntLargeData);
 				Serial.print("\n");
-				
+				*/
 				return 3;
 			}
 			else
