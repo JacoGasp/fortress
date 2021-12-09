@@ -10,12 +10,12 @@
 #define FORTRESS_ES32_SERVER_H
 
 #include <FreeRTOS.h>
-#include <Arduino.h>
 #include <AsyncTCP.h>
 #include <deque>
 #include <cassert>
 #include "../../include/networking/message.h"
 #include "../../include/constants.h"
+// #include "ThreadSafeQueue.h"
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 using Header = fortress::net::message_header<fortress::net::MsgTypes>;
@@ -29,6 +29,7 @@ private:
     
     Message m_tempInMessage;
     std::deque<Message> m_qMessagesOut;
+    // fortress::esp32::taskSafeQueue<Message> m_qMessagesOut;
     std::function<void(Message&, AsyncClient*)> m_onMessageCallback;
 
 public:

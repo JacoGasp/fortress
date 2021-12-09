@@ -3,16 +3,14 @@
 TCPServer::TCPServer(uint16_t port) : m_server(port) {
     m_server.onClient(
         [&](void *arg, AsyncClient *c) {
-            c->onData([&](void *arg, AsyncClient *client, void *data,
-                          size_t len) { onData(arg, client, data, len); });
+            c->onData([&](void *arg, AsyncClient *client, void *data, size_t len) { onData(arg, client, data, len); });
             onConnect(arg, c);
         },
         this);
 }
 
 void TCPServer::onConnect(void *arg, AsyncClient *client) {
-    std::cout << "New client connected from "
-              << client->remoteIP().toString().c_str() << '\n';
+    std::cout << "New client connected from " << client->remoteIP().toString().c_str() << '\n';
     // Dummy handshake
     Message msg;
     msg.header.id = fortress::net::MsgTypes::ServerAccept;
@@ -24,9 +22,9 @@ void TCPServer::begin() { m_server.begin(); }
 void TCPServer::end() { m_server.end(); }
 
 void TCPServer::printData(uint8_t *data, size_t len) {
-    for (auto ptr{data}; ptr != data + len; ++ptr)
-        std::cout << std::setfill('0') << std::setw(2) << std::hex
-                  << (int)(*ptr) << ' ';
+    for (auto ptr{data}; ptr != data + len; ++ptr) {
+        std::cout << std::setfill('0') << std::setw(2) << std::hex << (int)(*ptr) << ' ';
+    }
     std::cout << std::endl;
 }
 
@@ -41,8 +39,8 @@ void TCPServer::readHeader(uint8_t *data) {
     }
 }
 
-void TCPServer::readBody(uint8_t *data) {
-    std::memcpy(m_tempInMessage.body.data(), data, m_tempInMessage.size());
+void TCPServer::readBody(uint8_t *data) { 
+    std::memcpy(m_tempInMessage.body.data(), data, m_tempInMessage.size()); 
 }
 
 void TCPServer::onMessage(Message &msg, AsyncClient *client) {
@@ -94,7 +92,7 @@ void TCPServer::writeHeader(AsyncClient *client) {
 
     if (!msg->body.empty())
         writeBody(client);
-    
+
     // If the message hasn't body, pop the message out from the queue and send it.
     else {
         m_qMessagesOut.pop_front();
@@ -118,7 +116,7 @@ void TCPServer::writeBody(AsyncClient *client) {
     client->send();
     // Message sent, remove it from the queue
     m_qMessagesOut.pop_front();
-    msg->body.clear();
+
     // If there are left messages in the queue, send the next one.
     if (!m_qMessagesOut.empty())
         writeHeader(client);
