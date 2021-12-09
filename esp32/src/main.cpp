@@ -334,6 +334,7 @@ void loop() {
             return x >= SharedParams::integratorThreshold;
         })) {
             chargeIntegrator.reset();
+        }
 
 #endif
 
