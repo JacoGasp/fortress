@@ -340,8 +340,9 @@ void loop() {
         msg << sensorReadings[3]      // Ch. 4
             << sensorReadings[2]      // Ch. 3
             << sensorReadings[1]      // Ch. 2
-            << sensorReadings[0];     // Ch. 1
-           
+            << sensorReadings[0]     // Ch. 1
+            << static_cast<uint32_t>(currentMicros - previousMicros);
+            
         tcp_server.sendMessage(msg, tcp_client);
         previousMicros = currentMicros;
         ++totalReadings;
