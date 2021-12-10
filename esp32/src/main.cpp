@@ -168,7 +168,7 @@ void stopUpdating() {
 void setSensorHV(Message &msg) {
     uint16_t sensorHVmV;
     msg >> sensorHVmV;
-    uint16_t sensorHVDAC = static_cast<uint16_t>((static_cast<double>(sensorHVmV) * 4095) / (DACVref *DAC_OPAMP_GAIN));
+    uint16_t sensorHV = static_cast<uint16_t>((static_cast<double>(sensorHVmV) * 4095) / (DACVref *DAC_OPAMP_GAIN));
     HVDAC.setOutputValue(sensorHV);
     std::cout << "Sensor HV received: " << sensorHVmV << "millivolts" << std::endl;
     std::cout << "Sensor HV DAC set to: " << sensorHV << "units" << std::endl;
