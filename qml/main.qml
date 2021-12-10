@@ -41,121 +41,137 @@ ApplicationWindow {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
+        // Charts
+        RowLayout {
+            GridLayout {
+                id: gridLayout
+                columns: 4
+                rows: 4
 
-        GridLayout {
-            id: gridLayout
-            columns: 4
-            rows: 4
+                //            Label {
+                //                text: "Instant Dose"
+                //                Layout.column: 3
+                //                color: "lightGray"
+                //            }
 
-//            Label {
-//                text: "Instant Dose"
-//                Layout.column: 3
-//                color: "lightGray"
-//            }
-
-//            Label {
-//                text: "Total Dose"
-//                Layout.column: 4
-//                color: "lightGray"
-//            }
+                //            Label {
+                //                text: "Total Dose"
+                //                Layout.column: 4
+                //                color: "lightGray"
+                //            }
 
 
 
-            FRCharts {
-                id: chart_0
-                channel: 0
-                lineColor: "#D9534F"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
+                FRCharts {
+                    id: chart_0
+                    channel: 0
+                    lineColor: "#D9534F"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
 
-            }
+                }
 
-            FRCharts {
-                id: chart_1
-                channel:1
-                lineColor: "#56C0E0"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
+                FRCharts {
+                    id: chart_1
+                    channel:1
+                    lineColor: "#56C0E0"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
 
-            }
-//            FRGauge {
-//                id: gauge_0
-//                channel: 0
-//                Layout.columnSpan: 1
-//                Layout.rowSpan: 1
-//                maxValue: threshold
-//            }
+                }
+                //            FRGauge {
+                //                id: gauge_0
+                //                channel: 0
+                //                Layout.columnSpan: 1
+                //                Layout.rowSpan: 1
+                //                maxValue: threshold
+                //            }
 
-//            FRGauge {
-//                id: gauge_0b
-//                channel: 0
-//                Layout.columnSpan: 1
-//                Layout.rowSpan: 1
-//                maxValue: thresholdIntegral
-//                bIsIntegral: true
-//            }
+                //            FRGauge {
+                //                id: gauge_0b
+                //                channel: 0
+                //                Layout.columnSpan: 1
+                //                Layout.rowSpan: 1
+                //                maxValue: thresholdIntegral
+                //                bIsIntegral: true
+                //            }
 
-            FRCharts {
-                id: chart_2
-                channel: 2
-                lineColor: "#F0AD4E"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
-            }
+                FRCharts {
+                    id: chart_2
+                    channel: 2
+                    lineColor: "#F0AD4E"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
+                }
 
-            FRCharts {
-                id: chart_3
-                channel: 3
-                lineColor: "#5CB85C"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
-            }
+                FRCharts {
+                    id: chart_3
+                    channel: 3
+                    lineColor: "#5CB85C"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
+                }
 
-            FRCharts {
-                id: chart_4
-                channel: 4
-                lineColor: "#D9534F"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
-            }
+                FRCharts {
+                    id: chart_4
+                    channel: 4
+                    lineColor: "#D9534F"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
+                }
 
-            FRCharts {
-                id: chart_5
-                channel: 5
-                lineColor: "#56C0E0"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
-            }
+                FRCharts {
+                    id: chart_5
+                    channel: 5
+                    lineColor: "#56C0E0"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
+                }
 
-            FRCharts {
-                id: chart_6
-                channel: 6
-                lineColor: "#F0AD4E"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
-            }
+                FRCharts {
+                    id: chart_6
+                    channel: 6
+                    lineColor: "#F0AD4E"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
+                }
 
-            FRCharts {
-                id: chart_7
-                channel: 7
-                lineColor: "#5CB85C"
-                Layout.columnSpan: 2
-                Layout.rowSpan: 1
-            }
+                FRCharts {
+                    id: chart_7
+                    channel: 7
+                    lineColor: "#5CB85C"
+                    Layout.columnSpan: 2
+                    Layout.rowSpan: 1
+                }
 
-            Layout.fillHeight: true
+                Layout.fillHeight: true
 
-            Component.onCompleted: {
+                Component.onCompleted: {
 
-                for (let i = 0; i < gridLayout.children.length; ++i)
-                    charts.push(gridLayout.children[i]);
+                    for (let i = 0; i < gridLayout.children.length; ++i)
+                        charts.push(gridLayout.children[i]);
+                }
             }
         }
-
-        Label {
-            id: pingLabel
-            text: ping > 0 ? `Ping: ${ping.toFixed(3)} ms` : "Ping: -- ms"
-            color: "lightgray"
+        // Status Bar
+        RowLayout {
+            ColumnLayout{
+                Text {
+                    id: statusBar
+                    text: ""
+                    color: "lightgray"
+                    Layout.fillWidth: true
+                }
+            }
+            ColumnLayout {
+                Text {
+                    id: pingLabel
+                    text: ping > 0 ? `Ping: ${ping.toFixed(3)} ms` : "Ping: -- ms"
+                    color: "lightgray"
+                }
+            }
+            Layout.fillWidth: true
+            Layout.fillHeight: true
         }
     }
 
@@ -164,7 +180,7 @@ ApplicationWindow {
         running: Backend ? Backend.bIsConnected : false
         repeat: true
         onTriggered: {
-           ping = Backend.dPingValue
+            ping = Backend.dPingValue
         }
     }
 
@@ -187,6 +203,10 @@ ApplicationWindow {
             } else {
                 ping = -1.0
             }
+        }
+
+        function onStatusBarMessageArrived(message) {
+            statusBar.text = message
         }
     }
 }

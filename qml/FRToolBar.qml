@@ -22,8 +22,6 @@ ToolBar {
     property bool bHasSaved: true
     property var startDate: new Date()
 
-
-
     FRNotSavedAlert {
         id: saveAlert
     }
@@ -208,7 +206,11 @@ ToolBar {
                     editable: true
 
                     property int decimals: 3
-                    property var roundToNearestStep: x => Math.round(x / SharedParams.kHVStepSizeInMilliVolts) * SharedParams.kHVStepSizeInMilliVolts
+                    property var roundToNearestStep: x => {
+                        return SharedParams ?
+                               Math.round(x / SharedParams.kHVStepSizeInMilliVolts) * SharedParams.kHVStepSizeInMilliVolts
+                               : x
+                    }
                     property real hv: roundToNearestStep(value)
 
                     validator: DoubleValidator {
@@ -216,7 +218,7 @@ ToolBar {
                         top:  Math.max(spinbox.from, spinbox.to)
                     }
 
-                    textFromValue: function(value, locale) {  
+                    textFromValue: function(value, locale) {
                         return Number(roundToNearestStep(value) / 1000).toLocaleString(locale, 'f', spinbox.decimals)
                     }
 
