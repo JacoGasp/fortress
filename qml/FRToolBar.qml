@@ -9,6 +9,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
 import Qt.labs.platform
+import QtQuick.Templates as T
 // import SharedConstants
 
 ToolBar {
@@ -20,6 +21,8 @@ ToolBar {
     property bool bIsSaveEnabled: false
     property bool bHasSaved: true
     property var startDate: new Date()
+
+
 
     FRNotSavedAlert {
         id: saveAlert
@@ -165,6 +168,7 @@ ToolBar {
                 columns: 2
                 Label {
                     text: "Sampl. Freq (Hz):"
+                    Layout.alignment: Qt.AlignRight
                 }
 
                 TextField {
@@ -174,6 +178,7 @@ ToolBar {
                         top: SharedParams ? SharedParams.MAX_ALLOWED_FREQ : 0
                     }
                     enabled: !bIsReceiving
+                    selectByMouse: true
 
                     onEditingFinished: {
                         SharedParams.samplingFreq = this.text
@@ -184,29 +189,62 @@ ToolBar {
                             this.text = SharedParams.samplingFreq
                     }
 
-                    Layout.preferredWidth: 50
+                    Layout.preferredWidth: 80
                 }
+
 
                 Label {
-                    text: "Threshold (mSv):"
+                    text: "HV (V):"
+                    Layout.alignment: Qt.AlignRight
                 }
 
-                TextField {
-                    text: root.threshold
-                    validator: IntValidator {
-                        bottom: 1
-                        top: SharedParams ? SharedParams.MAX_ALLOWED_FREQ : 1
+                SpinBox {
+                    id: spinbox
+                    from: SharedParams ? SharedParams.kMinHVInMilliVolts : 0
+                    value: SharedParams ? SharedParams.kDefaultHVInMilliVolts : 5000
+                    to: SharedParams ? SharedParams.kMaxHVInMilliVolts : 0
+                    stepSize: SharedParams ? SharedParams.kHVStepSizeInMilliVolts : 0
+                    enabled: Backend ? Backend.bIsConnected && !bIsReceiving : false
+                    editable: true
+
+                    property int decimals: 3
+                    property var roundToNearestStep: x => Math.round(x / SharedParams.kHVStepSizeInMilliVolts) * SharedParams.kHVStepSizeInMilliVolts
+                    property real hv: roundToNearestStep(value)
+
+                    validator: DoubleValidator {
+                        bottom: Math.min(spinbox.from, spinbox.to)
+                        top:  Math.max(spinbox.from, spinbox.to)
                     }
 
-                    onEditingFinished: {
-                        root.threshold = this.text
+                    textFromValue: function(value, locale) {  
+                        return Number(roundToNearestStep(value) / 1000).toLocaleString(locale, 'f', spinbox.decimals)
+                    }
+
+                    valueFromText: function(text, locale) {
+                        return roundToNearestStep(Number.fromLocaleString(locale, text) * 1000)
                     }
 
                     onFocusChanged: {
-                        if(!focus && !acceptableInput)
-                            this.text = root.threshold
+                        if(!focus)
+                            spinbox.value = hv
                     }
-                    Layout.preferredWidth: 50
+
+
+                    Layout.preferredWidth: 80
+                    Component.onCompleted: {
+                        spinbox.contentItem.selectByMouse = true
+                    }
+                }
+                Label{}
+                Button {
+                    text: "Send HV"
+                    enabled: Backend ? Backend.bIsConnected && !bIsReceiving : false
+                    Layout.preferredWidth: 80
+                    onClicked: {
+                        forceActiveFocus()
+                        console.log(`Send HV value of ${spinbox.hv} mV`)
+                        Backend.sendHVValue(spinbox.hv)
+                    }
                 }
             }
         }
