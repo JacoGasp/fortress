@@ -24,6 +24,7 @@ class Backend : public QObject, public client_interface {
 Q_OBJECT
     Q_PROPERTY(bool bIsConnected READ isConnected NOTIFY connectionStatusChanged)
     Q_PROPERTY(double dPingValue READ getLastPingValue())
+    Q_PROPERTY(QString statusBarMessage READ getStatusBarMessage NOTIFY statusBarMessageArrived)
 
 private:
     ChartModel *m_chartModel;
@@ -43,6 +44,7 @@ private:
 
     unsigned long m_readingsReceived{ 0 };
     unsigned long m_bytesRead{ 0 };
+    QString m_statusBarMessage{};
 
 public:
     // Avoid name collision with multiple inheritance
@@ -68,12 +70,13 @@ public:
 
     Q_INVOKABLE void saveFile(QUrl &destination_path);
 
-
     void onMessage(message<MsgTypes> &msg) override;
 
     // Accessors
 
     [[nodiscard]] double getLastPingValue() const;
+
+    [[nodiscard]] QString getStatusBarMessage() const;
 
 
 private:
@@ -91,6 +94,8 @@ private:
 signals:
 
     void connectionStatusChanged(bool bIsConnected);
+
+    void statusBarMessageArrived(QString message);
 
     void connectionFailed(QString error_message);
 

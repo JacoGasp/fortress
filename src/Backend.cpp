@@ -76,6 +76,8 @@ void Backend::onServerDisconnected() {
         std::cout << "[BACKEND] Stopping Asio context\n";
         m_context.stop();
     }
+
+    emit statusBarMessageArrived("Connection closed.");
 }
 
 void Backend::onMessage(message<MsgTypes> &msg) {
@@ -83,6 +85,7 @@ void Backend::onMessage(message<MsgTypes> &msg) {
         case MsgTypes::ServerAccept: {
             std::cout << "[BACKEND] Server accepted\n";
             emit connectionStatusChanged(true);
+            emit statusBarMessageArrived("ESP32 accepted connection");
             break;
         }
 
@@ -161,11 +164,15 @@ void Backend::onServerFinishedUpload() {
     // How long the session was
     std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - m_startUpdateTime;
 
-    auto kilobytes = m_bytesRead / 1024.0;
+    auto kilobytes = m_bytesRead / 1000.0;
 
-    std::cout << "Received " << m_readingsReceived + 1 << " readings. Transferred "
-              << kilobytes << " KB in " << elapsedTime.count() << " s: "
-              << kilobytes / elapsedTime.count() << " KB/s\n";
+    std::stringstream report;
+    report << "Received " << m_readingsReceived + 1 << " readings. Transferred "
+      << kilobytes << " KB in " << elapsedTime.count() << " s - "
+      << kilobytes / elapsedTime.count() << " KB/s";
+
+    emit statusBarMessageArrived(QString::fromStdString(report.str()));
+    std::cout << report.str() << std::endl;
 }
 
 void Backend::pingHandler() {
@@ -225,10 +232,16 @@ double Backend::getLastPingValue() const {
     return m_lastPingValue;
 }
 
+QString Backend::getStatusBarMessage() const {
+    return m_statusBarMessage;
+}
+
 // Accessors
 
 void Backend::sendStartUpdateCommand(uint16_t frequency) {
     openFile(frequency);
+    // Clear the status bar
+    emit statusBarMessageArrived("");
 
     message<MsgTypes> msg;
     msg.header.id = ClientStartUpdating;
