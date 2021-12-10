@@ -34,7 +34,7 @@ const uint16_t integratorThreshold = 65500;  // threshold on ADC reading (16 bit
 TwoWire I2CHV = TwoWire(0);
 MCP4726 HVDAC;
 uint16_t sensorHV = 0;        // HV level 0-4095
-const float DACVref = 2.048;  // Volt
+const double DACVref = 2048;  // milliVolt
 const double DAC_OPAMP_GAIN = 24.66796875;
 
 // SPI
@@ -166,9 +166,12 @@ void stopUpdating() {
 }
 
 void setSensorHV(Message &msg) {
-    msg >> sensorHV;
+    uint16_t sensorHVmV;
+    msg >> sensorHVmV;
+    uint16_t sensorHVDAC = static_cast<uint16_t>((static_cast<double>(sensorHVmV) * 4095) / (DACVref *DAC_OPAMP_GAIN));
     HVDAC.setOutputValue(sensorHV);
-    std::cout << "Sensor HV set to: " << sensorHV << " millivolts" << std::endl;
+    std::cout << "Sensor HV received: " << sensorHVmV << "millivolts" << std::endl;
+    std::cout << "Sensor HV DAC set to: " << sensorHV << "units" << std::endl;
 }
 
 void onMessage(Message &msg, AsyncClient *client) {
