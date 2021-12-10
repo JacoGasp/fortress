@@ -6,6 +6,7 @@
 #define FORTRESS_SHAREDPARAMS_H
 
 #ifndef ESP32
+
 #include <QObject>
 #include <QtQml>
 
@@ -24,6 +25,10 @@ public:
     static constexpr int defaultMinScreenHeight = 840;
     static constexpr int plotWindowSizeInPoint = 512;
     static constexpr uint16_t integratorThreshold = 65500;
+    static constexpr int m_minHVInMilliVolts = 0;
+    static constexpr int m_maxHVInMilliVolts = 50'000;
+    static constexpr int m_kHVStepSizeInMilliVolts = 15;
+    static constexpr int m_kDefaultHVInMilliVolts = 5000;
 
 #ifndef ESP32
 private:
@@ -43,6 +48,10 @@ public:
     Q_PROPERTY(int defaultPort READ defaultPort CONSTANT)
     Q_PROPERTY(int samplingFreq READ samplingFreq WRITE setSamplingFreq NOTIFY samplingFreqChanged)
     Q_PROPERTY(int MAX_ALLOWED_FREQ READ maxAllowedFreq CONSTANT)
+    Q_PROPERTY(int kMinHVInMilliVolts READ kMinHVInMilliVolts CONSTANT)
+    Q_PROPERTY(int kMaxHVInMilliVolts READ kMaxHVInMilliVolts CONSTANT)
+    Q_PROPERTY(int kHVStepSizeInMilliVolts READ kHVStepSizeInMilliVolts CONSTANT)
+    Q_PROPERTY(int kDefaultHVInMilliVolts READ kDefaultHVInMilliVolts CONSTANT)
 
     [[nodiscard]] static int nChannels() { return n_channels; }
 
@@ -63,6 +72,14 @@ public:
     void setSamplingFreq(int freq) { m_samplingFreq = freq; }
 
     [[nodiscard]] static int maxAllowedFreq() { return m_maxAllowedFreq; }
+
+    [[nodiscard]] static int kMinHVInMilliVolts() { return m_minHVInMilliVolts; }
+
+    [[nodiscard]] static int kMaxHVInMilliVolts() { return m_maxHVInMilliVolts; }
+
+    [[nodiscard]] static int kHVStepSizeInMilliVolts() { return m_kHVStepSizeInMilliVolts; }
+    
+    [[nodiscard]] static int kDefaultHVInMilliVolts() { return m_kDefaultHVInMilliVolts; }
 
 signals:
 

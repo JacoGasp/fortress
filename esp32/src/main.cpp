@@ -168,7 +168,7 @@ void stopUpdating() {
 void setSensorHV(Message &msg) {
     msg >> sensorHV;
     HVDAC.setOutputValue(sensorHV);
-    std::cout << "Sensor HV set to: " << sensorHV << std::endl;
+    std::cout << "Sensor HV set to: " << sensorHV << " millivolts" << std::endl;
 }
 
 void onMessage(Message &msg, AsyncClient *client) {
@@ -187,7 +187,6 @@ void onMessage(Message &msg, AsyncClient *client) {
         case MsgTypes::ClientSetSensorHV:
             setSensorHV(msg);
             break;
-
         default:
             break;
     }

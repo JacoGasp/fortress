@@ -64,6 +64,8 @@ public:
 
     Q_INVOKABLE void sendStopUpdateCommand();
 
+    Q_INVOKABLE void sendHVValue(uint16_t value);
+
     Q_INVOKABLE void saveFile(QUrl &destination_path);
 
 

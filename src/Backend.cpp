@@ -246,6 +246,14 @@ void Backend::sendStopUpdateCommand() {
     sendMessage(msg);
 }
 
+
+void Backend::sendHVValue(uint16_t value) {
+    message<MsgTypes> msg;
+    msg.header.id = fortress::net::ClientSetSensorHV;
+    msg << value;
+    sendMessage(msg);
+}
+
 void Backend::saveFile(QUrl &destinationPath) {
     closeFile();
     if (QFile::exists(destinationPath.path())) {
