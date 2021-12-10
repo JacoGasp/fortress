@@ -15,14 +15,19 @@ void ChartModel::clearData() {
 
     for (int ch = 0; ch < SharedParams::n_channels; ++ch) {
         m_chartData[ch].clear();
-        m_chartDifferentialData[ch].clear();
+        m_chartCurrentData[ch].clear();
     }
 
-    m_chartData.clear();
-    m_chartDifferentialData.clear();
     m_t = m_dataXIndex = 0;
-    m_chTotalSums = {};
+    m_chartData.clear();
+    m_chartCurrentData.clear();
     m_chLastValues = {};
+    m_chLastCurrentValues = {};
+    m_chMinCurrentValues = {};
+    m_chMaxValues = {};
+    m_chMaxCurrentValues = {};
+    m_chTotalSums = {};
+    m_chTotalCurrentSums = {};
     generatePlotSeries(SharedParams::n_channels, SharedParams::plotWindowSizeInPoint);
 }
 
@@ -34,22 +39,22 @@ int ChartModel::plotWindowSize() {
     return SharedParams::plotWindowSizeInPoint;
 }
 
-bool ChartModel::showDifferentialValues() const {
-    return m_showDifferentialValues;
+bool ChartModel::showADCValues() const {
+    return m_showADCValues;
 }
 
-void ChartModel::showDifferentialValues(bool show) {
-    m_showDifferentialValues = show;
+void ChartModel::showADCValues(bool show) {
+    m_showADCValues = show;
     clearData();
 }
 
 
-void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_channels> &readings) {
+void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_channels> &readings, uint32_t deltaTime) {
     m_dataXIndex = m_t % SharedParams::plotWindowSizeInPoint;
 
     for (int ch = 0; ch < SharedParams::n_channels; ++ch) {
         auto chSeries = &m_chartData[ch];
-        auto chSeriesDiff = &m_chartDifferentialData[ch];
+        auto chSeriesDiff = &m_chartCurrentData[ch];
 
         int lastReading = m_chLastValues[ch];
         int newReading = readings[ch];
@@ -58,26 +63,25 @@ void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_chann
         if (lastReading - newReading > SharedParams::integratorThreshold * 0.9)
             lastReading -= SharedParams::integratorThreshold;
 
-        auto newDifferentialReading = newReading - lastReading;
-
+        auto newCurrentReading = computeCurrentFromADC(newReading, lastReading, deltaTime);
         // Set the current readings as last the last value
         m_chLastValues[ch] = newReading;
-        m_chLastDifferentialValues[ch] = newDifferentialReading;
+        m_chLastCurrentValues[ch] = newCurrentReading;
 
         // Swipe from left to right and refresh the circular buffer at current position
         double x{ static_cast<double>(m_dataXIndex) };
         chSeries->replace(m_dataXIndex, QPointF{ x, static_cast<double>(newReading) });
-        chSeriesDiff->replace(m_dataXIndex, QPointF{ x, static_cast<double>(newDifferentialReading) });
+        chSeriesDiff->replace(m_dataXIndex, QPointF{ x, static_cast<double>(newCurrentReading) });
 
         // Adjust the min/max values to auto-scale the plot
         auto maxValue = *std::max_element(chSeries->begin(), chSeries->end(), compareFunction);
         auto minMaxDiffValues = std::minmax_element(chSeriesDiff->begin(), chSeriesDiff->end(), compareFunction);
 
         m_chMaxValues[ch] = static_cast<int>(maxValue.y());
-        m_chMinDifferentialValues[ch] = static_cast<int>(minMaxDiffValues.first->y());
-        m_chMaxDifferentialValues[ch] = static_cast<int>(minMaxDiffValues.second->y());
+        m_chMinCurrentValues[ch] = minMaxDiffValues.first->y();
+        m_chMaxCurrentValues[ch] = minMaxDiffValues.second->y();
         m_chTotalSums[ch] += newReading;
-        m_chTotalDifferentialSums[ch] += newDifferentialReading;
+        m_chTotalCurrentSums[ch] += newCurrentReading;
     }
     ++m_t;
 }
@@ -92,24 +96,24 @@ void ChartModel::generatePlotSeries(int n_channels, int length) {
             points.push_front(QPointF{});
 
         m_chartData.append(points);
-        m_chartDifferentialData.append(points);
+        m_chartCurrentData.append(points);
     }
 }
 
 double ChartModel::getLastChannelValue(int channel) const {
-    return m_showDifferentialValues ? m_chLastDifferentialValues[channel] : m_chLastValues[channel];
+    return m_showADCValues ? m_chLastValues[channel] : m_chLastCurrentValues[channel];
 }
 
 double ChartModel::getMinChannelValue(int channel) const {
-    return m_showDifferentialValues ? m_chMinDifferentialValues[channel] : m_chMinValues[channel];
+    return m_showADCValues ? m_chMinValues[channel] : m_chMinCurrentValues[channel];
 }
 
 double ChartModel::getMaxChannelValue(int channel) const {
-    return m_showDifferentialValues ? m_chMaxDifferentialValues[channel] : m_chMaxValues[channel];
+    return m_showADCValues ? m_chMaxValues[channel]: m_chMaxCurrentValues[channel];
 }
 
 double ChartModel::getChannelTotalSum(uint8_t channel) const {
-    return m_showDifferentialValues ? m_chTotalDifferentialSums[channel] :  m_chTotalSums[channel];
+    return m_showADCValues ? m_chTotalSums[channel] : m_chTotalCurrentSums[channel];
 }
 
 
@@ -121,7 +125,7 @@ void ChartModel::updatePlotSeries(
     if (qtQuickLeftSeries && qtQuickRightSeries) {
         auto *xyQtQuickLeftSeries = dynamic_cast<QXYSeries *>(qtQuickLeftSeries);
         auto *xyQtQuickRightSeries = dynamic_cast<QXYSeries *>(qtQuickRightSeries);
-        auto channelData = m_showDifferentialValues ? &m_chartDifferentialData[channel] : &m_chartData[channel];
+        auto channelData = m_showADCValues ? &m_chartData[channel] : &m_chartCurrentData[channel];
 
         assert(channelData->length() == SharedParams::plotWindowSizeInPoint);
 

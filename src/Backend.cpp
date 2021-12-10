@@ -156,7 +156,7 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     m_textStream << '\n';
 
     // Draw
-    m_chartModel->insertReadings(channelsReadings);
+    m_chartModel->insertReadings(channelsReadings, deltaTime);
 }
 
 

@@ -22,9 +22,10 @@ ApplicationWindow {
     readonly property int margins: 16
     property var charts: []
     property var gauges: []
-    property double threshold: 1024
-    property double thresholdIntegral: 100 * 1024
+//    property double threshold: 1024
+//    property double thresholdIntegral: 100 * 1024
     property double ping: -1.0
+    property bool isShowingADC: false;
 
 
     header: FRToolBar {

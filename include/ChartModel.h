@@ -16,7 +16,7 @@
 class ChartModel : public QObject {
 Q_OBJECT
     Q_PROPERTY(int plotWindowSize READ plotWindowSize() CONSTANT)
-    Q_PROPERTY(int showDifferentialValues READ showDifferentialValues() WRITE showDifferentialValues())
+    Q_PROPERTY(int showADCValues READ showADCValues() WRITE showADCValues())
 
 private:
     // The current index on the X axis
@@ -26,42 +26,51 @@ private:
     // Store the entire data as (n_channels x plotWindowSize)
     QList<QList<QPointF>> m_chartData;
     // Store the entire data as (n_channels x plotWindowSize)
-    QList<QList<QPointF>> m_chartDifferentialData;
+    QList<QList<QPointF>> m_chartCurrentData;
 
     // Last n_channels points received to display as gauge
     std::array<int, SharedParams::n_channels> m_chLastValues{};
-    std::array<int, SharedParams::n_channels> m_chLastDifferentialValues{};
+    std::array<double, SharedParams::n_channels> m_chLastCurrentValues{};
     // The current n_channels min/max values to auto rescale Y axis
     const std::array<int, SharedParams::n_channels> m_chMinValues{};
-    std::array<int, SharedParams::n_channels> m_chMinDifferentialValues{};
+    std::array<double, SharedParams::n_channels> m_chMinCurrentValues{};
     std::array<int, SharedParams::n_channels> m_chMaxValues{};
-    std::array<int, SharedParams::n_channels> m_chMaxDifferentialValues{};
+    std::array<double, SharedParams::n_channels> m_chMaxCurrentValues{};
     // The n_channels total cumulative sum to display as gauge
     std::array<int, SharedParams::n_channels> m_chTotalSums{};
-    std::array<int, SharedParams::n_channels> m_chTotalDifferentialSums{};
+    std::array<double, SharedParams::n_channels> m_chTotalCurrentSums{};
 
-    bool m_showDifferentialValues = true;
+    bool m_showADCValues = false;
 
 private:
     static inline auto compareFunction = [](const QPointF &p1, const QPointF &p2) { return p1.y() < p2.y(); };
 
+    static inline auto computeCurrentFromADC = [](int current, int prev, uint32_t delta_t) {
+        return -static_cast<double>(current - prev) / static_cast<double>(SharedParams::kADCMaxVal) *
+               SharedParams::kAmplifierFeedback *
+               SharedParams::kIntegratorCapacitance;
+    };
+
+
 public:
     explicit ChartModel(QObject *parent = nullptr);
 
-    void insertReadings(const std::array<uint16_t, SharedParams::n_channels> &readings);
+    void insertReadings(const std::array<uint16_t, SharedParams::n_channels> &readings, uint32_t deltaTime);
 
     Q_INVOKABLE void clearData();
 
-    Q_INVOKABLE void updatePlotSeries(QAbstractSeries *qtQuickLeftSeries, QAbstractSeries *qtQuickRightSeries, int channel);
+    Q_INVOKABLE void
+    updatePlotSeries(QAbstractSeries *qtQuickLeftSeries, QAbstractSeries *qtQuickRightSeries, int channel);
 
     // Accessors
     [[nodiscard]] QList<QPointF> getSeries() const;
 
     [[nodiscard]] static int plotWindowSize();
 
-    [[nodiscard]] bool showDifferentialValues() const;
+    [[nodiscard]] bool showADCValues() const;
 
-    void showDifferentialValues(bool show);
+    void showADCValues(bool show);
+
 
     // Listen for events
 public slots:

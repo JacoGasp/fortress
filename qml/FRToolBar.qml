@@ -150,11 +150,12 @@ ToolBar {
             }
 
             CheckBox {
-                text: qsTr("Show differential values")
-                checkState: Qt.Checked
+                text: qsTr("Show ADC values")
+                checkState: Qt.Unchecked
                 onCheckStateChanged: {
-                    ChartModel.showDifferentialValues = this.checkState
-                    console.log(`Show differential values: ${ChartModel.showDifferentialValues}`)
+                    ChartModel.showADCValues = this.checkState
+                    root.isShowingADC = this.checkState
+                    console.log(`Show ADC values: ${ChartModel.showADCValues}`)
                 }
             }
         }

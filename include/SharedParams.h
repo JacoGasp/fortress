@@ -30,6 +30,12 @@ public:
     static constexpr int m_kHVStepSizeInMilliVolts = 15;
     static constexpr int m_kDefaultHVInMilliVolts = 5000;
 
+    // Circuit parameters
+    static constexpr int kADCMaxVal = 65535;
+    static constexpr float kADCVref = 4.096;                            // V
+    static constexpr float kAmplifierFeedback = 8.2 / 2.7;              // ohm/ohm
+    static constexpr float kIntegratorCapacitance = 100;                 // pF
+
 #ifndef ESP32
 private:
     // Toolbar
