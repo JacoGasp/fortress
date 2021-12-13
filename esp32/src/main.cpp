@@ -168,7 +168,7 @@ void stopUpdating() {
 void setSensorHV(Message &msg) {
     uint16_t sensorHVmV;
     msg >> sensorHVmV;
-    uint16_t sensorHV = static_cast<uint16_t>((static_cast<double>(sensorHVmV) * 4095) / (DACVref *DAC_OPAMP_GAIN));
+    uint16_t sensorHV = static_cast<uint16_t>((static_cast<double>(sensorHVmV) * 4095) / (DACVref * DAC_OPAMP_GAIN));
     HVDAC.setOutputValue(sensorHV);
     std::cout << "Sensor HV received: " << sensorHVmV << "millivolts" << std::endl;
     std::cout << "Sensor HV DAC set to: " << sensorHV << "units" << std::endl;
@@ -295,65 +295,69 @@ void setup() {
 }
 
 void loop() {
-    unsigned long currentMicros = micros();
+    try {
+        unsigned long currentMicros = micros();
 
-    // Because of async, can happen that currentMicros < previousMicros and since they are unsigned, the difference
-    // can overflow
-    if (isUpdating && currentMicros > previousMicros && currentMicros - previousMicros >= samplingInterval) {
-
-        Message msg;
-        msg.header.id = fortress::net::MsgTypes::ServerReadings;
+        // Because of async, can happen that currentMicros < previousMicros and since they are unsigned, the difference
+        // can overflow
+        if (isUpdating && currentMicros > previousMicros && currentMicros - previousMicros >= samplingInterval) {
+            Message msg;
+            msg.header.id = fortress::net::MsgTypes::ServerReadings;
 
 #ifdef EMULATE_SAMPLING
-        // Dummy data for test
-        for (auto it = sensorReadings.begin(); it != sensorReadings.end(); ++it) {
-            *it += static_cast<uint16_t>(random(-5, 25));
-            if (*it > SharedParams::integratorThreshold) *it -= SharedParams::integratorThreshold;
-            // Packet the sample
-            msg << *it;
-        }
+            // Dummy data for test
+            for (auto it = sensorReadings.begin(); it != sensorReadings.end(); ++it) {
+                *it += static_cast<uint16_t>(random(-5, 25));
+                if (*it > SharedParams::integratorThreshold) *it -= SharedParams::integratorThreshold;
+                // Packet the sample
+                msg << *it;
+            }
 #else
-        /*
-         * read all ADC channels
-         * important: getSample with no ADC connected adds 100 ms delay due to ADC timeout
-         */
+            /*
+             * read all ADC channels
+             * important: getSample with no ADC connected adds 100 ms delay due to ADC timeout
+             */
 
-        Serial.print("ADC status: ");
-        for (int i = 0; i < SharedParams::n_channels; ++i) {
-            // Sample from ADC
-            uint8_t adcstat = ADC.getSample(&sensorReadings[i], i);
-            msg << sensorReadings[i];
-            Serial.print(adcstat);
-            Serial.print(" ");
-        }
+            Serial.print("ADC status: ");
+            for (int i = 0; i < SharedParams::n_channels; ++i) {
+                // Sample from ADC
+                uint8_t adcstat = ADC.getSample(&sensorReadings[i], i);
+                msg << sensorReadings[i];
+                Serial.print(adcstat);
+                Serial.print(" ");
+            }
 
-        Serial.println();
+            Serial.println();
 
-        // Serial.println(micros());
+            // Serial.println(micros());
 
-        // Reset integrators
-        if (std::any_of(sensorReadings.begin(), sensorReadings.end(), [](uint16_t x) {
-            return x >= SharedParams::integratorThreshold;
-        })) {
-            chargeIntegrator.reset();
-        }
+            // Reset integrators
+            if (std::any_of(sensorReadings.begin(), sensorReadings.end(),
+                            [](uint16_t x) { return x >= SharedParams::integratorThreshold; })) {
+                chargeIntegrator.reset();
+            }
 
 #endif
 
-        // Insert ellapsed time between this frame and the previous one
-        msg << static_cast<uint32_t>(currentMicros - previousMicros);  // Delta time
+            // Insert ellapsed time between this frame and the previous one
+            msg << static_cast<uint32_t>(currentMicros - previousMicros);  // Delta time
 
-        // Send the readings
-        tcp_server.sendMessage(msg, tcp_client);
+            // Send the readings
+            tcp_server.sendMessage(msg, tcp_client);
 
-        previousMicros = currentMicros;
-        ++totalReadings;
-    }
+            previousMicros = currentMicros;
+            ++totalReadings;
+        }
 
 #ifdef EMULATE_SAMPLING
-    if (currentMicros - prevInfoMicros >= displayInfoInterval) {
-        printFreeMemory();
-        prevInfoMicros = currentMicros;
-    }
+        if (currentMicros - prevInfoMicros >= displayInfoInterval) {
+            printFreeMemory();
+            prevInfoMicros = currentMicros;
+        }
 #endif
+    } catch (std::exception const &e) {
+        std::cerr << "Caught exception: " << e.what() << '\n';
+    } catch (...) {
+        std::cerr << "Caught unknown exception\n";
+    }
 }

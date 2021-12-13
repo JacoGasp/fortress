@@ -39,14 +39,11 @@ void TCPServer::readHeader(uint8_t *data) {
     }
 }
 
-void TCPServer::readBody(uint8_t *data) { 
-    std::memcpy(m_tempInMessage.body.data(), data, m_tempInMessage.size()); 
-}
+void TCPServer::readBody(uint8_t *data) { std::memcpy(m_tempInMessage.body.data(), data, m_tempInMessage.size()); }
 
 void TCPServer::onMessage(Message &msg, AsyncClient *client) {
     // Make an action according to the Header ID
-    if (msg.header.id == fortress::net::MsgTypes::ServerPing)
-        sendMessage(msg, client);
+    if (msg.header.id == fortress::net::MsgTypes::ServerPing) sendMessage(msg, client);
     if (m_onMessageCallback) m_onMessageCallback(msg, client);
 }
 
@@ -84,21 +81,32 @@ void TCPServer::writeHeader(AsyncClient *client) {
     assert(!m_qMessagesOut.empty() && "Write header: empty message queue");
 
     auto msg = &m_qMessagesOut.front();
+    assert(msg->header.id <= fortress::net::MsgTypes::MessageAll);
 
     std::array<char, sizeof(Header)> headerData;
     std::memcpy(headerData.data(), &msg->header, sizeof(Header));
+
+    assert(msg->size() == headerData.size() && headerData.size() < 128);
     // Prepare header buffer for sending
     client->add(headerData.data(), sizeof(Header));
 
-    if (!msg->body.empty())
-        writeBody(client);
+    if (client->send()) {
+        // If header has sent, send body
+        if (!msg->body.empty()) 
+            writeBody(client);
 
-    // If the message hasn't body, pop the message out from the queue and send it.
-    else {
-        m_qMessagesOut.pop_front();
-        client->send();
-        // If the queue contains more messages, send the next one.
-        if (!m_qMessagesOut.empty()) writeHeader(client);
+        // If the message hasn't body, pop the message out from the queue and send it.
+        else {
+            m_qMessagesOut.pop_front();
+            // If the queue contains more messages, send the next one.
+            if (!m_qMessagesOut.empty())
+                writeHeader(client);
+        }
+    } else {
+        std::cout << "Failed to send header\n";
+        // Retry
+        if (!m_qMessagesOut.empty())
+                writeHeader(client);
     }
 }
 
@@ -112,27 +120,29 @@ void TCPServer::writeBody(AsyncClient *client) {
     // std::memcpy(data.data(), msg->body.data(), msg->body.size());
     // Append data and dispatch it
     // client->add(data.data(), msg->size());
-    client->add(reinterpret_cast<char*>(msg->body.data()), msg->size());
-    client->send();
-    // Message sent, remove it from the queue
-    m_qMessagesOut.pop_front();
+    client->add(reinterpret_cast<char *>(msg->body.data()), msg->size());
+    if (client->send()) {
+        // Message sent, remove it from the queue
+        m_qMessagesOut.pop_front();
 
-    // If there are left messages in the queue, send the next one.
-    if (!m_qMessagesOut.empty())
-        writeHeader(client);
+        // If there are left messages in the queue, send the next one.
+        if (!m_qMessagesOut.empty()) writeHeader(client);
+    } else {
+        std::cout << "Failed to send body data\n";
+        // Retry write body
+        if (!m_qMessagesOut.empty()) writeBody(client);
+    }
 }
 
 void TCPServer::sendMessage(const Message &msg, AsyncClient *client) {
     bool isWritingMessage = !m_qMessagesOut.empty();
+    assert(msg.header.id <= fortress::net::MessageAll && msg.header.size < 128);
+    assert(msg.header.size == msg.size());
     m_qMessagesOut.push_back(msg);
 
     // If the queue was not empty before inserting a new message, the client is still
     // busy to finish sending previous messages
-    if (!isWritingMessage)
-        writeHeader(client);
+    if (!isWritingMessage) writeHeader(client);
 }
 
-void TCPServer::setOnMessageCallback(
-    std::function<void(Message &, AsyncClient *)> callback) {
-    m_onMessageCallback = std::move(callback);
-}
+void TCPServer::setOnMessageCallback(std::function<void(Message &, AsyncClient *)> callback) { m_onMessageCallback = std::move(callback); }
