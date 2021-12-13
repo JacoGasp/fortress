@@ -138,11 +138,11 @@ void TCPServer::writeBody(AsyncClient *client) {
 
 void TCPServer::sendMessage(const Message &msg, AsyncClient *client) {
      // Check if msg header is valid
-    assert(msg->header.id >= 0 && msg->header.id <= fortress::net::MsgTypes::MessageAll);
+    assert(msg.header.id >= 0 && msg.header.id <= fortress::net::MsgTypes::MessageAll);
     // Check if body size is reasonable
-    assert(msg->header.size < 128);
+    assert(msg.header.size < 128);
     // Check if body size match the actual buffer length
-    assert(msg->header.size == msg->body.size());
+    assert(msg.header.size == msg.body.size());
     
     bool isWritingMessage = !m_qMessagesOut.empty();
     m_qMessagesOut.push_back(msg);
