@@ -81,32 +81,34 @@ void TCPServer::writeHeader(AsyncClient *client) {
     assert(!m_qMessagesOut.empty() && "Write header: empty message queue");
 
     auto msg = &m_qMessagesOut.front();
-    assert(msg->header.id <= fortress::net::MsgTypes::MessageAll);
+
+    // Check if msg header is valid
+    assert(msg->header.id >= 0 && msg->header.id <= fortress::net::MsgTypes::MessageAll);
+    // Check if body size is reasonable
+    assert(msg->header.size < 128);
+    // Check if body size match the actual buffer length
+    assert(msg->header.size == msg->body.size());
 
     std::array<char, sizeof(Header)> headerData;
     std::memcpy(headerData.data(), &msg->header, sizeof(Header));
 
-    assert(msg->size() == headerData.size() && headerData.size() < 128);
     // Prepare header buffer for sending
     client->add(headerData.data(), sizeof(Header));
 
     if (client->send()) {
-        // If header has sent, send body
-        if (!msg->body.empty()) 
-            writeBody(client);
+        // If header has been succesfully sent, send body
+        if (!msg->body.empty()) writeBody(client);
 
         // If the message hasn't body, pop the message out from the queue and send it.
         else {
             m_qMessagesOut.pop_front();
             // If the queue contains more messages, send the next one.
-            if (!m_qMessagesOut.empty())
-                writeHeader(client);
+            if (!m_qMessagesOut.empty()) writeHeader(client);
         }
     } else {
         std::cout << "Failed to send header\n";
         // Retry
-        if (!m_qMessagesOut.empty())
-                writeHeader(client);
+        if (!m_qMessagesOut.empty()) writeHeader(client);
     }
 }
 
@@ -135,9 +137,14 @@ void TCPServer::writeBody(AsyncClient *client) {
 }
 
 void TCPServer::sendMessage(const Message &msg, AsyncClient *client) {
+     // Check if msg header is valid
+    assert(msg->header.id >= 0 && msg->header.id <= fortress::net::MsgTypes::MessageAll);
+    // Check if body size is reasonable
+    assert(msg->header.size < 128);
+    // Check if body size match the actual buffer length
+    assert(msg->header.size == msg->body.size());
+    
     bool isWritingMessage = !m_qMessagesOut.empty();
-    assert(msg.header.id <= fortress::net::MessageAll && msg.header.size < 128);
-    assert(msg.header.size == msg.size());
     m_qMessagesOut.push_back(msg);
 
     // If the queue was not empty before inserting a new message, the client is still
