@@ -133,30 +133,36 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 // Helpers
 
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
-    // Get channels values
-    uint32_t deltaTime;
-    std::array<uint16_t, SharedParams::n_channels> channelsReadings{};
+    try {
+        // Get channels values
+        uint32_t deltaTime;
+        std::array <uint16_t, SharedParams::n_channels> channelsReadings{};
 
-    msg >> deltaTime;
+        msg >> deltaTime;
 
-    for (int i = 0; i < SharedParams::n_channels; ++i) {
-        // Note: channels are flipped in respect of ESP 32 oreder
-        msg >> channelsReadings[i];
+        for (int i = 0; i < SharedParams::n_channels; ++i) {
+            // Note: channels are flipped in respect of ESP 32 oreder
+            msg >> channelsReadings[i];
+        }
+
+        // Count the amount of data received
+        m_bytesRead += sizeof(msg);
+        ++m_readingsReceived;
+
+        // Write data to disk
+        m_textStream << deltaTime;
+        for (int i = 0; i < SharedParams::n_channels; ++i) {
+            m_textStream << ',' << channelsReadings[i];
+        }
+        m_textStream << '\n';
+
+        // Draw
+        m_chartModel->insertReadings(channelsReadings, deltaTime);
+    } catch (std::exception const &e) {
+        std::cout << "Caught exception parsing new reading: " << e.what() << '\n';
+    } catch (...) {
+        std::cout << "Caught unknown exception parsing new reading\n";
     }
-
-    // Count the amount of data received
-    m_bytesRead += sizeof(msg);
-    ++m_readingsReceived;
-
-    // Write data to disk
-    m_textStream << deltaTime;
-    for (int i = 0; i < SharedParams::n_channels; ++i) {
-        m_textStream << ',' << channelsReadings[i];
-    }
-    m_textStream << '\n';
-
-    // Draw
-    m_chartModel->insertReadings(channelsReadings, deltaTime);
 }
 
 

@@ -44,13 +44,12 @@ namespace fortress::net {
                        tcp_connection::owner owner,
                        std::function<void(owned_message<MsgTypes> &)> callback,
                        std::function<void()> onConnectionDropped = nullptr
-                       ) :
+        ) :
                 m_asioContext{ asioContext },
                 m_socket{ std::move(socket) },
                 m_owner{ owner },
                 m_onMessageCallback(std::move(callback)),
-                m_onConnectionDropped(std::move(onConnectionDropped))
-                {}
+                m_onConnectionDropped(std::move(onConnectionDropped)) {}
 
         [[nodiscard]] bool isConnected() const {
             return m_socket.is_open();
@@ -171,21 +170,38 @@ namespace fortress::net {
         void readHeader() {
             asio::async_read(m_socket, asio::buffer(&m_tempInMessage.header, sizeof(message_header<MsgTypes>)),
                              [this](std::error_code ec, std::size_t length) {
-                                 if (!ec) {
-                                     if (m_tempInMessage.header.size > 0) {
-                                         m_tempInMessage.body.resize(m_tempInMessage.header.size);
-                                         readBody();
+
+                                 try {
+                                     if (!ec) {
+                                         if (m_tempInMessage.header.id > fortress::net::MsgTypes::MessageAll ||
+                                             m_tempInMessage.header.size > 128) {
+                                             std::stringstream out;
+                                             out << "Message with header " << m_tempInMessage.header
+                                                 << " discarded.";
+                                             throw std::length_error(out.str());
+                                         }
+
+                                         if (m_tempInMessage.header.size > 0) {
+                                             m_tempInMessage.body.resize(m_tempInMessage.header.size);
+                                             readBody();
+                                         } else {
+                                             onMessage();
+                                             readHeader();
+                                             m_tempInMessage.body.clear();
+                                         }
                                      } else {
-                                         onMessage();
-                                         readHeader();
-                                         m_tempInMessage.body.clear();
+                                         std::cout << "Read header failed: " << ec.message() << '\n';
+                                         // FIXME: Here should turn off the client in case of connection drop
+                                         closeSocket();
                                      }
-                                 } else {
-                                     std::cout << "Read header failed: " << ec.message() << '\n';
-                                     // FIXME: Here should turn off the client in case of connection drop
-                                     closeSocket();
+                                 } catch (std::exception const &e) {
+                                     std::cerr << "Caught exception: " << e.what() << '\n';
+                                     readHeader();
+                                 } catch (...) {
+                                     std::cerr << "Caught unknown exception\n";
                                  }
                              });
+
         }
 
         void readBody() {
