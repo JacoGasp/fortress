@@ -40,7 +40,7 @@ public:
 private:
     // Toolbar
     const QString m_ipPlaceholder = "192.168.1.7";
-    QString m_ip = "192.168.178.20";
+    QString m_ip = "192.168.1.47";
     static constexpr int m_defaultPort = 60000;
     int m_samplingFreq = 100;
     static constexpr int m_maxAllowedFreq = 1024;

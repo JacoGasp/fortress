@@ -56,6 +56,7 @@ AsyncClient *tcp_client;  // Caveat: only one client which respond to
 
 // Reading variables
 bool isUpdating = false;
+unsigned long sessionStartTime = 0;
 unsigned long previousMicros = 0;
 long samplingInterval = 1000;
 unsigned long prevInfoMicros = 0;
@@ -152,6 +153,7 @@ void startUpdating(Message &msg, AsyncClient *client) {
         sensorReadings = {};
         std::cout << "Start updating every " << samplingInterval << " us" << std::endl;
         previousMicros = micros();
+        sessionStartTime = micros();
         chargeIntegrator.reset();
     }
 }
@@ -340,7 +342,7 @@ void loop() {
 #endif
 
             // Insert ellapsed time between this frame and the previous one
-            msg << static_cast<uint32_t>(currentMicros - previousMicros);  // Delta time
+            msg << static_cast<uint32_t>(micros() - sessionStartTime);  // Delta time
 
             // Send the readings
             tcp_server.sendMessage(msg, tcp_client);

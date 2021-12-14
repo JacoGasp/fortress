@@ -142,10 +142,12 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     try {
         // Get channels values
+        uint32_t time;
         uint32_t deltaTime;
         std::array <uint16_t, SharedParams::n_channels> channelsReadings{};
 
-        msg >> deltaTime;
+        msg >> time;
+        deltaTime = time - m_prevReadingTimestamp;
 
         for (int i = 0; i < SharedParams::n_channels; ++i) {
             // Note: channels are flipped in respect of ESP 32 oreder
@@ -157,7 +159,7 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
         ++m_readingsReceived;
 
         // Write data to disk
-        m_textStream << deltaTime;
+        m_textStream << time << ',' << deltaTime;
         for (int i = 0; i < SharedParams::n_channels; ++i) {
             m_textStream << ',' << channelsReadings[i];
         }
@@ -165,13 +167,14 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
 
         // Draw
         m_chartModel->insertReadings(channelsReadings, deltaTime);
+
+        m_prevReadingTimestamp = time;
     } catch (std::exception const &e) {
         std::cout << "Caught exception parsing new reading: " << e.what() << '\n';
     } catch (...) {
         std::cout << "Caught unknown exception parsing new reading\n";
     }
 }
-
 
 void Backend::onServerFinishedUpload() {
     // How long the session was
@@ -227,7 +230,7 @@ void Backend::openFile(uint16_t frequency) {
                  << "Timestamp: " << now.toString(Qt::ISODate) << '\n'
                  << "Sampling Frequency (Hz): " << frequency << '\n'
                  << "##################################" << '\n'
-                 << "t";
+                 << "t" << ",delta_t";
 
     for (int i = 0; i < SharedParams::n_channels; ++i)
         m_textStream << ",ch_" << i;

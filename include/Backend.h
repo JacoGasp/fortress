@@ -44,6 +44,7 @@ private:
 
     unsigned long m_readingsReceived{ 0 };
     unsigned long m_bytesRead{ 0 };
+    unsigned long m_prevReadingTimestamp{ 0 };
     QString m_statusBarMessage{};
     bool m_askDisconnect = false;
 
