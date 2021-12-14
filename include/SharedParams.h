@@ -96,7 +96,7 @@ signals:
 #endif
 };
 
-using ADCReadings_t = std::array<uint16_t, SharedParams::n_channels>;
+using ADCReadings_t = std::array<int, SharedParams::n_channels>;
 using CurrentReadings_t = std::array<double, SharedParams::n_channels>;
 
 
