@@ -44,8 +44,21 @@ private:
 
     unsigned long m_readingsReceived{ 0 };
     unsigned long m_bytesRead{ 0 };
+    unsigned long m_prevReadingTimestamp{ 0 };
     QString m_statusBarMessage{};
     bool m_askDisconnect = false;
+
+
+    // Store last current values to compute current
+    ADCReadings_t m_ADCReadings{};
+
+
+    static inline auto computeCurrentFromADC = [](int current, int prev, uint32_t delta_t) {
+        return -static_cast<double>(current - prev) / static_cast<double>(SharedParams::kADCMaxVal) *
+               SharedParams::kADCVref *
+               SharedParams::kAmplifierFeedback *
+               SharedParams::kIntegratorCapacitance / static_cast<double>(delta_t * 1e6);
+    };
 
 public:
     // Avoid name collision with multiple inheritance

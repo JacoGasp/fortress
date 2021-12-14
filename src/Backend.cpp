@@ -142,14 +142,26 @@ void Backend::onMessage(message<MsgTypes> &msg) {
 void Backend::onReadingsReceived(message<MsgTypes> &msg) {
     try {
         // Get channels values
+        uint32_t time;
         uint32_t deltaTime;
-        std::array <uint16_t, SharedParams::n_channels> channelsReadings{};
+        CurrentReadings_t currentReadings{};
 
-        msg >> deltaTime;
+        msg >> time;
+        deltaTime = time - m_prevReadingTimestamp;
 
         for (int i = 0; i < SharedParams::n_channels; ++i) {
-            // Note: channels are flipped in respect of ESP 32 oreder
-            msg >> channelsReadings[i];
+            // Note: channels are flipped in respect of ESP 32 order
+            uint16_t newReading;
+            msg >> newReading;
+            auto lastReading = m_ADCReadings[i];
+
+            // The integrator has been reset.
+            if (lastReading - newReading > SharedParams::integratorThreshold * 0.9)
+                lastReading -= SharedParams::integratorThreshold;
+
+            // Compute current in Ampere
+            currentReadings[i] = computeCurrentFromADC(newReading, lastReading, deltaTime);
+            m_ADCReadings[i] = newReading;
         }
 
         // Count the amount of data received
@@ -157,21 +169,22 @@ void Backend::onReadingsReceived(message<MsgTypes> &msg) {
         ++m_readingsReceived;
 
         // Write data to disk
-        m_textStream << deltaTime;
+        m_textStream << time << ',' << deltaTime;
         for (int i = 0; i < SharedParams::n_channels; ++i) {
-            m_textStream << ',' << channelsReadings[i];
+            m_textStream << ',' << m_ADCReadings[i] << ',' << currentReadings[i];
         }
         m_textStream << '\n';
 
         // Draw
-        m_chartModel->insertReadings(channelsReadings, deltaTime);
+        m_chartModel->insertReadings(m_ADCReadings, currentReadings);
+
+        m_prevReadingTimestamp = time;
     } catch (std::exception const &e) {
         std::cout << "Caught exception parsing new reading: " << e.what() << '\n';
     } catch (...) {
         std::cout << "Caught unknown exception parsing new reading\n";
     }
 }
-
 
 void Backend::onServerFinishedUpload() {
     // How long the session was
@@ -226,11 +239,15 @@ void Backend::openFile(uint16_t frequency) {
     m_textStream << "############ Fortress ############" << '\n'
                  << "Timestamp: " << now.toString(Qt::ISODate) << '\n'
                  << "Sampling Frequency (Hz): " << frequency << '\n'
+                 << "ADC Max Value: " << SharedParams::kADCMaxVal << '\n'
+                 << "ADC Vref (V): " << SharedParams::kADCVref << '\n'
+                 << "Amplifier Feedback: " << SharedParams::kAmplifierFeedback << '\n'
+                 << "Integrator Capacitance (pF): " << SharedParams::kIntegratorCapacitance << '\n'
                  << "##################################" << '\n'
-                 << "t";
+                 << "t" << ",delta_t";
 
     for (int i = 0; i < SharedParams::n_channels; ++i)
-        m_textStream << ",ch_" << i;
+        m_textStream << ",ADC_ch_" << i << ",I_ch_" << i;
     m_textStream << Qt::endl;
 }
 
@@ -262,6 +279,7 @@ void Backend::sendStartUpdateCommand(uint16_t frequency) {
     m_startUpdateTime = std::chrono::steady_clock::now();
     m_readingsReceived = 0;
     m_bytesRead = 0;
+    m_ADCReadings = {};
     sendMessage(msg);
 }
 
@@ -283,7 +301,7 @@ void Backend::sendHVValue(uint16_t value) {
 bool Backend::saveFile(QUrl &destinationPath) {
     closeFile();
     if (QFile::exists(destinationPath.path())) {
-        std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.";
+        std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.\n";
         QFile::remove(destinationPath.path());
     }
     return QFile::copy(m_file.fileName(), destinationPath.path());

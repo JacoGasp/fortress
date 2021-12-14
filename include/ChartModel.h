@@ -29,33 +29,26 @@ private:
     QList<QList<QPointF>> m_chartCurrentData;
 
     // Last n_channels points received to display as gauge
-    std::array<int, SharedParams::n_channels> m_chLastValues{};
-    std::array<double, SharedParams::n_channels> m_chLastCurrentValues{};
+    ADCReadings_t m_chLastValues{};
+    CurrentReadings_t m_chLastCurrentValues{};
     // The current n_channels min/max values to auto rescale Y axis
-    const std::array<int, SharedParams::n_channels> m_chMinValues{};
-    std::array<double, SharedParams::n_channels> m_chMinCurrentValues{};
-    std::array<int, SharedParams::n_channels> m_chMaxValues{};
-    std::array<double, SharedParams::n_channels> m_chMaxCurrentValues{};
+    ADCReadings_t m_chMinValues{};
+    CurrentReadings_t m_chMinCurrentValues{};
+    ADCReadings_t m_chMaxValues{};
+    CurrentReadings_t m_chMaxCurrentValues{};
     // The n_channels total cumulative sum to display as gauge
-    std::array<int, SharedParams::n_channels> m_chTotalSums{};
-    std::array<double, SharedParams::n_channels> m_chTotalCurrentSums{};
+    ADCReadings_t m_chTotalSums{};
+    CurrentReadings_t m_chTotalCurrentSums{};
 
     bool m_showADCValues = false;
 
 private:
     static inline auto compareFunction = [](const QPointF &p1, const QPointF &p2) { return p1.y() < p2.y(); };
 
-    static inline auto computeCurrentFromADC = [](int current, int prev, uint32_t delta_t) {
-        return -static_cast<double>(current - prev) / static_cast<double>(SharedParams::kADCMaxVal) *
-               SharedParams::kAmplifierFeedback *
-               SharedParams::kIntegratorCapacitance / static_cast<double>(delta_t * 1e6);
-    };
-
-
 public:
     explicit ChartModel(QObject *parent = nullptr);
 
-    void insertReadings(const std::array<uint16_t, SharedParams::n_channels> &readings, uint32_t deltaTime);
+    void insertReadings(const ADCReadings_t &rawReadings, const CurrentReadings_t &currentReadings);
 
     Q_INVOKABLE void clearData();
 
