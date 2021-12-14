@@ -45,6 +45,7 @@ private:
     unsigned long m_readingsReceived{ 0 };
     unsigned long m_bytesRead{ 0 };
     QString m_statusBarMessage{};
+    bool m_askDisconnect = false;
 
 public:
     // Avoid name collision with multiple inheritance
@@ -68,7 +69,7 @@ public:
 
     Q_INVOKABLE void sendHVValue(uint16_t value);
 
-    Q_INVOKABLE void saveFile(QUrl &destination_path);
+    Q_INVOKABLE bool saveFile(QUrl &destination_path);
 
     void onMessage(message<MsgTypes> &msg) override;
 
@@ -94,6 +95,8 @@ private:
 signals:
 
     void connectionStatusChanged(bool bIsConnected);
+
+    void connectionLost();
 
     void statusBarMessageArrived(QString message);
 

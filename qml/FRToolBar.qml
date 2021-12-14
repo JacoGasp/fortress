@@ -7,6 +7,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import QtQml.Models
 import Qt.labs.platform
 import QtQuick.Templates as T
@@ -40,6 +41,16 @@ ToolBar {
             changeStatus(bIsConnected ? "connected" : "disconnected")
             bIsConnecting = false
             bIsReceiving = false
+            if (!bHasSaved) {
+                saveAlert.show();
+            }
+        }
+
+        function onConnectionLost() {
+            console.log("Connection lost!")
+            statusBar.text = "Connection to ESP32 lost"
+            bIsSaveEnabled = true;
+
         }
     }
 
@@ -141,7 +152,7 @@ ToolBar {
 
                 Button {
                     text: "Save"
-                    enabled: bIsSaveEnabled && !bHasSaved
+                    enabled: bIsSaveEnabled
                     onClicked: {
                         fileDialog.open()
                     }
@@ -259,9 +270,10 @@ ToolBar {
         fileMode: FileDialog.SaveFile
         currentFile: `file:///${Qt.formatDate(startDate, "yyyyMMdd")}_${Qt.formatTime(startDate, "hhmmss")}_fortress.csv`
         onAccepted: {
-            console.log(file)
-            Backend.saveFile(file)
-            bHasSaved = true
+            bHasSaved = Backend.saveFile(file)
+            if (bHasSaved) {
+                console.log(`File successfully saved to ${file}`)
+            }
         }
     }
 
@@ -270,6 +282,7 @@ ToolBar {
         if (!bHasSaved) {
             saveAlert.show()
         } else {
+            bHasSaved = false;
             bIsSaveEnabled = false
             bIsReceiving = true
             Backend.sendStartUpdateCommand(SharedParams.samplingFreq)

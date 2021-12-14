@@ -7,7 +7,7 @@ Item {
     anchors.centerIn: parent
     MessageDialog {
         id: messageDialog
-        text: "Starting a new session will overwrite the current one."
+        text: "Current session was not saved"
         informativeText: "Do you want to save?"
         buttons: StandardButton.No | StandardButton.Save
 

@@ -33,6 +33,7 @@ Backend::~Backend() {
 
 
 void Backend::connectToHost(const QString &host, uint16_t port) {
+    m_askDisconnect = false;
     // Prepare the context for consecutive use
     m_context.restart();
 
@@ -49,10 +50,16 @@ void Backend::connectToHost(const QString &host, uint16_t port) {
         assert(m_context.stopped() == true);
         std::cout << "[BACKEND] Asio context stopped\n";
         emit connectionStatusChanged(isConnected());
+
+        if (!m_askDisconnect) {
+            std::cerr << "[BACKEND] Connection to ESP 32 lost\n";
+            emit connectionLost();
+        }
     });
 }
 
 void Backend::disconnectFromHost() {
+    m_askDisconnect = true;
     if (!client_interface::isConnected())
         return;
 
@@ -273,11 +280,11 @@ void Backend::sendHVValue(uint16_t value) {
     sendMessage(msg);
 }
 
-void Backend::saveFile(QUrl &destinationPath) {
+bool Backend::saveFile(QUrl &destinationPath) {
     closeFile();
     if (QFile::exists(destinationPath.path())) {
         std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.";
         QFile::remove(destinationPath.path());
     }
-    QFile::copy(m_file.fileName(), destinationPath.path());
+    return QFile::copy(m_file.fileName(), destinationPath.path());
 }
