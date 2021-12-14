@@ -49,7 +49,7 @@ void ChartModel::showADCValues(bool show) {
 }
 
 
-void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_channels> &readings, uint32_t deltaTime) {
+void ChartModel::insertReadings(const ADCReadings_t &rawReadings, const CurrentReadings_t &currentReadings) {
     m_dataXIndex = m_t % SharedParams::plotWindowSizeInPoint;
 
     for (int ch = 0; ch < SharedParams::n_channels; ++ch) {
@@ -57,16 +57,16 @@ void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_chann
         auto chSeriesDiff = &m_chartCurrentData[ch];
 
         int lastReading = m_chLastValues[ch];
-        int newReading = readings[ch];
+        int newReading = rawReadings[ch];
 
         // The integrator has been reset.
         if (lastReading - newReading > SharedParams::integratorThreshold * 0.9)
             lastReading -= SharedParams::integratorThreshold;
 
-        auto newCurrentReading = computeCurrentFromADC(newReading, lastReading, deltaTime);
+        auto newCurrentReading = currentReadings[ch];
         // Set the current readings as last the last value
         m_chLastValues[ch] = newReading;
-        m_chLastCurrentValues[ch] = newCurrentReading;
+        m_chLastCurrentValues[ch] = currentReadings[ch];
 
         // Swipe from left to right and refresh the circular buffer at current position
         double x{ static_cast<double>(m_dataXIndex) };
@@ -81,7 +81,7 @@ void ChartModel::insertReadings(const std::array<uint16_t, SharedParams::n_chann
         m_chMinCurrentValues[ch] = minMaxDiffValues.first->y();
         m_chMaxCurrentValues[ch] = minMaxDiffValues.second->y();
         m_chTotalSums[ch] += newReading;
-        m_chTotalCurrentSums[ch] += newCurrentReading;
+        m_chTotalCurrentSums[ch] += currentReadings[ch];
     }
     ++m_t;
 }
