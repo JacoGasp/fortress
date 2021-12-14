@@ -301,7 +301,7 @@ void Backend::sendHVValue(uint16_t value) {
 bool Backend::saveFile(QUrl &destinationPath) {
     closeFile();
     if (QFile::exists(destinationPath.path())) {
-        std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.";
+        std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.\n";
         QFile::remove(destinationPath.path());
     }
     return QFile::copy(m_file.fileName(), destinationPath.path());
