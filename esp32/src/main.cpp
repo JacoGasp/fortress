@@ -249,7 +249,7 @@ void setup() {
 
     hspi = new SPIClass(HSPI);
     hspi->begin();
-    I2CHV.begin(I2C_SDA, I2C_SCL, 100000);
+    I2CHV.begin(I2C_SDA, I2C_SCL, uint32_t{100000});
 
     Serial.println("hspi, I2C OK");
 

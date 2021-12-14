@@ -9,7 +9,7 @@
 #ifndef FORTRESS_ESP32_SERVER_H
 #define FORTRESS_ES32_SERVER_H
 
-#include <FreeRTOS.h>
+#include <freertos/FreeRTOS.h>
 #include <AsyncTCP.h>
 #include <deque>
 #include <cassert>
