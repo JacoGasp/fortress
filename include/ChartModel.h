@@ -48,7 +48,7 @@ private:
     static inline auto computeCurrentFromADC = [](int current, int prev, uint32_t delta_t) {
         return -static_cast<double>(current - prev) / static_cast<double>(SharedParams::kADCMaxVal) *
                SharedParams::kAmplifierFeedback *
-               SharedParams::kIntegratorCapacitance;
+               SharedParams::kIntegratorCapacitance / static_cast<double>(delta_t * 1e6);
     };
 
 
