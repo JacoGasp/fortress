@@ -94,8 +94,10 @@ signals:
     void samplingFreqChanged();
 
 #endif
-
 };
+
+using ADCReadings_t = std::array<uint16_t, SharedParams::n_channels>;
+using CurrentReadings_t = std::array<double, SharedParams::n_channels>;
 
 
 #endif //FORTRESS_SHAREDPARAMS_H
