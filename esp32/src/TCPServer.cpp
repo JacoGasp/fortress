@@ -80,7 +80,7 @@ void TCPServer::onData(void *arg, AsyncClient *client, void *data, size_t len) {
 void TCPServer::writeHeader(AsyncClient *client) {
     assert(!m_qMessagesOut.empty() && "Write header: empty message queue");
 
-    auto msg = &m_qMessagesOut.back();
+    auto msg = &m_qMessagesOut.front();
 
     // Check if msg header is valid
     assert(msg->header.id >= 0 && msg->header.id <= fortress::net::MsgTypes::MessageAll);
