@@ -57,7 +57,7 @@ private:
         return -static_cast<double>(current - prev) / static_cast<double>(SharedParams::kADCMaxVal) *
                SharedParams::kADCVref *
                SharedParams::kAmplifierFeedback *
-               SharedParams::kIntegratorCapacitance / static_cast<double>(delta_t * 1e6);
+               SharedParams::kIntegratorCapacitance / static_cast<double>(delta_t / 1e6);
     };
 
 public:
