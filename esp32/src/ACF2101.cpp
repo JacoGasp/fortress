@@ -14,7 +14,6 @@ void ACF2101::begin()
     pinMode(SelectPin, OUTPUT);
 	pinMode(HoldPin, OUTPUT);
 	pinMode(ResetPin, OUTPUT);
-    //hold, sel closed
     //LOW = on, HIGH = off
     digitalWrite(SelectPin, LOW);
 	digitalWrite(HoldPin, LOW);
@@ -26,6 +25,7 @@ void ACF2101::reset()
 {
     //digitalWrite(HoldPin, HIGH);
     digitalWrite(ResetPin, LOW);
+    delayMicroseconds(100);
     digitalWrite(ResetPin, HIGH);
     //digitalWrite(HoldPin, LOW);
 
@@ -33,5 +33,6 @@ void ACF2101::reset()
 
 void ACF2101::stop()
 {
-    digitalWrite(HoldPin, HIGH);
+    //digitalWrite(HoldPin, HIGH);
+    digitalWrite(ResetPin, LOW);
 }

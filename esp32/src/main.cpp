@@ -320,13 +320,13 @@ void loop() {
              * important: getSample with no ADC connected adds 100 ms delay due to ADC timeout
              */
 
-            Serial.print("ADC status: ");
+            //Serial.print("ADC status: ");
             for (int i = 0; i < SharedParams::n_channels; ++i) {
                 // Sample from ADC
                 uint8_t adcstat = ADC.getSample(&sensorReadings[i], i);
                 msg << sensorReadings[i];
-                Serial.print(adcstat);
-                Serial.print(" ");
+                //Serial.print(adcstat);
+                //Serial.print(" ");
             }
 
             Serial.println();
