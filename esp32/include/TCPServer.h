@@ -15,7 +15,8 @@
 #include <cassert>
 #include "../../include/networking/message.h"
 #include "../../include/constants.h"
-// #include "ThreadSafeQueue.h"
+// #include "AsyncSyncronization.h"
+#include "ThreadSafeQueue.h"
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 using Header = fortress::net::message_header<fortress::net::MsgTypes>;
@@ -28,7 +29,8 @@ private:
     bool m_isWriting = false;
     
     Message m_tempInMessage;
-    std::deque<Message> m_qMessagesOut;
+    fortress::esp32::TaskSafeQueue<Message> m_qMessagesOut;
+    // AsyncPlainLock m_lockmq;
     // fortress::esp32::taskSafeQueue<Message> m_qMessagesOut;
     std::function<void(Message&, AsyncClient*)> m_onMessageCallback;
 
