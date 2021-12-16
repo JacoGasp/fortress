@@ -16,7 +16,7 @@
 #include "../../include/networking/message.h"
 #include "../../include/constants.h"
 // #include "AsyncSyncronization.h"
-#include "ThreadSafeQueue.h"
+#include "TaskSafeQueue.h"
 
 using Message = fortress::net::message<fortress::net::MsgTypes>;
 using Header = fortress::net::message_header<fortress::net::MsgTypes>;
