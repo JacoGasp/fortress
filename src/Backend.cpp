@@ -228,8 +228,10 @@ void Backend::togglePingUpdate() {
 }
 
 void Backend::openFile(uint16_t frequency) {
-    m_file.open();
-    m_file.seek(0);
+    m_file = std::make_unique<QTemporaryFile>(m_filename);
+    m_textStream.setDevice(m_file.get());
+    m_file->open();
+//    m_file->seek(0);
     m_textStream.flush();
 
     auto now = QDateTime::currentDateTime();
@@ -254,8 +256,10 @@ void Backend::openFile(uint16_t frequency) {
 void Backend::closeFile() {
     m_textStream.flush();
 
-    if (m_file.isOpen())
-        m_file.close();
+    if (m_file->isOpen())
+        m_file->close();
+
+    m_textStream.setDevice(nullptr);
 }
 
 double Backend::getLastPingValue() const {
@@ -304,5 +308,5 @@ bool Backend::saveFile(QUrl &destinationPath) {
         std::cout << "Destination " << destinationPath.path().toStdString() << " already exists, overwrite.\n";
         QFile::remove(destinationPath.path());
     }
-    return QFile::copy(m_file.fileName(), destinationPath.path());
+    return QFile::copy(m_file->fileName(), destinationPath.path());
 }

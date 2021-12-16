@@ -33,8 +33,9 @@ private:
     bool m_bIsPinging{ false };
     static constexpr asio::chrono::milliseconds PING_DELAY{ 1000 };
 
-    QTemporaryFile m_file{ "fortress_out.csv" };              // Csv output file
-    QTextStream m_textStream{ &m_file };                             // Csv stream to write on file
+    QString const m_filename = "fortress_out.csv";
+    std::unique_ptr<QTemporaryFile> m_file;                                                  // Csv output file
+    QTextStream m_textStream;                             // Csv stream to write on file
 
     asio::io_context m_context{};
     std::unique_ptr<asio::steady_timer> m_pPingTimer;
