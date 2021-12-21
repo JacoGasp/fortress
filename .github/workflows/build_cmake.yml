@@ -10,8 +10,6 @@ on:
       - v*
     pull_request:
       branches:
-        - *
-
 env:
   QT_NAME: qt6
   QT_VERSION: 6.2.2
