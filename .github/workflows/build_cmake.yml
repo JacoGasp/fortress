@@ -51,6 +51,7 @@ jobs:
             brew install asio
             cd /usr/local/Cellar/asio/
             ln -s ${ASIO_VERSION} current
+            ls
           fi
 
       - name: Download Qt
