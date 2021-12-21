@@ -48,9 +48,9 @@ jobs:
             unzip CQtDeployer*.zip -d cqtdeployer
             chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
           elif [ "$RUNNER_OS" == macOS ]; then
-            brew install asio@${ASIO_VERSION}
+            brew install asio
             cd /usr/local/Cellar/asio/
-            ln -s ${ASIO_VERSION} current
+            ln -s ./* current
             ls current
           fi
 
