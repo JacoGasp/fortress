@@ -13,8 +13,7 @@ on:
 env:
   QT_NAME: qt6
   QT_VERSION: 6.2.2
-  ASION_VERSION: 1.20.0
-  
+
   DESKTOP_APP_TARGET: Fortress
   SERVER_APP_TARGET: Server
   DESKTOP_APP_BUILD_FILE: app/Fortress
@@ -43,15 +42,10 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == Linux ]; then
             sudo apt update
-            sudo apt install -y libgl1-mesa-dev libasio-dev libxkbcommon-x11-0 cmake
+            sudo apt install -y libgl1-mesa-dev libxkbcommon-x11-0 cmake
             wget https://github.com/QuasarApp/CQtDeployer/releases/download/1.5.1/CQtDeployer_1.5.1_Linux64.zip 
             unzip CQtDeployer*.zip -d cqtdeployer
             chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
-          elif [ "$RUNNER_OS" == macOS ]; then
-            brew install asio
-            cd /usr/local/Cellar/asio/
-            ln -s ./* current
-            ls current
           fi
 
       - name: Download Qt

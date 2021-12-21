@@ -14,7 +14,3 @@ add_executable(SimpleClient SimpleClient.cpp ${INCLUDES})
 
 target_include_directories(SimpleServer PRIVATE ../include)
 target_include_directories(SimpleClient PRIVATE ../include)
-if(APPLE)
-    target_include_directories(SimpleClient PUBLIC /usr/local/Cellar/asio/current/include)
-    target_include_directories(SimpleServer PUBLIC /usr/local/Cellar/asio/current/include)
-endif(APPLE)
