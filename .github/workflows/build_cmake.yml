@@ -68,9 +68,9 @@ jobs:
            set(compiler "gcc_64")
           elseif ("${{ runner.os }}" STREQUAL "macOS")
            set(url_os "mac_x64")
-           set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.clang_64")
-           set(qt_dir_prefix "${qt_version}/clang_64")
-           set(compiler "clang_64")
+           set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.macos")
+           set(qt_dir_prefix "${qt_version}/macos")
+           set(compiler "macos")
           endif()
           
           set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/${qt_name}_${qt_version_dotless}")
