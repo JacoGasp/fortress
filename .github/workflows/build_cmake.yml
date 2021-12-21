@@ -48,10 +48,10 @@ jobs:
             unzip CQtDeployer*.zip -d cqtdeployer
             chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
           elif [ "$RUNNER_OS" == macOS ]; then
-            brew install asio
+            brew install asio@${ASIO_VERSION}
             cd /usr/local/Cellar/asio/
             ln -s ${ASIO_VERSION} current
-            ls
+            ls current
           fi
 
       - name: Download Qt
