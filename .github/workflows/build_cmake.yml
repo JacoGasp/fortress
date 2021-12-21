@@ -122,12 +122,13 @@ jobs:
               execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../icu.7z WORKING_DIRECTORY "${qt_name}")
           endif()
           
-          file(READ "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" qtconfig)
-          string(REPLACE "Enterprise" "OpenSource" qtconfig "${qtconfig}")
-          string(REPLACE "licheck.exe" "" qtconfig "${qtconfig}")
-          string(REPLACE "licheck64" "" qtconfig "${qtconfg}")
-          string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
-          file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
+          # Not working anymore with Qt 6.2.2
+          # file(READ "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" qtconfig)
+          # string(REPLACE "Enterprise" "OpenSource" qtconfig "${qtconfig}")
+          # string(REPLACE "licheck.exe" "" qtconfig "${qtconfig}")
+          # string(REPLACE "licheck64" "" qtconfig "${qtconfg}")
+          # string(REPLACE "licheck_mac" "" qtconfig "${qtconfig}")
+          # file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
       - name: Configure
         run: |
