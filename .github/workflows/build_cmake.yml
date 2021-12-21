@@ -33,6 +33,10 @@ jobs:
             artifact: "macOS-x64.zip"
             bundle_name: "macOS-x64"
             os: macos-latest
+         - name: "Windows Latest x64"
+            artifact: "win-x64.zip"
+            bundle_name: "win-x64"
+            os: windows-latest
     steps:
       - uses: actions/checkout@v2
 
