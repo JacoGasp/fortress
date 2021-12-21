@@ -7,7 +7,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -fstrict-aliasing -pedantic-errors -pedantic -Wno-deprecated-declarations -Wno-unused-variable")
 
 if(APPLE)
-    include_directories(/usr/local/Cellar/asio/1.18.2/include)
+    include_directories(/usr/local/Cellar/asio/current/include)
 endif(APPLE)
 # Setup Qt
 set(REQUIRED_LIBS Core Gui Qml Quick Widgets Charts)

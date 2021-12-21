@@ -11,7 +11,7 @@ on:
 
 env:
   QT_NAME: qt6
-  QT_VERSION: 6.1.1
+  QT_VERSION: 6.2.2
   
   DESKTOP_APP_TARGET: Fortress
   SERVER_APP_TARGET: Server
@@ -47,6 +47,7 @@ jobs:
             chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
           elif [ "$RUNNER_OS" == macOS ]; then
             brew install asio
+            ln -s /usr/local/Cellar/asio/1.* /usr/local/Cellar/asio/current
           fi
          
       - name: Download Qt
