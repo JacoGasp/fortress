@@ -137,8 +137,9 @@ jobs:
 
           export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
           export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
-
-          cmake -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" -DCMAKE_BUILD_TYPE=Release ../
+          export CMAKE_PREFIX_PATH = "${{ steps.qt.outputs.qt_dir }}/lib/cmake"
+          echo $CMAKE_PREFIX_PATH
+          cmake -DCMAKE_BUILD_TYPE=Release ../
 
 
       - name: Build
