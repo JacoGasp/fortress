@@ -30,9 +30,9 @@ Rectangle {
             labelsColor: "darkgray"
             min: 0
             max: 10
-            titleText: `<font color='lightgray'>Ch ${channel} [${root.isShowingADC ? "ADC" : " A"}]</font>`
+            titleText: `<font color='lightgray'>Ch ${channel} [${root.isShowingADC ? "ADC" : " pA"}]</font>`
             gridLineColor: "darkgray"
-            labelFormat: root.isShowingADC ? "%d" : "%.3g"
+            labelFormat: root.isShowingADC ? "%d" : "%3.1f"
 
             Behavior on min {
                 NumberAnimation { duration: 200 }
