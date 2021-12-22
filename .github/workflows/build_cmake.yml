@@ -39,6 +39,7 @@ jobs:
           - name: "Windows Latest x64"
             artifact: "win-x64.zip"
             bundle_name: "win-x64"
+            environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
             os: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -183,18 +184,33 @@ jobs:
           # file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
       - name: Configure
-        shell: bash
+        shell: cmake -P {0}
         run: |
-          mkdir build && cd build
-          # TODO: fix for linux
-
-          # export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
-          # export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
-          cmake \
-             -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" \
-             -DCMAKE_BUILD_TYPE="$ENV{BUILD_TYPE}" \
-             ../
-
+          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
+            execute_process(
+              COMMAND "${{ matrix.config.environment_script }}" && set
+              OUTPUT_FILE environment_script_output.txt
+            )
+            file(STRINGS environment_script_output.txt output_lines)
+            foreach(line IN LISTS output_lines)
+              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
+                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
+              endif()
+            endforeach()
+          endif()
+          
+          execute_process(
+          COMMAND cmake
+            -S .
+            -B build
+            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
+            -D CMAKE_MAKE_PROGRAM=ninja
+            -D CMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
+          RESULT_VARIABLE result
+        )
+        if (NOT result EQUAL 0)
+        message(FATAL_ERROR "Bad exit status")
+        endif()
 
       - name: Build
         shell: cmake -P {0}
