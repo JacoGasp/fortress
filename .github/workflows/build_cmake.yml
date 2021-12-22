@@ -129,14 +129,17 @@ jobs:
           # file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
       - name: Configure
+        shell: bash
         run: |
           mkdir build && cd build
           # TODO: fix for linux
 
           # export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
           # export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
-          CMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
-          cmake -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH -DCMAKE_BUILD_TYPE=Release ../
+          cmake \
+             -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" \
+             -DCMAKE_BUILD_TYPE=Release \
+             ../
 
 
       - name: Build
