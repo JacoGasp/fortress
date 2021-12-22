@@ -209,7 +209,6 @@ jobs:
               -S .
               -B build
               -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-              -D CMAKE_MAKE_PROGRAM=ninja
               -D CMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
             RESULT_VARIABLE result
           )
