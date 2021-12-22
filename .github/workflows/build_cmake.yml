@@ -31,16 +31,24 @@ jobs:
           - name: "Linux Latest x64"
             artifact: "Linux-x64.tar.gz"
             bundle_name: "Linux-x64"
-            os: ubuntu-latest
+            os: ubuntu-latest,
+            cc: "gcc"
+            cxx: "g++"
+          
           - name: "macOS Latest x64"
             artifact: "macOS-x64.zip"
             bundle_name: "macOS-x64"
-            os: macos-latest
+            os: macos-latest,
+            cc: "clang"
+            cxx: "clang++"
+          
           - name: "Windows Latest x64"
             artifact: "win-x64.zip"
             bundle_name: "win-x64"
             environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
-            os: windows-latest
+            os: windows-latest,
+            cc: "cl"
+            cxx: "cl"
     steps:
       - uses: actions/checkout@v2
 
@@ -225,6 +233,9 @@ jobs:
       - name: Build
         shell: cmake -P {0}
         run: |
+          set(ENV{CC} ${{ matrix.config.cc }})
+          set(ENV{CXX} ${{ matrix.config.cxx }})
+          
           include(ProcessorCount)
           ProcessorCount(N) 
           
