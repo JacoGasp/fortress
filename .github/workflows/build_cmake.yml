@@ -103,13 +103,16 @@ jobs:
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${qt_name}/${qt_dir_prefix}" qt_dir)
           message("::set-output name=qt_dir::${qt_dir}")
           
-          foreach(package qtbase qtdeclarative qttools qtquickcontrols2 qtcharts)
-            message("${qt_base_url}/${qt_package_name}/${package_version}${package}${packge_suffix}")
-            file (DOWNLOAD "${qt_base_url}/${qt_package_name}/${package_version}${package}${package_suffix}.7z" "./${package}.7z" SHOW_PROGRESS)
+          # Download addons
+          message("Downloading addons...")
+          foreach(package qtbase qtdeclarative qttools qtquickcontrols2)
+            set(addon_url "${qt_base_url}/${qt_package_name}/${package_version}${package}${packge_suffix}.7z")
+            file (DOWNLOAD "${addon_url}" "./${package}.7z" SHOW_PROGRESS)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY "${qt_name}")
           endforeach()
 
           # Download addons
+          message("Donwloading QtCharts")
           foreach (addon qtcharts)
             if ("${{ runner.os }}" STREQUAL "Windows")
               set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.win64_${compiler}/${package_version}${addon}${package_suffix}.7z)
