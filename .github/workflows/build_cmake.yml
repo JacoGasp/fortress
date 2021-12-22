@@ -111,7 +111,13 @@ jobs:
 
           # Download addons
           foreach (addon qtcharts)
-            message("${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z")
+            if ("${{ runner.os }}" STREQUAL "Windows")
+              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.win64_${compiler}/${package_version}${addon}${package_suffix}.7z
+            else 
+              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z
+            endif()
+            
+            message("${addon_url")
             file (DOWNLOAD "${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z" "./${addon}.7z" SHOW_PROGRESS)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${addon}.7z WORKING_DIRECTORY "${qt_name}")
           endforeach()
