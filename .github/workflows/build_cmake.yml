@@ -208,8 +208,8 @@ jobs:
              COMMAND cmake
               -S .
               -B build
-              -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-              -D CMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
+              -DCMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
+              -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
             RESULT_VARIABLE result
           )
           if (NOT result EQUAL 0)
