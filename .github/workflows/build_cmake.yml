@@ -72,8 +72,8 @@ jobs:
           elseif ("${{ runner.os }}" STREQUAL "Windows")
            set(url_os "windows_x86")
            set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.win64_msvc2019_64")
-           set(qt_dir_prefix "${qt_version}/windows_x86")
-           set(compiler "msvc")
+           set(qt_dir_prefix "${qt_version}/msvc2019_64")
+           set(compiler "msvc2019_64")
           endif()
           
           set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/${qt_name}_${qt_version_dotless}")
