@@ -239,8 +239,13 @@ jobs:
           include(ProcessorCount)
           ProcessorCount(N) 
           
-          set(make_cmd make $ENV{DESKTOP_APP_TARGET} $ENV{SERVER_APP_TARGET} -j ${N})
-          execute_process(COMMAND ${make_cmd} WORKING_DIRECTORY build RESULT_VARIABLE result)
+          set(make_cmd cmake --b$ENV{DESKTOP_APP_TARGET} $ENV{SERVER_APP_TARGET} -j ${N})
+          execute_process(COMMAND 
+            cmake --build .
+            --target $ENV{DESKTOP_APP_TARGET} 
+            --target $ENV{SERVER_APP_TARGET} 
+            -j ${N}
+            WORKING_DIRECTORY build RESULT_VARIABLE result)
           
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status")
