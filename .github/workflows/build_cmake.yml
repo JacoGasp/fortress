@@ -94,9 +94,8 @@ jobs:
           string(REPLACE "-debug-symbols" "" package_suffix "${package_suffix}")
 
           # Workaround for CMake's greedy regex (WinOnly)
-
-          if ("${{ matrix.config.environment_script }}" MATCHES "vcvars32.bat")
-            string(REPLACE "X86_64" "X86" package_suffix "${package_suffix}")
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            string(REPLACE "ARM64" "X86_64" package_suffix "${package_suffix}")
           endif()
           file(MAKE_DIRECTORY ${qt_name})
 
