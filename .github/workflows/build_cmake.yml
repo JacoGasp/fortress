@@ -112,9 +112,9 @@ jobs:
           # Download addons
           foreach (addon qtcharts)
             if ("${{ runner.os }}" STREQUAL "Windows")
-              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.win64_${compiler}/${package_version}${addon}${package_suffix}.7z
+              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.win64_${compiler}/${package_version}${addon}${package_suffix}.7z)
             else() 
-              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z
+              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z)
             endif()
             
             message("${addon_url")
