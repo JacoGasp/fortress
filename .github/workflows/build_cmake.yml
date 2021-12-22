@@ -144,7 +144,9 @@ jobs:
           # Save the path for other steps
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${qt_name}/${qt_dir_prefix}" qt_dir)
           message("::set-output name=qt_dir::${qt_dir}")
-          
+
+          execute_process(COMMAND sh -c "echo 'QT_DIR=${qt_dir}' >> $GITHUB_ENV")
+
           # Download packages
           message("Downloading packages...")
           foreach(package qtbase qtdeclarative qttools qtquickcontrols2)
@@ -199,17 +201,21 @@ jobs:
               endif()
             endforeach()
           endif()
+
           set(path_separator ":")
           if ("${{ runner.os }}" STREQUAL "Windows")
             set(path_separator ";")
           endif()
           set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
+
+          set(cmake_prefix_path $ENV{QT_DIR}/lib/cmake)
+
           execute_process(
              COMMAND cmake
               -S .
               -B build
-              -DCMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-              -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
+              -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
+              -D CMAKE_PREFIX_PATH=${cmake_prefix_path}
             RESULT_VARIABLE result
           )
           if (NOT result EQUAL 0)
