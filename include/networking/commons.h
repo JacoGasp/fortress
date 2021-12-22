@@ -22,9 +22,10 @@
 
 #if !defined(ESP32 )
 #define ASIO_STANDALONE
-#include <asio.hpp>
-#include <asio/ts/buffer.hpp>
-#include <asio/ts/internet.hpp>
+#define _WIN32_WINNT 0x0501
+#include "asio.hpp"
+#include "asio/ts/buffer.hpp"
+#include "asio/ts/internet.hpp"
 #endif
 
 #endif //FORTRESS_COMMONS_H

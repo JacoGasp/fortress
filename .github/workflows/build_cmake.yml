@@ -6,15 +6,16 @@ name: Qt Cmake Build
 on:
   workflow_dispatch:
   push:
+    pull_request:
     tags:
       - v*
-    pull_request:
-      branches:
 env:
   QT_NAME: qt6
   QT_VERSION: 6.2.2
-  ASION_VERSION: 1.20.0
-  
+  CMAKE_VERSION: 3.21.1
+  NINJA_VERSION: 1.10.2
+  BUILD_TYPE: Release
+
   DESKTOP_APP_TARGET: Fortress
   SERVER_APP_TARGET: Server
   DESKTOP_APP_BUILD_FILE: app/Fortress
@@ -31,10 +32,23 @@ jobs:
             artifact: "Linux-x64.tar.gz"
             bundle_name: "Linux-x64"
             os: ubuntu-latest
+            cc: "gcc"
+            cxx: "g++"
+          
           - name: "macOS Latest x64"
             artifact: "macOS-x64.zip"
             bundle_name: "macOS-x64"
             os: macos-latest
+            cc: "clang"
+            cxx: "clang++"
+          
+          - name: "Windows Latest x64"
+            artifact: "win-x64.zip"
+            bundle_name: "win-x64"
+            environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+            os: windows-latest
+            cc: "cl"
+            cxx: "cl"
     steps:
       - uses: actions/checkout@v2
 
@@ -43,16 +57,49 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == Linux ]; then
             sudo apt update
-            sudo apt install -y libgl1-mesa-dev libasio-dev libxkbcommon-x11-0 cmake
+            sudo apt install -y libgl1-mesa-dev libxkbcommon-x11-0
             wget https://github.com/QuasarApp/CQtDeployer/releases/download/1.5.1/CQtDeployer_1.5.1_Linux64.zip 
             unzip CQtDeployer*.zip -d cqtdeployer
             chmod +x cqtdeployer/cqtdeployer.sh cqtdeployer/bin/*
-          elif [ "$RUNNER_OS" == macOS ]; then
-            brew install asio
-            cd /usr/local/Cellar/asio/
-            ln -s ./* current
-            ls current
           fi
+      - name: Download Ninja and CMake
+        shell: cmake -P {0}
+        run: |
+          set(cmake_version $ENV{CMAKE_VERSION})
+          set(ninja_version $ENV{NINJA_VERSION})
+          message(STATUS "Using host CMake version: ${CMAKE_VERSION}")
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            set(ninja_suffix "win.zip")
+            set(cmake_suffix "windows-x86_64.zip")
+            set(cmake_dir "cmake-${cmake_version}-windows-x86_64/bin")
+          elseif ("${{ runner.os }}" STREQUAL "Linux")
+            set(ninja_suffix "linux.zip")
+            set(cmake_suffix "linux-x86_64.tar.gz")
+            set(cmake_dir "cmake-${cmake_version}-linux-x86_64/bin")
+          elseif ("${{ runner.os }}" STREQUAL "macOS")
+            set(ninja_suffix "mac.zip")
+            set(cmake_suffix "macos-universal.tar.gz")
+            set(cmake_dir "cmake-${cmake_version}-macos-universal/CMake.app/Contents/bin")
+          endif()
+          set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
+          file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
+          set(cmake_url "https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-${cmake_suffix}")
+          file(DOWNLOAD "${cmake_url}" ./cmake.zip SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./cmake.zip)
+          # Add to PATH environment variable
+          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${cmake_dir}" cmake_dir)
+          set(path_separator ":")
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            set(path_separator ";")
+          endif()
+          file(APPEND "$ENV{GITHUB_PATH}" "$ENV{GITHUB_WORKSPACE}${path_separator}${cmake_dir}")
+          if (NOT "${{ runner.os }}" STREQUAL "Windows")
+            execute_process(
+              COMMAND chmod +x ninja
+              COMMAND chmod +x ${cmake_dir}/cmake
+            )
+          endif()
 
       - name: Download Qt
         id: qt
@@ -72,6 +119,11 @@ jobs:
            set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.clang_64")
            set(qt_dir_prefix "${qt_version}/macos")
            set(compiler "clang_64")
+          elseif ("${{ runner.os }}" STREQUAL "Windows")
+           set(url_os "windows_x86")
+           set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.win64_msvc2019_64")
+           set(qt_dir_prefix "${qt_version}/msvc2019_64")
+           set(compiler "msvc2019_64")
           endif()
           
           set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/${qt_name}_${qt_version_dotless}")
@@ -92,26 +144,36 @@ jobs:
           string(REPLACE "-debug-symbols" "" package_suffix "${package_suffix}")
 
           # Workaround for CMake's greedy regex (WinOnly)
-
-          if ("${{ matrix.config.environment_script }}" MATCHES "vcvars32.bat")
-            string(REPLACE "X86_64" "X86" package_suffix "${package_suffix}")
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            string(REPLACE "ARM64" "X86_64" package_suffix "${package_suffix}")
           endif()
           file(MAKE_DIRECTORY ${qt_name})
 
           # Save the path for other steps
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${qt_name}/${qt_dir_prefix}" qt_dir)
           message("::set-output name=qt_dir::${qt_dir}")
-          
-          foreach(package qtbase qtdeclarative qttools qtquickcontrols2 qtcharts)
-            message("${qt_base_url}/${qt_package_name}/${package_version}${package}${packge_suffix}")
-            file (DOWNLOAD "${qt_base_url}/${qt_package_name}/${package_version}${package}${package_suffix}.7z" "./${package}.7z" SHOW_PROGRESS)
+
+          execute_process(COMMAND sh -c "echo 'QT_DIR=${qt_dir}' >> $GITHUB_ENV")
+
+          # Download packages
+          message("Downloading packages...")
+          foreach(package qtbase qtdeclarative qttools qtquickcontrols2)
+            set(addon_url "${qt_base_url}/${qt_package_name}/${package_version}${package}${package_suffix}.7z")
+            file (DOWNLOAD "${addon_url}" "./${package}.7z" SHOW_PROGRESS)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${package}.7z WORKING_DIRECTORY "${qt_name}")
           endforeach()
-
-          # Download addons
+          
+          # Download QtCharts
+          message("Donwloading QtCharts")
           foreach (addon qtcharts)
-            message("${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z")
-            file (DOWNLOAD "${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z" "./${addon}.7z" SHOW_PROGRESS)
+            if ("${{ runner.os }}" STREQUAL "Windows")
+              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.win64_${compiler}/${package_version}${addon}${package_suffix}.7z)
+            else() 
+              set(addon_url ${qt_base_url}/${qt_addon_prefix}.${addon}.${compiler}/${package_version}${addon}${package_suffix}.7z)
+            endif()
+          
+            message("${addon_url}")
+            file (DOWNLOAD "${addon_url}" "./${addon}.7z" SHOW_PROGRESS)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ../${addon}.7z WORKING_DIRECTORY "${qt_name}")
           endforeach()
 
@@ -132,24 +194,58 @@ jobs:
           # file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
       - name: Configure
+        shell: cmake -P {0}
         run: |
-          mkdir build && cd build
-          # TODO: fix for linux
+          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
+            execute_process(
+              COMMAND "${{ matrix.config.environment_script }}" && set
+              OUTPUT_FILE environment_script_output.txt
+            )
+            file(STRINGS environment_script_output.txt output_lines)
 
-          export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
-          export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
-          CMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
-          cmake -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH -DCMAKE_BUILD_TYPE=Release ../
+            foreach(line IN LISTS output_lines)
+              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
+                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
+              endif()
+            endforeach()
+          endif()
 
+          set(path_separator ":")
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            set(path_separator ";")
+          endif()
+          set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
 
+          set(cmake_prefix_path $ENV{QT_DIR}/lib/cmake)
+
+          execute_process(
+             COMMAND cmake
+              -S .
+              -B build
+              -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
+              -D CMAKE_PREFIX_PATH=${cmake_prefix_path}
+            RESULT_VARIABLE result
+          )
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status")
+          endif()
+          
       - name: Build
         shell: cmake -P {0}
         run: |
+          set(ENV{CC} ${{ matrix.config.cc }})
+          set(ENV{CXX} ${{ matrix.config.cxx }})
+
           include(ProcessorCount)
           ProcessorCount(N) 
           
-          set(make_cmd make $ENV{DESKTOP_APP_TARGET} $ENV{SERVER_APP_TARGET} -j ${N})
-          execute_process(COMMAND ${make_cmd} WORKING_DIRECTORY build RESULT_VARIABLE result)
+          set(make_cmd cmake --b$ENV{DESKTOP_APP_TARGET} $ENV{SERVER_APP_TARGET} -j ${N})
+          execute_process(COMMAND 
+            cmake --build .
+            --target $ENV{DESKTOP_APP_TARGET} 
+            --target $ENV{SERVER_APP_TARGET} 
+            -j ${N}
+            WORKING_DIRECTORY build RESULT_VARIABLE result)
           
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status")

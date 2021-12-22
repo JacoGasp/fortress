@@ -4,7 +4,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -fstrict-aliasing -pedantic-errors -pedantic -Wno-deprecated-declarations -Wno-unused-variable")
+# Set default compile flags for Unix
+if(UNIX)
+    message(STATUS "GCC detected, adding compile flags")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -fstrict-aliasing -pedantic-errors -pedantic -Wno-deprecated-declarations -Wno-unused-variable")
+endif()
 
 
 # Setup Qt
@@ -28,6 +32,3 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)
-if(APPLE)
-    target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/Cellar/asio/current/include)
-endif(APPLE)
