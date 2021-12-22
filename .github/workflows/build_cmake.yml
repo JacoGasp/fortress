@@ -9,7 +9,6 @@ on:
     tags:
       - v*
     pull_request:
-      branches:
 env:
   QT_NAME: qt6
   QT_VERSION: 6.2.2
@@ -34,6 +33,10 @@ jobs:
             artifact: "macOS-x64.zip"
             bundle_name: "macOS-x64"
             os: macos-latest
+          - name: "Windows Latest x64"
+            artifact: "win-x64.zip"
+            bundle_name: "win-x64"
+            os: windows-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -66,6 +69,11 @@ jobs:
            set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.clang_64")
            set(qt_dir_prefix "${qt_version}/macos")
            set(compiler "clang_64")
+          elseif ("${{ runner.os }}" STREQUAL "Windows")
+           set(url_os "windows_x86")
+           set(qt_package_name "qt.${qt_name}.${qt_version_dotless}.win64_msvc2019_64")
+           set(qt_dir_prefix "${qt_version}/msvc2019_64")
+           set(compiler "msvc2019_64")
           endif()
           
           set(qt_base_url "https://download.qt.io/online/qtsdkrepository/${url_os}/desktop/${qt_name}_${qt_version_dotless}")
@@ -86,9 +94,8 @@ jobs:
           string(REPLACE "-debug-symbols" "" package_suffix "${package_suffix}")
 
           # Workaround for CMake's greedy regex (WinOnly)
-
-          if ("${{ matrix.config.environment_script }}" MATCHES "vcvars32.bat")
-            string(REPLACE "X86_64" "X86" package_suffix "${package_suffix}")
+          if ("${{ runner.os }}" STREQUAL "Windows")
+            string(REPLACE "ARM64" "X86_64" package_suffix "${package_suffix}")
           endif()
           file(MAKE_DIRECTORY ${qt_name})
 
@@ -126,14 +133,17 @@ jobs:
           # file(WRITE "${qt_name}/${qt_dir_prefix}/mkspecs/qconfig.pri" "${qtconfig}")
 
       - name: Configure
+        shell: bash
         run: |
           mkdir build && cd build
           # TODO: fix for linux
 
-          export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
-          export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
-          CMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake"
-          cmake -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH -DCMAKE_BUILD_TYPE=Release ../
+          # export PATH="${{ steps.qt.outputs.qt_dir }}/bin:${PATH}"
+          # export LD_LIBRARY_PATH="${{ steps.qt.outputs.qt_dir }}/lib:{LD_LIBRARY_PATH}"
+          cmake \
+             -DCMAKE_PREFIX_PATH="${{ steps.qt.outputs.qt_dir }}/lib/cmake" \
+             -DCMAKE_BUILD_TYPE=Release \
+             ../
 
 
       - name: Build
